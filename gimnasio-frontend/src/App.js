@@ -1,9 +1,11 @@
+import React from 'react';
+import Login from './components/login';
 import './App.css';
 
 function App() {
   return (
-    <div className="text-red-700 dark:text-sky-400">
-      Bienvenido al gimnasio(Sparta)
+    <div className="App">
+      <Login />
     </div>
   );
 }
