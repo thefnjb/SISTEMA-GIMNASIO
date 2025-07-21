@@ -6,5 +6,13 @@ const AvatarGroup = () => {
     </div>
   );
 }
+const Admin = () =>{
+  return (
+      <div className="w-[100px] h-[100px] rounded-lg ">
+        <img className="w-20 h-20 rounded-full border-2 border-white " src="/images/logo.jpg" alt="logo" />
+      </div>
+  );
+}
 
 export default AvatarGroup;
+export { Admin };

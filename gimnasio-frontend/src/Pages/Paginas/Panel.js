@@ -1,7 +1,11 @@
+import Barralateral from "../../components/Barralateral/Barralateral";
+
 function Panel(props) {
   return (
     <div>
-      <h1>Panel</h1>
+      <h1>
+        <Barralateral />
+      </h1>
     </div>
   );
 }
