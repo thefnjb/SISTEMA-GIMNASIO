@@ -1,14 +1,15 @@
 
 import React from 'react';
 import { Admin } from '../Avatar/avatar';
+import { useState } from 'react';
 import HomeIcon from '@mui/icons-material/Home';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
+import Button from '@mui/material/Button';
+import Grow from '@mui/material/Grow';
 
-
-import { useState } from 'react';
 
 const Barralateral = () => {
   const [active, setActive] = useState('INICIO');
@@ -29,15 +30,29 @@ const Barralateral = () => {
     </aside>
   );
 };
+
 const SidebarItem = ({ icon, label, active, onClick }) => (
-  <div
-    onClick={onClick}
-    className={`flex items-center gap-4 text-xl font-semibold px-4 py-3 rounded-lg cursor-pointer transition-all select-none
-      ${active ? 'bg-gradient-to-r from-purple-500 via-blue-500 to-gray-400 text-white shadow-lg scale-105' : 'bg-slate-800 hover:bg-gradient-to-r from-purple-500 via-blue-500 to-gray-400 hover:text-white'}`}
-  >
-    <span className="text-2xl">{icon}</span>
-    <span>{label}</span>
-  </div>
+  <Grow in={true} timeout={600}>
+    <div>
+      <Button
+        onClick={onClick}
+        startIcon={icon}
+        variant="outlined"
+        color="inherit"
+        fullWidth
+        sx={{
+          justifyContent: "flex-start",
+          fontWeight: active ? "bold" : "normal",
+          fontSize: "1.1rem",
+          my: 1,
+          borderRadius: 2,
+          textTransform: "none"
+        }}
+      >
+        {label}
+      </Button>
+    </div>
+  </Grow>
 );
 
 export default Barralateral
