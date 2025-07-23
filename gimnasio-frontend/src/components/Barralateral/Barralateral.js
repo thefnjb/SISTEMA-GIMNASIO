@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Admin } from '../Avatar/avatar';
 import { useState } from 'react';
@@ -6,7 +7,11 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
-const Barralateral = ({ active, setActive }) => {
+import Button from '@mui/material/Button';
+import Grow from '@mui/material/Grow';
+
+const Barralateral = () => {
+  const [active, setActive] = useState('INICIO');
   return (
     <aside className="w-72 min-h-screen bg-gradient-to-b from-black via-gray-900 to-gray-800 text-white p-6 flex flex-col items-center shadow-2xl">
       <div className="mb-8 w-full text-center">
@@ -24,9 +29,8 @@ const Barralateral = ({ active, setActive }) => {
     </aside>
   );
 };
-
 const SidebarItem = ({ icon, label, active, onClick }) => (
-  <Grow in={true} timeout={600}>
+    <Grow in={true} timeout={600}>
     <div>
       <Button
         onClick={onClick}
@@ -49,4 +53,4 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
   </Grow>
 );
 
-export default Barralateral;
+export default Barralateral
