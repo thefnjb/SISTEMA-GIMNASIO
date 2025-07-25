@@ -19,12 +19,24 @@ function Login() {
   const [password, setPassword] = useState(""); // Vacío al iniciar
   const [rememberMe, setRememberMe] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (usuario === "admin" && password === "123") {
-      navigate('/panel');
-    } else {
-      alert("Credenciales incorrectas.");
+    try {
+      const response = await fetch("http://localhost:4000/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ Usuario: usuario, Contraseña: password })
+      });
+      if (response.ok) {
+        navigate('/panel');
+      } else {
+        const data = await response.json();
+        alert(data.error || "Credenciales incorrectas.");
+      }
+    } catch (error) {
+      alert("Error de conexión con el servidor.");
     }
   };
 
