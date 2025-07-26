@@ -2,8 +2,11 @@ import React, { useState } from 'react';
 import Barralateral from "../../components/Barralateral/Barralateral";
 import { CustomCard } from "../../components/Card/spacer";
 import Ingresos from "./Ingresos";
-import ModalSuscripcion from "../../components/Modal/Modal";
-import ModalDia from "../../components/Modal/ModalDia"; // Assuming ModalDia is defined similarly to ModalSuscripcion
+import ModalSuscripcion from "../../components/Modal/ModalSuscripcion";
+import { ModalDia } from "../../components/Modal/ModalDia";
+import { ModalEntrenadores } from "../../components/Modal/ModalEntrenadores";
+
+
 
 function Panel() {
   const [active, setActive] = useState("INICIO");
@@ -32,16 +35,20 @@ function Panel() {
               title="Clientes por Vencer"
             >
             </CustomCard>
+
             <CustomCard
               imageUrl="/images/clientespordiaa.png"
               title="Clientes por Dia"
             >
-              <ModalDia triggerText="Ver Lista" title="Clientes por Dia" />
+              <ModalDia triggerText="Ingresar" title="Clientes por Dia" />
             </CustomCard>
+            
             <CustomCard
               imageUrl="/images/entrenadores.png"
               title="Entrenadores"
-            />
+            >
+                <ModalEntrenadores triggerText="Ingresar" title="Entrenadores" />
+             </CustomCard>
           </div>
         );
       case "INGRESOS":
