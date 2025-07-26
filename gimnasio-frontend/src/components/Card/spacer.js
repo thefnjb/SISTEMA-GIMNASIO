@@ -2,7 +2,7 @@ import { Card} from "@heroui/react";
 import { useState } from "react";
 
 
-export const CustomCard = ({ imageUrl, title, description }) => {
+export const CustomCard = ({ imageUrl, title, description, children }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
 
@@ -41,6 +41,9 @@ export const CustomCard = ({ imageUrl, title, description }) => {
         <p className="text-sm text-default-500">
           {description || ""}
         </p>
+        {children && (
+          <div className="mt-4 flex justify-center">{children}</div>
+        )}
       </div>
     </Card>
   );

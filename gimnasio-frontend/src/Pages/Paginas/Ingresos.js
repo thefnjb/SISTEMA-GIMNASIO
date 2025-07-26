@@ -3,7 +3,9 @@ import React from 'react';
 
 function Ingresos() {
     return (
-        <div className='text-center text-black-500'>Ingresos</div>
+        
+        <div className='bg-sky-100 text-center text-black-500'>Ingresos</div>
+        
     );
 }
 
