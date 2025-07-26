@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AvatarGroup from '../Avatar/avatar';
+import { AlertaCredenciales } from '../Alerta/Alerct';
 
 const Button = ({ children, className, ...props }) => (
   <button className={`btn ${className}`} {...props}>
@@ -18,6 +19,7 @@ function Login() {
   const [usuario, setUsuario] = useState(""); // Vacío al iniciar
   const [password, setPassword] = useState(""); // Vacío al iniciar
   const [rememberMe, setRememberMe] = useState(false);
+  const [errorCredenciales, setErrorCredenciales] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,8 +34,7 @@ function Login() {
       if (response.ok) {
         navigate('/panel');
       } else {
-        const data = await response.json();
-        alert(data.error || "Credenciales incorrectas.");
+        setErrorCredenciales(true);
       }
     } catch (error) {
       alert("Error de conexión con el servidor.");
@@ -41,49 +42,49 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex lg:flex-row flex-col bg-black text-white">
+    <div className="flex min-h-screen flex-col bg-black text-white lg:flex-row">
       {/* Imagen lateral con efecto dramático */}
-      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
-        <div className="w-full h-full bg-cover bg-center grayscale animate-zoomImage"
+      <div className="relative hidden overflow-hidden lg:block lg:w-1/2">
+        <div className="animate-zoomImage h-full w-full bg-cover bg-center grayscale"
           style={{ backgroundImage: "url('/images/login.png')" }}></div>
       </div>
       {/* Formulario */}
-      <div className="w-full lg:w-1/2 flex justify-center items-center px-6 py-10 bg-zinc-900 shadow-inner">
-        <div className="w-full max-w-md space-y-6 animate-fadeInDown">
+      <div className="flex w-full items-center justify-center bg-zinc-900 px-6 py-10 shadow-inner lg:w-1/2">
+        <div className="animate-fadeInDown w-full max-w-md space-y-6">
           <div className="text-center">
               <AvatarGroup />
             <h1 className="text-3xl font-extrabold tracking-wide">ADMIN GIMNASIO</h1>
-            <p className="text-sm text-gray-400 mt-1">Accede con tus credenciales</p>
+            <p className="mt-1 text-sm text-gray-400">Accede con tus credenciales</p>
           </div>
-
+          {errorCredenciales && <AlertaCredenciales/>}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="usuario" className="block mb-2 text-sm font-semibold">Usuario</label>
+              <label htmlFor="usuario" className="mb-2 block text-sm font-semibold">Usuario</label>
               <Input
                 id="usuario"
                 type="text"
                 value={usuario}
                 onChange={(e) => setUsuario(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-zinc-800 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
+                className="w-full rounded-lg border border-gray-600 bg-zinc-800 px-4 py-3 text-white focus:ring-2 focus:ring-red-500"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block mb-2 text-sm font-semibold">Contraseña</label>
+              <label htmlFor="password" className="mb-2 block text-sm font-semibold">Contraseña</label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 rounded-lg bg-zinc-800 text-white border border-gray-600 focus:ring-2 focus:ring-red-500"
+                  className="w-full rounded-lg border border-gray-600 bg-zinc-800 px-4 py-3 pr-12 text-white focus:ring-2 focus:ring-red-500"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-white"
                 >
                   {showPassword ? '🙈' : '👁️'}
                 </button>
@@ -96,7 +97,7 @@ function Login() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="accent-red-600 mr-2"
+                  className="mr-2 accent-red-600"
                 />
                 Recordarme
               </label>
@@ -104,7 +105,7 @@ function Login() {
 
             <Button
               type="submit"
-              className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold animate-pulse"
+              className="w-full animate-pulse rounded-lg bg-red-600 py-3 font-semibold text-white hover:bg-red-700"
             >
               Iniciar Sesión
             </Button>

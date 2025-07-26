@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Barralateral from "../../components/Barralateral/Barralateral";
 import { CustomCard } from "../../components/Card/spacer";
+import Ingresos from "./Ingresos";
 
 function Panel() {
   const [active, setActive] = useState("INICIO");
@@ -12,36 +13,34 @@ function Panel() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
       <CustomCard 
-        imageUrl="/images/suscrip.jpg" 
+        imageUrl="/images/suscripcion.png" 
         title="Suscripcion"
         
       />
       <CustomCard 
-        imageUrl="/images/clientes.jpg"
+        imageUrl="/images/clientes.png"
         title="Clientes"
        
       />
       <CustomCard 
-        imageUrl="/images/clienteven.PNG"
+        imageUrl="/images/clientesporvencer.png"
         title="Clientes por Vencer"
        
       />
       <CustomCard 
-        imageUrl="/images/clientesdia.PNG"
+        imageUrl="/images/clientespordiaa.png"
         title="Clientes por Dia"
        
       />
       <CustomCard 
-        imageUrl="/images/entrena.PNG"
+        imageUrl="/images/entrenadores.png"
         title="Entrenadores"
         
       />
     </div>
   );
       case "INGRESOS":
-        return <h2 className="text-xl p-6">Aquí va la sección de INGRESOS</h2>;
-      case "SALIDA":
-        return <h2 className="text-xl p-6">Has cerrado sesión</h2>;
+        return <Ingresos />;
       default:
         return null;
     }

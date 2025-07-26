@@ -8,8 +8,8 @@ export const CustomCard = ({ imageUrl, title, description }) => {
 
   return (
     <Card className={`max-w-[300px] w-full h-auto p-4 bg-gray-200 rounded-2xl shadow-sm transition-all duration-200
-        ${isHovered ? 'ring-2 ring-black/15 scale-[1.03]' : ''}
-        ${isActive ? 'ring-4 ring-black/15 scale-[0.98]' : ''}`}
+        ${isHovered ? 'ring-2 bg-slate-500 scale-[1.03]' : ''}
+        ${isActive ? 'ring-4 bg-slate-400 scale-[0.98]' : ''}`}
 
       radius="2xl"
       onMouseEnter={() => setIsHovered(true)}
@@ -34,8 +34,8 @@ export const CustomCard = ({ imageUrl, title, description }) => {
           </div>
         )}
       </div>
-      <div className="space-y-2">
-        <h3 className="text-base font-semibold text-default-700 text-center">
+      <div className="flex flex-col space-y-2 mt-4">
+        <h3 className="text-base font-semibold  text-center text-black">
           {title || "Título por defecto"}
         </h3>
         <p className="text-sm text-default-500">
