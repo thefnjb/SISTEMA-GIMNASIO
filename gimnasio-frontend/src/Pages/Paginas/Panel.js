@@ -5,6 +5,7 @@ import Ingresos from "./Ingresos";
 import ModalSuscripcion from "../../components/Modal/ModalSuscripcion";
 import { ModalDia } from "../../components/Modal/ModalDia";
 import { ModalEntrenadores } from "../../components/Modal/ModalEntrenadores";
+import { ModalMembresia } from "../../components/Modal/ModalMembresia";
 
 
 
@@ -49,6 +50,14 @@ function Panel() {
             >
                 <ModalEntrenadores triggerText="Ingresar" title="Entrenadores" />
              </CustomCard>
+
+            <CustomCard
+              imageUrl="/images/membresias.png"
+              title="Membresias"
+            >
+              <ModalMembresia triggerText="Ingresar" title="Membresias" />
+             </CustomCard>
+
           </div>
         );
       case "INGRESOS":

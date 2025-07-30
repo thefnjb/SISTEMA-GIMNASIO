@@ -3,8 +3,8 @@ import { useState } from "react";
 
 
 export const CustomCard = ({ imageUrl, title, description, children }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isActive, setIsActive] = useState(false);
+  const [isHovered] = useState(false);
+  const [isActive] = useState(false);
 
   return (
     <Card className={`max-w-[300px] w-full h-auto p-4 bg-gray-200 rounded-2xl shadow-sm transition-all duration-200
@@ -12,10 +12,6 @@ export const CustomCard = ({ imageUrl, title, description, children }) => {
         ${isActive ? 'ring-4 bg-slate-400 scale-[0.98]' : ''}`}
 
       radius="2xl"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setIsActive(false); }}
-      onMouseDown={() => setIsActive(true)}
-      onMouseUp={() => setIsActive(false)}
     >
       <div className="flex flex-col space-y-4">
         {imageUrl ? (

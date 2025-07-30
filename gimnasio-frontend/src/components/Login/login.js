@@ -16,8 +16,8 @@ const Input = ({ className, ...props }) => (
 function Login() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  const [usuario, setUsuario] = useState(""); // Vacío al iniciar
-  const [password, setPassword] = useState(""); // Vacío al iniciar
+  const [usuario, setUsuario] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [errorCredenciales, setErrorCredenciales] = useState(false);
 
@@ -29,10 +29,12 @@ function Login() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ Usuario: usuario, Contraseña: password })
+        body: JSON.stringify({ Usuario: usuario, Contraseña: password }),
+        credentials: "include" // 🔑 ahora sí guarda y envía la cookie
       });
+
       if (response.ok) {
-        navigate('/panel');
+        navigate("/panel");
       } else {
         setErrorCredenciales(true);
       }
@@ -43,23 +45,30 @@ function Login() {
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white lg:flex-row">
-      {/* Imagen lateral con efecto dramático */}
+      {/* Imagen lateral */}
       <div className="relative hidden overflow-hidden lg:block lg:w-1/2">
-        <div className="animate-zoomImage h-full w-full bg-cover bg-center grayscale"
-          style={{ backgroundImage: "url('/images/login.png')" }}></div>
+        <div
+          className="animate-zoomImage h-full w-full bg-cover bg-center grayscale"
+          style={{ backgroundImage: "url('/images/login.png')" }}
+        ></div>
       </div>
+
       {/* Formulario */}
       <div className="flex w-full items-center justify-center bg-zinc-900 px-6 py-10 shadow-inner lg:w-1/2">
         <div className="animate-fadeInDown w-full max-w-md space-y-6">
           <div className="text-center">
-              <AvatarGroup />
+            <AvatarGroup />
             <h1 className="text-3xl font-extrabold tracking-wide">ADMIN GIMNASIO</h1>
             <p className="mt-1 text-sm text-gray-400">Accede con tus credenciales</p>
           </div>
-          {errorCredenciales && <AlertaCredenciales/>}
+
+          {errorCredenciales && <AlertaCredenciales />}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="usuario" className="mb-2 block text-sm font-semibold">Usuario</label>
+              <label htmlFor="usuario" className="mb-2 block text-sm font-semibold">
+                Usuario
+              </label>
               <Input
                 id="usuario"
                 type="text"
@@ -71,7 +80,9 @@ function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-semibold">Contraseña</label>
+              <label htmlFor="password" className="mb-2 block text-sm font-semibold">
+                Contraseña
+              </label>
               <div className="relative">
                 <Input
                   id="password"
@@ -86,7 +97,7 @@ function Login() {
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-white"
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
             </div>

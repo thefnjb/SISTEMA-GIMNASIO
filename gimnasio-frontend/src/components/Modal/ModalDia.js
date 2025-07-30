@@ -62,7 +62,7 @@ const ModalDia = ({ triggerText = "Abrir Modal", title = "Registro del Día" }) 
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         hideCloseButton
-        backdrop="opaque"
+        backdrop="blur"
         isDismissable={false}
         className="bg-black text-white"
       >

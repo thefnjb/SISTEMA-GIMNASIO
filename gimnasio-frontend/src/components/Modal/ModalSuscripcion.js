@@ -30,11 +30,28 @@ const metodosPago = {
 
 const ModalSuscripcion = ({ triggerText = "Abrir Modal", title }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const [size, setSize] = useState("5xl");
+
+  const sizeClassMap = {
+    sm: "max-w-sm",
+    md: "max-w-md",
+    lg: "max-w-lg",
+    xl: "max-w-xl",
+    "2xl": "max-w-2xl",
+    "3xl": "max-w-3xl",
+    full: "w-full max-w-screen-lg",
+  };
+
+   const handleOpen = (customSize) => {
+    setSize(customSize);
+    onOpen(); // abre el modal
+  };
 
   // Estados para los campos
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
   const [fecha, setFecha] = useState("");
+  const [celular, setCelular] = useState("");
   const [membresia, setMembresia] = useState("");
   const [entrenador, setEntrenador] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
@@ -65,7 +82,7 @@ const ModalSuscripcion = ({ triggerText = "Abrir Modal", title }) => {
   return (
     <>
       <Button
-        onPress={onOpen}
+        onPress={() => handleOpen("5xl")}
         className="text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
         style={{ backgroundColor: "#7a0f16" }}
       >
@@ -76,9 +93,10 @@ const ModalSuscripcion = ({ triggerText = "Abrir Modal", title }) => {
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         hideCloseButton={true}
-        backdrop="opaque"
+        size={size}
+        backdrop="blur"
         isDismissable={false}
-        className="bg-black text-white"
+        className={`bg-black text-white ${sizeClassMap[size] || "max-w-3xl"}`}
       >
         <ModalContent>
           {(onClose) => (
@@ -125,7 +143,17 @@ const ModalSuscripcion = ({ triggerText = "Abrir Modal", title }) => {
                     '--tw-ring-shadow': 'none'
                   }}
                 />
-                
+                <Input
+                  label="Celular"
+                  placeholder="Ingresa el número de celular"
+                  value={celular}
+                  onChange={(e) => setCelular(e.target.value)}
+                  className="text-white focus:outline-none"
+                  classNames={inputClasses}
+                  style={{
+                    '--tw-ring-shadow': 'none'
+                  }}
+                />
                 <Input
                   label="Membresía"
                   placeholder="Ej. Mensual, Anual"
