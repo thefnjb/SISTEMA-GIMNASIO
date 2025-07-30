@@ -12,5 +12,5 @@ const gymSchema = new mongoose.Schema({
     }
 },{ timestamps: true });
 
-const modal = mongoose.model('gym', gymSchema);
+const modal = mongoose.model("gym", gymSchema);
 module.exports = modal;

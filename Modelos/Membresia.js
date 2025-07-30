@@ -2,21 +2,19 @@ const mongoose = require('mongoose');
 
 const Membresias = mongoose.Schema({
 
-    ttulo:{
+    titulo:{
         type:String,
         required: true,
     },
-    presio:{
+    precio:{
         type:Number,
         required: true,
     },
-    
     gym:{
         type:mongoose.Schema.Types.ObjectId,
-        ref:"gym",
-        required:true
+        ref:'gym',
+        required:true,
     }
-
 })
 
 const modalMembresias = mongoose.model('membresias', Membresias);

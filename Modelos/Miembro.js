@@ -2,17 +2,16 @@ const mongoose = require("mongoose");
 
 const UsuarioSchema = mongoose.Schema({
     nombre: { type: String, required: true },
-    edad: { type: Number, required: true },
     fechaIngreso: { type: Date, default: Date.now },
     celular: { type: String },
-    dirección: { type: String },
     membresía: { type: mongoose.Schema.Types.ObjectId, ref: 'Membresia' },
     estadoPago: { type: String, enum: ['Pagado', 'Pendiente'], default: 'Pendiente' },
     estado: { type: String, enum: ['Activo', 'Inactivo'], default: 'Activo' },
+    gym:{type:mongoose.Schema.Types.ObjectId,ref:'gym',required:true, },
     ultimoPago: { type: Date },
-    próximaFactura: { type: Date },
+    renovacion: { type: Date },
     entrenador: { type: mongoose.Schema.Types.ObjectId, ref: 'Entrenador' }
 });
 
-const Usuario = mongoose.model("Usuario", UsuarioSchema);
-module.exports = Usuario;
+const Miembro = mongoose.model("Miembro", UsuarioSchema);
+module.exports = Miembro;
