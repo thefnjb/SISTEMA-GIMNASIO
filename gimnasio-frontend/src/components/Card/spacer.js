@@ -32,7 +32,6 @@ export const CustomCard = ({ imageUrl, title, description, children }) => {
       </div>
       <div className="flex flex-col space-y-2 mt-4">
         <h3 className="text-base font-semibold  text-center text-black">
-          {title || "Título por defecto"}
         </h3>
         <p className="text-sm text-default-500">
           {description || ""}

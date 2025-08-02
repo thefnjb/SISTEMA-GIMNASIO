@@ -1,17 +1,21 @@
 const mongoose = require("mongoose");
 
-const UsuarioSchema = mongoose.Schema({
+const MiembroSchema = new mongoose.Schema({
     nombre: { type: String, required: true },
+    celular: { type: String, required: true, unique: true },
     fechaIngreso: { type: Date, default: Date.now },
-    celular: { type: String },
-    membresía: { type: mongoose.Schema.Types.ObjectId, ref: 'Membresia' },
-    estadoPago: { type: String, enum: ['Pagado', 'Pendiente'], default: 'Pendiente' },
-    estado: { type: String, enum: ['Activo', 'Inactivo'], default: 'Activo' },
-    gym:{type:mongoose.Schema.Types.ObjectId,ref:'gym',required:true, },
+    membresia: { type: mongoose.Schema.Types.ObjectId, ref: "Membresia" },
+    estadoPago: { type: String, enum: ["Pagado", "Pendiente"], default: "Pendiente" },
+    estado: { type: String, enum: ["Activo", "Inactivo"], default: "Activo" },
+    gym: { type: mongoose.Schema.Types.ObjectId, ref: "gym" },
     ultimoPago: { type: Date },
     renovacion: { type: Date },
-    entrenador: { type: mongoose.Schema.Types.ObjectId, ref: 'Entrenador' }
-});
+    entrenador: { type: mongoose.Schema.Types.ObjectId, ref: "Entrenador" },
+    metodoPago: { 
+    type: String, 
+    enum: ["Yape", "Plin", "Efectivo"], 
+    default: "Efectivo" 
+    }
+}, { timestamps: true });
 
-const Miembro = mongoose.model("Miembro", UsuarioSchema);
-module.exports = Miembro;
+module.exports = mongoose.model("Miembro", MiembroSchema);

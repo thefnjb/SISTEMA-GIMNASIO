@@ -3,8 +3,10 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Admin } from '../Avatar/avatar';
 import HomeIcon from '@mui/icons-material/Home';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
+import AddchartIcon from '@mui/icons-material/Addchart';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import IconButton from '@mui/material/IconButton';
 
 import Button from '@mui/material/Button';
 import Grow from '@mui/material/Grow';
@@ -25,9 +27,14 @@ const Barralateral = ({ active, setActive }) => {
       <Admin />
       <nav className="w-full flex-1 flex flex-col gap-4 mt-8">
         <SidebarItem icon={<HomeIcon />} label="INICIO" active={active === 'INICIO'} onClick={() => setActive('INICIO')} />
-        <SidebarItem icon={<AccountBalanceWalletIcon />} label="INGRESOS" onClick={() => setActive('INGRESOS')} />
-        <SidebarItem icon={<ExitToAppIcon />} label="SALIDA" onClick={handleLogout} />
+        <SidebarItem icon={<AccountCircleIcon />} label="CLIENTES" active={active === 'CLIENTES'} onClick={() => setActive('CLIENTES')} />
+        <SidebarItem icon={<AddchartIcon />} label="INGRESOS" active={active === 'INGRESOS'} onClick={() => setActive('INGRESOS')} />
       </nav>
+      <div className="w-full mt-auto flex justify-end">
+        <IconButton onClick={handleLogout} color="inherit" aria-label="salir">
+          <ExitToAppIcon fontSize="large" />
+        </IconButton>
+      </div>
     </aside>
   );
 };
@@ -37,8 +44,8 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
       <Button
         onClick={onClick}
         startIcon={icon}
-        variant="outlined"
-        color="inherit"
+        variant="contained"
+        color="default"
         fullWidth
         sx={{
           justifyContent: "flex-start",
