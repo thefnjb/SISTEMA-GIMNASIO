@@ -3,9 +3,8 @@ import Barralateral from "../../components/Barralateral/Barralateral";
 import { CustomCard } from "../../components/Card/spacer";
 import Ingresos from "./Ingresos";
 import ModalSuscripcion from "../../components/Modal/ModalSuscripcion";
-import { ModalDia } from "../../components/Modal/ModalDia";
+import  ModalDia  from "../../components/Modal/ModalDia";
 import { ModalEntrenadores } from "../../components/Modal/ModalEntrenadores";
-import { ModalMembresia } from "../../components/Modal/ModalMembresia";
 
 
 
@@ -19,45 +18,21 @@ function Panel() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
             <CustomCard
               imageUrl="/images/suscripcion.png"
-              title="Suscripcion"
             >
               <ModalSuscripcion
-                triggerText="Gestionar"
-                title="Gestionar Suscripciones"
+                triggerText="INGRESAR"
               />
             </CustomCard>
             <CustomCard
-              imageUrl="/images/clientes.png"
-              title="Clientes"
-            >
-            </CustomCard>
-            <CustomCard
-              imageUrl="/images/clientesporvencer.png"
-              title="Clientes por Vencer"
-            >
-            </CustomCard>
-
-            <CustomCard
               imageUrl="/images/clientespordiaa.png"
-              title="Clientes por Dia"
             >
-              <ModalDia triggerText="Ingresar" title="Clientes por Dia" />
+              <ModalDia triggerText="INGRESAR" title="Clientes por Dia" />
             </CustomCard>
-            
             <CustomCard
               imageUrl="/images/entrenadores.png"
-              title="Entrenadores"
             >
-                <ModalEntrenadores triggerText="Ingresar" title="Entrenadores" />
-             </CustomCard>
-
-            <CustomCard
-              imageUrl="/images/membresias.png"
-              title="Membresias"
-            >
-              <ModalMembresia triggerText="Ingresar" title="Membresias" />
-             </CustomCard>
-
+                <ModalEntrenadores triggerText="INGRESAR" title="Entrenadores" />
+              </CustomCard>
           </div>
         );
       case "INGRESOS":
