@@ -11,13 +11,13 @@ import {
 import { useState } from "react";
 import axios from "axios";
 
-const ModalEntrenadores = ({ triggerText = "INGRESAR", title = "Entrenadores" }) => {
+const ModalEntrenadores = ({ triggerText = "INGRESAR", title = "Entrenadores", onEntrenadorAgregado }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [nombre, setNombre] = useState("");
   const [edad, setEdad] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [fotoPerfil, setFotoPerfil] = useState("");
+  const [fotoPerfil, setFotoPerfil] = useState(null);
 
   const agregarEntrenador = async () => {
     if (!nombre.trim() || !edad.trim() || !telefono.trim()) {
@@ -25,16 +25,25 @@ const ModalEntrenadores = ({ triggerText = "INGRESAR", title = "Entrenadores" })
       return;
     }
 
+    const formData = new FormData();
+    formData.append("nombre", nombre);
+    formData.append("edad", edad);
+    formData.append("telefono", telefono);
+    if (fotoPerfil) formData.append("fotoPerfil", fotoPerfil);
+
     try {
-      await axios.post(
-        "http://localhost:4000/trainers/nuevo",
-        { nombre, edad, telefono, fotoPerfil },
-        { withCredentials: true }
-      );
+      await axios.post("http://localhost:4000/trainers/nuevo", formData, {
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
       setNombre("");
       setEdad("");
       setTelefono("");
-      setFotoPerfil("");
+      setFotoPerfil(null);
+
+      if (onEntrenadorAgregado) onEntrenadorAgregado();
+
     } catch (err) {
       console.error("Error al agregar entrenador:", err);
     }
@@ -42,14 +51,13 @@ const ModalEntrenadores = ({ triggerText = "INGRESAR", title = "Entrenadores" })
 
   return (
     <>
-     <Button
-  onPress={onOpen}
-  className="text-white transition-all"
-  style={{ backgroundColor: "#7a0f16" }}
->
-  {triggerText}
-</Button>
-
+      <Button
+        onPress={onOpen}
+        className="text-white transition-all"
+        style={{ backgroundColor: "#7a0f16" }}
+      >
+        {triggerText}
+      </Button>
 
       <Modal
         isOpen={isOpen}
@@ -57,13 +65,13 @@ const ModalEntrenadores = ({ triggerText = "INGRESAR", title = "Entrenadores" })
         hideCloseButton
         backdrop="blur"
         isDismissable={false}
-        className="bg-black text-white"
+        className="text-white bg-black"
       >
         <ModalContent>
           {(onClose) => (
-            <div className="bg-neutral-600 rounded-xl text-white">
+            <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-center text-red-500 text-3xl font-bold">
+                <div className="w-full text-3xl font-bold text-center text-red-500">
                   {title}
                 </div>
               </ModalHeader>
@@ -72,8 +80,8 @@ const ModalEntrenadores = ({ triggerText = "INGRESAR", title = "Entrenadores" })
                 <Input placeholder="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
                 <Input placeholder="Edad" type="number" value={edad} onChange={(e) => setEdad(e.target.value)} />
                 <Input placeholder="Teléfono" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
-                <Input placeholder="URL Foto de Perfil" value={fotoPerfil} onChange={(e) => setFotoPerfil(e.target.value)} />
-                <Button className="mt-2 bg-red-600 hover:bg-red-700 text-white" onPress={agregarEntrenador}>
+                <Input type="file" accept="image/*" onChange={(e) => setFotoPerfil(e.target.files[0])}/>
+                <Button className="mt-2 text-white bg-red-600 hover:bg-red-700" onPress={agregarEntrenador}>
                   Agregar
                 </Button>
               </ModalBody>

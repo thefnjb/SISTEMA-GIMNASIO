@@ -8,7 +8,7 @@ import {
   Input,
   useDisclosure,
 } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 const metodosPago = {
@@ -17,12 +17,19 @@ const metodosPago = {
   efectivo: { nombre: "Efectivo", color: "bg-green-600", icono: "/iconos/eefctivo.png" },
 };
 
-const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registro del Día" }) => {
+const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registro del Día", onClienteAgregado }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [fechaInscripcion, setFechaInscripcion] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      const today = new Date().toLocaleDateString('en-CA');
+      setFechaInscripcion(today);
+    }
+  }, [isOpen]);
 
   const limpiarCampos = () => {
     setNombreCompleto("");
@@ -36,14 +43,17 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
       return;
     }
 
+    const correctedDate = new Date(`${fechaInscripcion}T00:00:00`);
+
     try {
       await axios.post("http://localhost:4000/visits/registrarcliente", {
         nombre: nombreCompleto,
-        fecha: fechaInscripcion,
+        fecha: correctedDate, // Enviar el objeto Date
         metododePago: metodoSeleccionado ? metodosPago[metodoSeleccionado].nombre : "Efectivo",
       }, { withCredentials: true });
 
       limpiarCampos();
+      if (onClienteAgregado) onClienteAgregado(); 
       onClose();
     } catch (err) {
       console.error("Error al registrar cliente:", err);
@@ -71,13 +81,13 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
         hideCloseButton
         backdrop="blur"
         isDismissable={false}
-        className="bg-black text-white"
+        className="text-white bg-black"
       >
         <ModalContent>
           {(onClose) => (
-            <div className="bg-neutral-600 rounded-xl text-white">
+            <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-center text-red-500 text-3xl font-bold">
+                <div className="w-full text-3xl font-bold text-center text-red-500">
                   {title}
                 </div>
               </ModalHeader>
@@ -128,7 +138,7 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
                 <Button
                   color="primary"
                   onPress={() => guardarCliente(onClose)}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="text-white bg-red-600 hover:bg-red-700"
                 >
                   Guardar
                 </Button>
