@@ -93,6 +93,7 @@ function Panel() {
               </CustomCard>
             </div>
 
+            <div className="mt-4 sm:mt-6 md:mt-8 lg:mt-10 xl:mt-12">
             <TablaClientesDia refresh={refreshClientes} />
 
             {showAgregar && (
@@ -103,13 +104,14 @@ function Panel() {
               <ModalviewMembresia onClose={() => setShowVer(false)} />
             )}
           </div>
-        );
-      case "INGRESOS":
-        return <Ingresos />;
-      default:
-        return null;
-    }
-  };
+          </div>
+          );
+          case "INGRESOS":
+            return <Ingresos />;
+          default:
+            return null;
+          }
+          };
 
   return (
     <div className="flex">

@@ -10,6 +10,7 @@ import {
   Spinner,
 } from "@heroui/react";
 import axios from "axios";
+import DeleteIcon from "@mui/icons-material/Delete"; // ✅ Ícono de eliminar importado
 
 const ModalviewMembresia = ({ onClose }) => {
   const { isOpen, onOpenChange } = useDisclosure({ defaultOpen: true });
@@ -80,25 +81,14 @@ const ModalviewMembresia = ({ onClose }) => {
       hideCloseButton
       backdrop="blur"
       isDismissable={false}
-      className="bg-black text-white"
+      className="text-white bg-black"
     >
       <ModalContent>
         {(modalClose) => (
-          <div className="bg-neutral-600 rounded-xl text-white">
-            <ModalHeader className="flex justify-between items-center">
-              <div className="w-full text-center text-red-500 text-3xl font-bold">
+          <>
+            <ModalHeader>
+              <div className="w-full text-2xl font-bold text-center text-red-500">
                 Membresías
-              </div>
-              <div className="flex-shrink-0">
-                <Button
-                  className="text-white border border-white"
-                  variant="light"
-                  size="sm"
-                  onPress={handleRefresh}
-                  isDisabled={loading}
-                >
-                  Actualizar
-                </Button>
               </div>
             </ModalHeader>
 
@@ -111,28 +101,67 @@ const ModalviewMembresia = ({ onClose }) => {
               ) : error ? (
                 <div className="text-center py-4 text-red-400">{error}</div>
               ) : data.length > 0 ? (
-                <ul className="bg-white text-black rounded-lg p-3 space-y-2 max-h-[300px] overflow-y-auto">
-                  {data.map((m) => (
-                    <li
-                      key={m._id}
-                      className="flex justify-between items-center px-2 py-1 rounded-md hover:bg-red-100"
-                    >
-                      <span>
-                        {m.titulo} — S/ {Number(m.precio).toFixed(2)}
-                      </span>
-                      <Button
-                        onPress={() => handleEliminar(m._id)}
-                        className="text-red-500 hover:text-red-700"
-                        variant="light"
-                        size="sm"
-                      >
-                        Eliminar
-                      </Button>
-                    </li>
-                  ))}
-                </ul>
+                <div className="space-y-4 max-h-[400px] overflow-y-auto">
+                  {(() => {
+                    const groupedByMonth = data.reduce((acc, m) => {
+                      const date = new Date(m.createdAt || m.fechaCreacion || Date.now());
+                      const monthYear = date.toLocaleDateString("es-ES", {
+                        month: "long",
+                        year: "numeric",
+                      });
+
+                      if (!acc[monthYear]) {
+                        acc[monthYear] = [];
+                      }
+                      acc[monthYear].push(m);
+                      return acc;
+                    }, {});
+
+                    const sortedMonths = Object.keys(groupedByMonth).sort((a, b) => {
+                      const dateA = new Date(groupedByMonth[a][0].createdAt || Date.now());
+                      const dateB = new Date(groupedByMonth[b][0].createdAt || Date.now());
+                      return dateB - dateA;
+                    });
+
+                    return sortedMonths.map((monthYear) => (
+                      <div key={monthYear} className="space-y-2">
+                        <h3 className="text-red-400 font-semibold text-lg capitalize border-b border-gray-600 pb-1">
+                          {monthYear}
+                        </h3>
+                        <div className="space-y-2">
+                          {groupedByMonth[monthYear].map((m) => (
+                            <div
+                              key={m._id}
+                              className="bg-gray-700 rounded-lg p-3 flex justify-between items-center hover:bg-gray-600 transition-colors"
+                            >
+                              <div className="flex flex-col">
+                                <span className="text-white font-medium">{m.titulo}</span>
+                                <span className="text-green-400 font-semibold">
+                                  S/ {Number(m.precio).toFixed(2)}
+                                </span>
+                                {m.duracion && (
+                                  <span className="text-gray-300 text-sm">
+                                    Duración: {m.duracion}
+                                  </span>
+                                )}
+                              </div>
+                              <Button
+                                onPress={() => handleEliminar(m._id)}
+                                className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                variant="light"
+                                size="sm"
+                                startContent={<DeleteIcon />} // ✅ Uso del ícono aquí
+                              >
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
               ) : (
-                <p className="text-center text-gray-200">No hay membresías registradas.</p>
+                <p className="text-center text-gray-400">No hay membresías registradas.</p>
               )}
             </ModalBody>
 
@@ -146,7 +175,7 @@ const ModalviewMembresia = ({ onClose }) => {
                 Cerrar
               </Button>
             </ModalFooter>
-          </div>
+          </>
         )}
       </ModalContent>
     </Modal>
