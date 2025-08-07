@@ -4,7 +4,7 @@ const MiembroSchema = new mongoose.Schema({
     nombre: { type: String, required: true },
     celular: { type: String, required: true, unique: true },
     fechaIngreso: { type: Date, default: Date.now },
-    membresia: { type: mongoose.Schema.Types.ObjectId, ref: "Membresia" },
+    membresia: { type: mongoose.Schema.Types.ObjectId, ref: "membresias" },
     estadoPago: { type: String, enum: ["Pagado", "Pendiente"], default: "Pendiente" },
     estado: { type: String, enum: ["Activo", "Inactivo"], default: "Activo" },
     gym: { type: mongoose.Schema.Types.ObjectId, ref: "gym" },

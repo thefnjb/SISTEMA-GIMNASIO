@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Barralateral from "../../components/Barralateral/Barralateral";
 import { CustomCard } from "../../components/Card/spacer";
 import Ingresos from "./Ingresos";
+import Clientes from "./cientes";
 import ModalSuscripcion from "../../components/Modal/ModalSuscripcion";
 import ModalDia from "../../components/Modal/ModalDia";
 import ModalEntrenadores from "../../components/Modal/ModalEntrenadores";
@@ -108,6 +109,8 @@ function Panel() {
           );
           case "INGRESOS":
             return <Ingresos />;
+          case "CLIENTES":
+            return <Clientes />;
           default:
             return null;
           }

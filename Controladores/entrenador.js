@@ -1,6 +1,5 @@
 const Entrenador = require("../Modelos/Entrenador");
 
-// Crear un nuevo entrenador
 exports.crearEntrenador = async (req, res) => {
   try {
     const { nombre, edad, telefono } = req.body;
@@ -11,7 +10,6 @@ exports.crearEntrenador = async (req, res) => {
       telefono,
       gym: req.gym._id
     });
-
     // si se sube foto, guardamos en Mongo
     if (req.file) {
       nuevoEntrenador.fotoPerfil.data = req.file.buffer;
@@ -25,8 +23,6 @@ exports.crearEntrenador = async (req, res) => {
     res.status(500).json({ error: "Error al crear el entrenador" });
   }
 };
-
-// Ver todos los entrenadores
 exports.verEntrenadores = async (req, res) => {
   try {
     const entrenadores = await Entrenador.find({ gym: req.gym._id });
@@ -47,8 +43,37 @@ exports.verEntrenadores = async (req, res) => {
     res.status(500).json({ error: "Error al obtener los entrenadores" });
   }
 };
+exports.actualizarEntrenador = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, edad, telefono } = req.body;
 
-// Eliminar un entrenador
+    const entrenadorActualizado = await Entrenador.findOneAndUpdate(
+      { _id: id, gym: req.gym._id },
+      { nombre, edad, telefono },
+      { new: true }
+    );
+
+    if (!entrenadorActualizado) {
+      return res.status(404).json({ error: "Entrenador no encontrado" });
+    }
+
+    // Si se sube una nueva foto, actualizamos en Mongo
+    if (req.file) {
+      entrenadorActualizado.fotoPerfil.data = req.file.buffer;
+      entrenadorActualizado.fotoPerfil.contentType = req.file.mimetype;
+      await entrenadorActualizado.save();
+    }
+
+    res.status(200).json({
+      message: "Entrenador actualizado correctamente",
+      entrenador: entrenadorActualizado,
+    });
+  } catch (err) {
+    console.error("Error al actualizar entrenador:", err);
+    res.status(500).json({ error: "Error al actualizar el entrenador" });
+  }
+};
 exports.eliminarEntrenador = async (req, res) => {
   try {
     const { id } = req.params;

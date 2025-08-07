@@ -36,6 +36,31 @@ exports.verMembresia = async (req, res) => {
     }
 }
 
+exports.actualizarMembresia = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { titulo, precio } = req.body;
+
+        const membresiaActualizada = await Membresia.findOneAndUpdate(
+            { _id: id, gym: req.gym._id },
+            { titulo, precio },
+            { new: true }
+        );
+
+        if (!membresiaActualizada) {
+            return res.status(404).json({ error: "Membresía no encontrada" });
+        }
+
+        res.status(200).json({
+            message: "Membresía actualizada correctamente",
+            membresia: membresiaActualizada,
+        });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Error al actualizar la membresía" });
+    }
+};
+
 exports.eliminarMembresia = async (req, res) => {
     try {
     const { id } = req.params;
@@ -50,4 +75,4 @@ exports.eliminarMembresia = async (req, res) => {
     console.log(err);
     res.status(500).json({ error: "Error al eliminar la membresía" });
   }
-}
+  };
