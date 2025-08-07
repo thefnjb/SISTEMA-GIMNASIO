@@ -16,7 +16,7 @@ export default function TablaClientesHoy({ refresh }) {
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
 
-  const rowsPerPage = 5; // 🔹 pocos por página para que no quede vacío
+  const rowsPerPage = 5; 
 
   const fetchClientes = async () => {
     try {
