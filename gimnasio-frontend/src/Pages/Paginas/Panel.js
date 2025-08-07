@@ -31,7 +31,7 @@ function Panel() {
   };
 
   const renderContent = () => {
-    switch (active) {
+    switch (active)  {
       case "INICIO":
         return (
           <div className="p-6">

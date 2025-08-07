@@ -12,7 +12,8 @@ import {
 import axios from "axios";
 import DeleteIcon from "@mui/icons-material/Delete"; 
 
-const ModalviewMembresia = ({ onClose }) => {
+// Agrega la prop `onSeleccionar`
+const ModalviewMembresia = ({ onClose, onSeleccionar }) => {
   const { isOpen, onOpenChange } = useDisclosure({ defaultOpen: true });
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -131,14 +132,27 @@ const ModalviewMembresia = ({ onClose }) => {
                                   </span>
                                 )}
                               </div>
-                              <Button
-                                onPress={() => handleEliminar(m._id)}
-                                className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                                variant="light"
-                                size="sm"
-                                startContent={<DeleteIcon />} // ✅ Uso del ícono aquí
-                              >
-                              </Button>
+                              <div className="flex gap-2">
+                                <Button
+                                  onPress={() => handleEliminar(m._id)}
+                                  className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                                  variant="light"
+                                  size="sm"
+                                  startContent={<DeleteIcon />}
+                                />
+                                <Button
+                                  onPress={() => {
+                                    if (onSeleccionar) {
+                                      onSeleccionar(m); // Enviar la membresía al padre
+                                    }
+                                    modalClose(); // Cerrar modal
+                                  }}
+                                  className="text-white bg-green-600 hover:bg-green-700"
+                                  size="sm"
+                                >
+                                  Aceptar
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>

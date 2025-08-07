@@ -110,20 +110,24 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
                 {/* Método de pago */}
                 <div>
                   <label className="block mb-1 text-sm">Método de Pago</label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2">
                     {Object.entries(metodosPago).map(([key, metodo]) => (
                       <button
                         key={key}
                         type="button"
-                        className={`p-2 rounded text-white flex items-center gap-2 ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
+                        className={`w-full p-3 rounded text-white flex items-center justify-between ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
                         onClick={() => setMetodoSeleccionado(key)}
                       >
-                        <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
-                        <span>{metodo.nombre}</span>
+                        <div className="flex items-center gap-3">
+                          <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
+                          <span className="text-lg font-medium">{metodo.nombre}</span>
+                        </div>
+                        {metodoSeleccionado === key && <span className="text-sm font-semibold">Seleccionado</span>}
                       </button>
                     ))}
                   </div>
                 </div>
+
               </ModalBody>
 
               <ModalFooter>

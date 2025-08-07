@@ -10,6 +10,8 @@ import {
 } from "@heroui/react";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import ModalviewMembresia from "../Membresia/ModalviewMembresia";
+import ModalVerEntrenadores from "./ModalVerEntrenadores";
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -19,33 +21,51 @@ const metodosPago = {
 
 const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  // Inicializamos en 'xs' o cualquier valor, se sobreescribirá al abrir
+  const {
+    isOpen: isMembresiaOpen,
+    onOpen: openMembresia,
+    onOpenChange: onMembresiaChange,
+  } = useDisclosure();
+  const {
+    isOpen: isEntrenadorOpen,
+    onOpen: openEntrenador,
+    onOpenChange: onEntrenadorChange,
+  } = useDisclosure();
+
   const [size, setSize] = useState("3xl");
 
-  // Estados del formulario
   const [nombre, setNombre] = useState("");
   const [celular, setCelular] = useState("");
-  const [fechaInicio, setFechaInicio] = useState("");
+ const [fechaInicio, setFechaInicio] = useState(() => {
+  const hoy = new Date();
+  return hoy.toISOString().split("T")[0]; // formato YYYY-MM-DD
+});
+
   const [membresia, setMembresia] = useState("");
   const [entrenador, setEntrenador] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
 
-  // Listas desde el backend
   const [membresias, setMembresias] = useState([]);
   const [entrenadores, setEntrenadores] = useState([]);
 
   useEffect(() => {
     if (isOpen) {
       setSize("3xl");
-      axios.get("http://localhost:4000/plans/vermembresia", { withCredentials: true })
-        .then(res => setMembresias(res.data))
-        .catch(err => console.error("Error al cargar membresías:", err));
-
-      axios.get("http://localhost:4000/trainers/ver", { withCredentials: true })
-        .then(res => setEntrenadores(res.data))
-        .catch(err => console.error("Error al cargar entrenadores:", err));
+      cargarDatos();
     }
   }, [isOpen]);
+
+  const cargarDatos = () => {
+    axios
+      .get("http://localhost:4000/plans/vermembresia", { withCredentials: true })
+      .then((res) => setMembresias(res.data))
+      .catch((err) => console.error("Error al cargar membresías:", err));
+
+    axios
+      .get("http://localhost:4000/trainers/ver", { withCredentials: true })
+      .then((res) => setEntrenadores(res.data))
+      .catch((err) => console.error("Error al cargar entrenadores:", err));
+  };
 
   const guardarSuscripcion = async (onClose) => {
     if (!nombre || !celular || !membresia || !entrenador || !fechaInicio) {
@@ -54,16 +74,22 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
     }
 
     try {
-      await axios.post("http://localhost:4000/members/registrarmiembros", {
-        nombre,
-        celular,
-        membresia,
-        entrenador,
-        estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
-        metodoPago: metodoSeleccionado ? metodosPago[metodoSeleccionado].nombre : "Pendiente",
-        ultimoPago: fechaInicio,
-        renovacion: fechaInicio,
-      }, { withCredentials: true });
+      await axios.post(
+        "http://localhost:4000/members/registrarmiembros",
+        {
+          nombre,
+          celular,
+          membresia,
+          entrenador,
+          estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
+          metodoPago: metodoSeleccionado
+            ? metodosPago[metodoSeleccionado].nombre
+            : "Pendiente",
+          ultimoPago: fechaInicio,
+          renovacion: fechaInicio,
+        },
+        { withCredentials: true }
+      );
       limpiarCampos();
       onClose();
     } catch (err) {
@@ -88,7 +114,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   return (
     <>
       <Button
-        onPress={() => onOpen()}
+        onPress={onOpen}
         className="text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
         style={{ backgroundColor: "#7a0f16" }}
       >
@@ -135,34 +161,60 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
 
                 <div>
                   <label className="block mb-1 text-sm">Membresía</label>
-                  <select
-                    value={membresia}
-                    onChange={(e) => setMembresia(e.target.value)}
-                    className="w-full p-2 text-black bg-gray-200 rounded"
-                  >
-                    <option value="">Selecciona una membresía</option>
-                    {membresias.map((m) => (
-                      <option key={m._id} value={m._id}>
-                        {m.titulo} — S/ {m.precio}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full">
+                    <div
+                      onClick={openMembresia}
+                      className="w-full p-2 text-black bg-gray-200 rounded cursor-pointer flex justify-between items-center"
+                    >
+                      <span>
+                        {membresia ? 
+                          membresias.find(m => m._id === membresia)?.titulo || "Selecciona una membresía" 
+                          : "Selecciona una membresía"}
+                      </span>
+                      <svg 
+                        className="w-4 h-4 text-gray-600" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M19 9l-7 7-7-7" 
+                        />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block mb-1 text-sm">Entrenador</label>
-                  <select
-                    value={entrenador}
-                    onChange={(e) => setEntrenador(e.target.value)}
-                    className="w-full p-2 text-black bg-gray-200 rounded"
-                  >
-                    <option value="">Selecciona un entrenador</option>
-                    {entrenadores.map((e) => (
-                      <option key={e._id} value={e._id}>
-                        {e.nombre} — {e.edad} años
-                      </option>
-                    ))}
-                  </select>
+                  <div className="w-full">
+                    <div
+                      onClick={openEntrenador}
+                      className="w-full p-2 text-black bg-gray-200 rounded cursor-pointer flex justify-between items-center"
+                    >
+                      <span>
+                        {entrenador ? 
+                          entrenadores.find(e => e._id === entrenador)?.nombre || "Selecciona un entrenador" 
+                          : "Selecciona un entrenador"}
+                      </span>
+                      <svg 
+                        className="w-4 h-4 text-gray-600" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M19 9l-7 7-7-7" 
+                        />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
 
                 <div>
@@ -172,14 +224,22 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                       <button
                         key={key}
                         type="button"
-                        className={`w-full p-3 rounded text-white flex items-center justify-between ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
+                        className={`w-full p-3 rounded text-white flex items-center justify-between ${metodo.color} ${
+                          metodoSeleccionado === key ? "ring-4 ring-red-400" : ""
+                        }`}
                         onClick={() => setMetodoSeleccionado(key)}
                       >
                         <div className="flex items-center gap-3">
-                          <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
+                          <img
+                            src={metodo.icono}
+                            alt={metodo.nombre}
+                            className="w-6 h-6"
+                          />
                           <span className="text-lg font-medium">{metodo.nombre}</span>
                         </div>
-                        {metodoSeleccionado === key && <span className="text-sm font-semibold">Seleccionado</span>}
+                        {metodoSeleccionado === key && (
+                          <span className="text-sm font-semibold">Seleccionado</span>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -190,7 +250,10 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                 <Button
                   color="danger"
                   variant="light"
-                  onPress={() => { limpiarCampos(); onClose(); }}
+                  onPress={() => {
+                    limpiarCampos();
+                    onClose();
+                  }}
                   className="text-white border-white"
                 >
                   Cerrar
@@ -207,6 +270,27 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
           )}
         </ModalContent>
       </Modal>
+
+      {/* Modal de visualización de membresías */}
+      {isMembresiaOpen && (
+        <ModalviewMembresia
+          onClose={onMembresiaChange}
+          onSeleccionar={(membresiaSeleccionada) => {
+            setMembresia(membresiaSeleccionada._id);
+            cargarDatos();
+          }}
+        />
+      )}
+
+      {/* Modal de selección de entrenador */}
+      <ModalVerEntrenadores
+        isOpen={isEntrenadorOpen}
+        onOpenChange={onEntrenadorChange}
+        onSeleccionar={(entrenadorSeleccionado) => {
+          setEntrenador(entrenadorSeleccionado._id);
+          cargarDatos();
+        }}
+      />
     </>
   );
 };
