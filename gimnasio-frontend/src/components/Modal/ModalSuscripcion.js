@@ -19,7 +19,8 @@ const metodosPago = {
 
 const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const [size, setSize] = useState("5xl");
+  // Inicializamos en 'xs' o cualquier valor, se sobreescribirá al abrir
+  const [size, setSize] = useState("3xl");
 
   // Estados del formulario
   const [nombre, setNombre] = useState("");
@@ -33,9 +34,9 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const [membresias, setMembresias] = useState([]);
   const [entrenadores, setEntrenadores] = useState([]);
 
-  // Cargar datos al abrir modal
   useEffect(() => {
     if (isOpen) {
+      setSize("3xl");
       axios.get("http://localhost:4000/plans/vermembresia", { withCredentials: true })
         .then(res => setMembresias(res.data))
         .catch(err => console.error("Error al cargar membresías:", err));
@@ -46,9 +47,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
     }
   }, [isOpen]);
 
-  // Guardar suscripción
   const guardarSuscripcion = async (onClose) => {
-    // Validación de campos obligatorios
     if (!nombre || !celular || !membresia || !entrenador || !fechaInicio) {
       alert("Por favor completa todos los campos obligatorios");
       return;
@@ -77,7 +76,6 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
     }
   };
 
-  // Limpiar campos
   const limpiarCampos = () => {
     setNombre("");
     setCelular("");
@@ -90,7 +88,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   return (
     <>
       <Button
-        onPress={() => setSize("5xl") || onOpen()}
+        onPress={() => onOpen()}
         className="text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
         style={{ backgroundColor: "#7a0f16" }}
       >
@@ -104,13 +102,13 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
         size={size}
         backdrop="blur"
         isDismissable={false}
-        className="bg-black text-white max-w-4xl"
+        className="text-white bg-black"
       >
         <ModalContent>
           {(onClose) => (
-            <div className="bg-neutral-600 rounded-xl text-white">
+            <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-center text-red-500 text-3xl font-bold">
+                <div className="w-full text-3xl font-bold text-center text-red-500">
                   Nueva Suscripción
                 </div>
               </ModalHeader>
@@ -135,13 +133,12 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                   onChange={(e) => setFechaInicio(e.target.value)}
                 />
 
-                {/* Selección de Membresía */}
                 <div>
                   <label className="block mb-1 text-sm">Membresía</label>
                   <select
                     value={membresia}
                     onChange={(e) => setMembresia(e.target.value)}
-                    className="w-full p-2 rounded bg-gray-200 text-black"
+                    className="w-full p-2 text-black bg-gray-200 rounded"
                   >
                     <option value="">Selecciona una membresía</option>
                     {membresias.map((m) => (
@@ -152,13 +149,12 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                   </select>
                 </div>
 
-                {/* Selección de Entrenador */}
                 <div>
                   <label className="block mb-1 text-sm">Entrenador</label>
                   <select
                     value={entrenador}
                     onChange={(e) => setEntrenador(e.target.value)}
-                    className="w-full p-2 rounded bg-gray-200 text-black"
+                    className="w-full p-2 text-black bg-gray-200 rounded"
                   >
                     <option value="">Selecciona un entrenador</option>
                     {entrenadores.map((e) => (
@@ -169,27 +165,25 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                   </select>
                 </div>
 
-                {/* Método de pago */}
-            <div>
-              <label className="block mb-1 text-sm">Método de Pago</label>
-              <div className="flex flex-col gap-2">
-                {Object.entries(metodosPago).map(([key, metodo]) => (
-                  <button
-                    key={key}
-                    type="button"
-                    className={`w-full p-3 rounded text-white flex items-center justify-between ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
-                    onClick={() => setMetodoSeleccionado(key)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
-                      <span className="text-lg font-medium">{metodo.nombre}</span>
-                    </div>
-                    {metodoSeleccionado === key && <span className="text-sm font-semibold">Seleccionado</span>}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+                <div>
+                  <label className="block mb-1 text-sm">Método de Pago</label>
+                  <div className="flex flex-col gap-2">
+                    {Object.entries(metodosPago).map(([key, metodo]) => (
+                      <button
+                        key={key}
+                        type="button"
+                        className={`w-full p-3 rounded text-white flex items-center justify-between ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
+                        onClick={() => setMetodoSeleccionado(key)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
+                          <span className="text-lg font-medium">{metodo.nombre}</span>
+                        </div>
+                        {metodoSeleccionado === key && <span className="text-sm font-semibold">Seleccionado</span>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </ModalBody>
 
               <ModalFooter>
@@ -204,7 +198,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                 <Button
                   color="primary"
                   onPress={() => guardarSuscripcion(onClose)}
-                  className="bg-red-600 hover:bg-red-700 text-white"
+                  className="text-white bg-red-600 hover:bg-red-700"
                 >
                   Guardar
                 </Button>

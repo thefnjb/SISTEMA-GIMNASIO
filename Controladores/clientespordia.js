@@ -12,6 +12,48 @@ exports.getAllClientes = async (req, res) => {
         res.status(500).json({ error: "Error al obtener los clientes por día" });
     }
 };
+// Actualizar clientes por dia
+exports.actualizarCliente = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, metododePago } = req.body;
+
+        const clienteActualizado = await ClientesPorDia.findByIdAndUpdate(
+            id,
+            { nombre, metododePago },
+            { new: true }
+        );
+
+        if (!clienteActualizado) {
+            return res.status(404).json({ error: "Cliente no encontrado" });
+        }
+
+        res.status(200).json({
+            message: "Cliente actualizado correctamente",
+            cliente: clienteActualizado,
+        });
+    } catch (err) {
+        console.error("Error en actualizarCliente:", err);
+        res.status(500).json({ error: "Error al actualizar el cliente" });
+    }
+};
+
+// Eliminar cliente por día
+exports.eliminarCliente = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const clienteEliminado = await ClientesPorDia.findByIdAndDelete(id);
+
+        if (!clienteEliminado) {
+            return res.status(404).json({ error: "Cliente no encontrado" });
+        }
+
+        res.status(200).json({ message: "Cliente eliminado correctamente" });
+    } catch (err) {
+        console.error("Error en eliminarCliente:", err);
+        res.status(500).json({ error: "Error al eliminar el cliente" });
+    }
+};
 
 // Registrar cliente por día
 exports.registrarCliente = async (req, res) => {
