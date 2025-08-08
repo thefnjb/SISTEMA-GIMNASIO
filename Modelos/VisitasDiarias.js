@@ -4,11 +4,18 @@ const VisitasDiariasSchema = mongoose.Schema({
     nombre: { 
         type: String, 
         required: true, 
-        trim: true },
+        trim: true 
+    },
     fecha: {
         type: Date,
         required: true,
         default: Date.now
+    },
+    horaInicio: {
+        type: String,
+        required: true,
+        trim: true,
+        match: /^([0-1]\d|2[0-3]):([0-5]\d)$/, // Formato HH:mm de 24 horas
     },
     monto:{
         type: Number,
@@ -21,12 +28,12 @@ const VisitasDiariasSchema = mongoose.Schema({
         default: 'Pendiente'
     },
     gym:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'gym',
-        required:true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'gym',
+        required: true
     }
-    },{
-    timestamps:true
+}, {
+    timestamps: true
 });
 
 module.exports = mongoose.model("VisitasDiarias", VisitasDiariasSchema);

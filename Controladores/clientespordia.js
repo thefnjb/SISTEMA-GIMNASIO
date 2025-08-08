@@ -57,24 +57,29 @@ exports.eliminarCliente = async (req, res) => {
 
 // Registrar cliente por día
 exports.registrarCliente = async (req, res) => {
-    try {
+  try {
     const { nombre, fecha, metododePago } = req.body;
 
+    // Capturar hora actual en formato HH:mm
+    const now = new Date();
+    const horaInicio = now.toTimeString().slice(0, 5); // Resultado: "14:38"
+
     const nuevoCliente = new ClientesPorDia({
-        nombre,
-        fecha,
-        metododePago,
+      nombre,
+      fecha,
+      horaInicio, // ⬅️ Guardar hora exacta aquí
+      metododePago,
       gym: req.gym._id, // auth inyecta el gym
     });
 
     await nuevoCliente.save();
 
     res.status(201).json({
-        message: "Cliente registrado correctamente",
-        cliente: nuevoCliente,
+      message: "Cliente registrado correctamente",
+      cliente: nuevoCliente,
     });
-    } catch (err) {
-        console.error("Error en registrarCliente:", err);
-        res.status(500).json({ error: "Error al registrar el cliente por día" });
-    }
+  } catch (err) {
+    console.error("Error en registrarCliente:", err);
+    res.status(500).json({ error: "Error al registrar el cliente por día" });
+  }
 };
