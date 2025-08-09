@@ -6,6 +6,7 @@ const upload = require("../Middleware/multerConfig");
 
 router.post("/nuevo", auth, upload.single("fotoPerfil"), EntrenadorController.crearEntrenador);
 router.get("/ver", auth, EntrenadorController.verEntrenadores);
+router.get("/ver/:id/photo", EntrenadorController.verFotoPerfil);
 router.put("/actualizar/:id", auth, EntrenadorController.actualizarEntrenador);
 router.delete("/eliminar/:id", auth, EntrenadorController.eliminarEntrenador);
 

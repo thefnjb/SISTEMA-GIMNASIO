@@ -10,6 +10,8 @@ import {
 } from "@heroui/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Alert from '@mui/material/Alert';
+import Stack from '@mui/material/Stack';
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -23,11 +25,13 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [fechaInscripcion, setFechaInscripcion] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
+  const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' }); 
 
   useEffect(() => {
     if (isOpen) {
       const today = new Date().toLocaleDateString('en-CA');
       setFechaInscripcion(today);
+      setAlertInfo({ show: false, type: '', message: '' }); 
     }
   }, [isOpen]);
 
@@ -35,11 +39,13 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
     setNombreCompleto("");
     setFechaInscripcion("");
     setMetodoSeleccionado(null);
+    setAlertInfo({ show: false, type: '', message: '' }); 
   };
 
   const guardarCliente = async (onClose) => {
     if (!nombreCompleto.trim() || !fechaInscripcion) {
-      alert("Por favor, completa el nombre y la fecha.");
+      setAlertInfo({ show: true, type: 'warning', message: 'Por favor, complete todos los campos obligatorios.' });
+      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 3000);
       return;
     }
 
@@ -52,16 +58,17 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
         metododePago: metodoSeleccionado ? metodosPago[metodoSeleccionado].nombre : "Efectivo",
       }, { withCredentials: true });
 
-      limpiarCampos();
+      setAlertInfo({ show: true, type: 'success', message: 'Cliente registrado exitosamente.' });
+      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 3000);
+
+      limpiarCampos();            
       if (onClienteAgregado) onClienteAgregado(); 
       onClose();
     } catch (err) {
       console.error("Error al registrar cliente:", err);
-      if (err.response?.data?.error) {
-        alert(`Error: ${err.response.data.error}`);
-      } else {
-        alert("Ocurrió un error al registrar el cliente.");
-      }
+      const errorMessage = err.response?.data?.error || "Ocurrió un error al registrar el cliente.";
+      setAlertInfo({ show: true, type: 'error', message: `Error: ${errorMessage}` });
+      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 3000);
     }
   };
 
@@ -93,6 +100,13 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
               </ModalHeader>
 
               <ModalBody className="space-y-4">
+                {alertInfo.show && (
+                  <Stack sx={{ width: '100%' }} spacing={2}>
+                    <Alert variant="filled" severity={alertInfo.type}>
+                      {alertInfo.message}
+                    </Alert>
+                  </Stack>
+                )}
                 <Input
                   label="Nombre y Apellido"
                   placeholder="Ej. Juan Pérez"

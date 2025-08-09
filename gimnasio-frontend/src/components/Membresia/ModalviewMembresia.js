@@ -10,10 +10,9 @@ import {
   Spinner,
 } from "@heroui/react";
 import axios from "axios";
-import DeleteIcon from "@mui/icons-material/Delete"; 
+import DeleteIcon from "@mui/icons-material/Delete";
 
-// Agrega la prop `onSeleccionar`
-const ModalviewMembresia = ({ onClose, onSeleccionar }) => {
+const ModalviewMembresia = ({ onClose }) => {
   const { isOpen, onOpenChange } = useDisclosure({ defaultOpen: true });
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -140,18 +139,6 @@ const ModalviewMembresia = ({ onClose, onSeleccionar }) => {
                                   size="sm"
                                   startContent={<DeleteIcon />}
                                 />
-                                <Button
-                                  onPress={() => {
-                                    if (onSeleccionar) {
-                                      onSeleccionar(m); // Enviar la membresía al padre
-                                    }
-                                    modalClose(); // Cerrar modal
-                                  }}
-                                  className="text-white bg-green-600 hover:bg-green-700"
-                                  size="sm"
-                                >
-                                  Aceptar
-                                </Button>
                               </div>
                             </div>
                           ))}
