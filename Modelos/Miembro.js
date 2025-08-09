@@ -10,11 +10,13 @@ const MiembroSchema = new mongoose.Schema({
     gym: { type: mongoose.Schema.Types.ObjectId, ref: "gym" },
     ultimoPago: { type: Date },
     renovacion: { type: Date },
+    mesesRenovacion: { type: String }, // Nuevo campo para almacenar los meses seleccionados
+    fechaInicioRenovacion: { type: Date }, // Nuevo campo para la fecha de inicio de renovación
     entrenador: { type: mongoose.Schema.Types.ObjectId, ref: "Entrenador" },
     metodoPago: { 
-    type: String, 
-    enum: ["Yape", "Plin", "Efectivo"], 
-    default: "Efectivo" 
+        type: String, 
+        enum: ["Yape", "Plin", "Efectivo"], 
+        default: "Efectivo" 
     }
 }, { timestamps: true });
 
