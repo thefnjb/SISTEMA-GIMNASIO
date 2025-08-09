@@ -11,51 +11,68 @@ import {
 import axios from "axios";
 
 export default function ActualizarSuscripciones({ miembro, onClose, onUpdated }) {
+  // Modificar el estado inicial
   const [datos, setDatos] = useState({
     nombre: miembro.nombre || "",
     estado: miembro.estado || "Activo",
-    renovacion: miembro.renovacion
+    renovacion: miembro.renovacion 
       ? new Date(miembro.renovacion).toISOString().split("T")[0]
-      : "",
+      : new Date().toISOString().split("T")[0],
     metodoPago: miembro.metodoPago || "Efectivo",
     celular: miembro.celular || "",
-    estadoPago: miembro.estadoPago || "Pendiente"
+    estadoPago: miembro.estadoPago || "Pendiente",
+    fechaIngreso: miembro.fechaIngreso || new Date().toISOString(),
+    ultimoPago: miembro.ultimoPago || new Date().toISOString()
   });
 
+  const [mesesRenovacion, setMesesRenovacion] = useState(miembro.mesesRenovacion || "");
   const [isLoading, setIsLoading] = useState(false);
 
-  const parseDate = (dateStr) => {
-    if (!dateStr) return null;
-    const [year, month, day] = dateStr.split("-");
-    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-  };
+  // Modificar la función handleActualizar
+ const handleActualizar = async () => {
+  setIsLoading(true);
+  try {
+    if (!mesesRenovacion) {
+      alert("Por favor selecciona los meses de renovación");
+      return;
+    }
 
-  const handleActualizar = async () => {
-    setIsLoading(true);
-    try {
-      const datosActualizados = {
-        nombre: datos.nombre,
-        estado: datos.estado,
-        renovacion: parseDate(datos.renovacion),
-        metodoPago: datos.metodoPago,
-        celular: datos.celular,
-        estadoPago: datos.estadoPago
-      };
+    const fechaActual = new Date();
+    const fechaBase = datos.renovacion ? new Date(datos.renovacion) : fechaActual;
+    const fechaRenovacionFinal = new Date(fechaBase);
+    fechaRenovacionFinal.setMonth(fechaBase.getMonth() + parseInt(mesesRenovacion));
 
-      await axios.patch(
-        `http://localhost:4000/members/actualizarmiembro/${miembro._id}`,
-        datosActualizados,
-        { withCredentials: true }
-      );
+    const datosActualizados = {
+      ...datos,
+      renovacion: fechaRenovacionFinal.toISOString(),
+      mesesRenovacion: mesesRenovacion,
+      fechaInicioRenovacion: datos.renovacion || fechaActual.toISOString(),
+      estado: "Activo",
+      estadoPago: "Pagado",
+      fechaIngreso: fechaActual.toISOString(), // Actualizar fecha de ingreso
+      ultimoPago: fechaActual.toISOString()    // Actualizar último pago
+    };
+
+    console.log('Datos a enviar:', datosActualizados);
+
+    const response = await axios.patch(
+      `http://localhost:4000/members/actualizarmiembro/${miembro._id}`,
+      datosActualizados,
+      { withCredentials: true }
+    );
+
+    if (response.data) {
+      alert("Renovación actualizada exitosamente");
       onUpdated();
       onClose();
-    } catch (error) {
-      console.error("Error al actualizar:", error);
-      alert("Error al actualizar el miembro. Por favor, inténtalo de nuevo.");
-    } finally {
-      setIsLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("Error al actualizar:", error);
+    alert("Error al actualizar la renovación");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <Modal
@@ -179,15 +196,47 @@ export default function ActualizarSuscripciones({ miembro, onClose, onUpdated })
             </div>
 
             {/* Fecha de Renovación */}
+<div className="space-y-2">
+  <p className="text-sm font-medium text-gray-700">Fecha de Renovación</p>
+
+  <Input
+    type="date"
+    placeholder="Selecciona una fecha"
+    value={datos.renovacion}
+    onChange={(e) => {
+      const nuevaFecha = e.target.value;
+      setDatos({ ...datos, renovacion: nuevaFecha });
+    }}
+    variant="bordered"
+    className="w-full"
+    min={new Date().toISOString().split('T')[0]}
+  />
+</div>
+            {/* Meses de Renovación */}
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700">Fecha de Renovación</p>
-              <Input
-                type="date"
-                placeholder="Fecha de Renovación"
-                value={datos.renovacion}
-                onChange={(e) => setDatos({ ...datos, renovacion: e.target.value })}
-                variant="bordered"
-              />
+              <p className="text-sm font-medium text-gray-700">Meses de Renovación</p>
+              <div className="relative">
+                <Input
+                  type="number"
+                  min="1"
+                  max="12"
+                  placeholder="Ingresa el número de meses"
+                  value={mesesRenovacion}
+                  onChange={(e) => {
+                    const valor = e.target.value;
+                    if (valor >= 1 && valor <= 12) {
+                      setMesesRenovacion(valor);
+                    }
+                  }}
+                  variant="bordered"
+                  className="w-full"
+                  endContent={
+                    <div className="pointer-events-none text-gray-500">
+                      {mesesRenovacion === "1" ? "mes" : "meses"}
+                    </div>
+                  }
+                />
+              </div>
             </div>
           </div>
         </ModalBody>

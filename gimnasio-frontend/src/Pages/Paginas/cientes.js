@@ -53,8 +53,69 @@ export default function TablaMiembros() {
     setMostrarModal(true);
   };
 
+  const formatearRenovacion = (miembro) => {
+    console.log('Datos del miembro:', miembro); // Para depuración
+
+    if (!miembro.mesesRenovacion || !miembro.fechaInicioRenovacion) {
+      return "-";
+    }
+
+    try {
+      // Formatear la fecha de inicio
+      const fechaInicio = new Date(miembro.fechaInicioRenovacion);
+      
+      // Verificar si la fecha es válida
+      if (isNaN(fechaInicio.getTime())) {
+        console.error('Fecha inválida:', miembro.fechaInicioRenovacion);
+        return "-";
+      }
+
+      const fechaFormateada = fechaInicio.toLocaleDateString('es-ES', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+
+      return (
+        <div className="flex flex-col">
+          <span className="font-semibold text-blue-600">
+            {miembro.mesesRenovacion} {parseInt(miembro.mesesRenovacion) === 1 ? 'mes' : 'meses'}
+          </span>
+          <span className="text-sm text-gray-600">
+            Desde: {fechaFormateada}
+          </span>
+        </div>
+      );
+    } catch (error) {
+      console.error('Error al formatear renovación:', error);
+      return "-";
+    }
+  };
+
+  const verificarEstadoRenovacion = (miembro) => {
+    if (!miembro.renovacion) return "Inactivo";
+    
+    const fechaActual = new Date();
+    const fechaRenovacion = new Date(miembro.renovacion);
+    
+    return fechaActual > fechaRenovacion ? "Inactivo" : "Activo";
+  };
+
   useEffect(() => {
     obtenerMiembros();
+  }, []);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setMiembros(prevMiembros => 
+        prevMiembros.map(miembro => ({
+          ...miembro,
+          estado: verificarEstadoRenovacion(miembro)
+        }))
+      );
+    }, 60000); // Verificar cada minuto
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const miembrosFiltrados = miembros.filter((miembro) =>
@@ -108,13 +169,15 @@ export default function TablaMiembros() {
                 <TableCell>{miembro.celular}</TableCell>
                 <TableCell>{formatearFecha(miembro.fechaIngreso)}</TableCell>
                 <TableCell>{formatearFecha(miembro.ultimoPago)}</TableCell>
-                <TableCell>{formatearFecha(miembro.renovacion)}</TableCell>
+                <TableCell>
+                  {formatearRenovacion(miembro)}
+                </TableCell>
                 <TableCell>
                   <Chip
-                    color={miembro.estado === "Activo" ? "success" : "danger"}
+                    color={verificarEstadoRenovacion(miembro) === "Activo" ? "success" : "danger"}
                     variant="flat"
                   >
-                    {miembro.estado}
+                    {verificarEstadoRenovacion(miembro)}
                   </Chip>
                 </TableCell>
                 <TableCell>
