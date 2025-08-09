@@ -78,7 +78,7 @@ function Panel() {
                 </div>
               </CustomCard>
 
-              <CustomCard imageUrl="/images/entrenadores.png">
+              <CustomCard imageUrl="/images/entrenadores.PNG">
                 <div className="flex gap-10">
                   <ModalEntrenadores 
                     triggerText={<GetAppRoundedIcon fontSize="large" />} 

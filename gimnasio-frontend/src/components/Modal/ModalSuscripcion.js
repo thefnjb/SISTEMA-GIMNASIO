@@ -8,10 +8,10 @@ import {
   Input,
   useDisclosure,
 } from "@heroui/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import axios from "axios";
-import ModalviewMembresia from "../Membresia/ModalviewMembresia";
-import ModalVerEntrenadores from "./ModalVerEntrenadores";
+import ModalSeleccionarMembresia from "../Membresia/ModalSeleccionarMembresia";
+import ModalSeleccionarEntrenador from "./ModalSeleccionarEntrenador";
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -21,51 +21,22 @@ const metodosPago = {
 
 const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
-  const {
-    isOpen: isMembresiaOpen,
-    onOpen: openMembresia,
-    onOpenChange: onMembresiaChange,
-  } = useDisclosure();
-  const {
-    isOpen: isEntrenadorOpen,
-    onOpen: openEntrenador,
-    onOpenChange: onEntrenadorChange,
-  } = useDisclosure();
-
-  const [size, setSize] = useState("3xl");
+  const [isMembresiaOpen, setMembresiaOpen] = useState(false);
+  
+  const [isEntrenadorModalOpen, setEntrenadorModalOpen] = useState(false);
 
   const [nombre, setNombre] = useState("");
   const [celular, setCelular] = useState("");
- const [fechaInicio, setFechaInicio] = useState(() => {
-  const hoy = new Date();
-  return hoy.toISOString().split("T")[0]; // formato YYYY-MM-DD
-});
+  const [fechaInicio, setFechaInicio] = useState(() => {
+    const hoy = new Date();
+    return hoy.toISOString().split("T")[0];
+  });
 
-  const [membresia, setMembresia] = useState("");
-  const [entrenador, setEntrenador] = useState("");
+  const [membresia, setMembresia] = useState(null);
+  const [entrenador, setEntrenador] = useState(null);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
 
-  const [membresias, setMembresias] = useState([]);
-  const [entrenadores, setEntrenadores] = useState([]);
-
-  useEffect(() => {
-    if (isOpen) {
-      setSize("3xl");
-      cargarDatos();
-    }
-  }, [isOpen]);
-
-  const cargarDatos = () => {
-    axios
-      .get("http://localhost:4000/plans/vermembresia", { withCredentials: true })
-      .then((res) => setMembresias(res.data))
-      .catch((err) => console.error("Error al cargar membresías:", err));
-
-    axios
-      .get("http://localhost:4000/trainers/ver", { withCredentials: true })
-      .then((res) => setEntrenadores(res.data))
-      .catch((err) => console.error("Error al cargar entrenadores:", err));
-  };
+  
 
   const guardarSuscripcion = async (onClose) => {
     if (!nombre || !celular || !membresia || !entrenador || !fechaInicio) {
@@ -79,8 +50,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
         {
           nombre,
           celular,
-          membresia,
-          entrenador,
+          membresia: membresia._id,
+          entrenador: entrenador._id,
           estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
           metodoPago: metodoSeleccionado
             ? metodosPago[metodoSeleccionado].nombre
@@ -106,9 +77,14 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
     setNombre("");
     setCelular("");
     setFechaInicio("");
-    setMembresia("");
-    setEntrenador("");
+    setMembresia(null);
+    setEntrenador(null);
     setMetodoSeleccionado(null);
+  };
+
+  const handleSeleccionarEntrenador = (entrenadorSeleccionado) => {
+    setEntrenador(entrenadorSeleccionado);
+    setEntrenadorModalOpen(false);
   };
 
   return (
@@ -125,7 +101,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         hideCloseButton
-        size={size}
+        size="3xl"
         backdrop="blur"
         isDismissable={false}
         className="text-white bg-black"
@@ -139,7 +115,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                 </div>
               </ModalHeader>
 
-              <ModalBody className="space-y-4">
+              <ModalBody className="space-y-4 max-h-[70vh] overflow-y-auto">
                 <Input
                   label="Nombre y Apellido"
                   placeholder="Ingresa el nombre"
@@ -163,25 +139,23 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                   <label className="block mb-1 text-sm">Membresía</label>
                   <div className="w-full">
                     <div
-                      onClick={openMembresia}
-                      className="w-full p-2 text-black bg-gray-200 rounded cursor-pointer flex justify-between items-center"
+                      onClick={() => setMembresiaOpen(true)}
+                      className="flex items-center justify-between w-full p-2 text-black bg-gray-200 rounded cursor-pointer"
                     >
                       <span>
-                        {membresia ? 
-                          membresias.find(m => m._id === membresia)?.titulo || "Selecciona una membresía" 
-                          : "Selecciona una membresía"}
+                        {membresia ? membresia.titulo : "Selecciona una membresía"}
                       </span>
-                      <svg 
-                        className="w-4 h-4 text-gray-600" 
-                        fill="none" 
-                        stroke="currentColor" 
+                      <svg
+                        className="w-4 h-4 text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M19 9l-7 7-7-7" 
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
                         />
                       </svg>
                     </div>
@@ -192,25 +166,23 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                   <label className="block mb-1 text-sm">Entrenador</label>
                   <div className="w-full">
                     <div
-                      onClick={openEntrenador}
-                      className="w-full p-2 text-black bg-gray-200 rounded cursor-pointer flex justify-between items-center"
+                      onClick={() => setEntrenadorModalOpen(true)}
+                      className="flex items-center justify-between w-full p-2 text-black bg-gray-200 rounded cursor-pointer"
                     >
                       <span>
-                        {entrenador ? 
-                          entrenadores.find(e => e._id === entrenador)?.nombre || "Selecciona un entrenador" 
-                          : "Selecciona un entrenador"}
+                        {entrenador ? entrenador.nombre : "Selecciona un entrenador"}
                       </span>
-                      <svg 
-                        className="w-4 h-4 text-gray-600" 
-                        fill="none" 
-                        stroke="currentColor" 
+                      <svg
+                        className="w-4 h-4 text-gray-600"
+                        fill="none"
+                        stroke="currentColor"
                         viewBox="0 0 24 24"
                       >
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d="M19 9l-7 7-7-7" 
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
                         />
                       </svg>
                     </div>
@@ -271,25 +243,21 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
         </ModalContent>
       </Modal>
 
-      {/* Modal de visualización de membresías */}
       {isMembresiaOpen && (
-        <ModalviewMembresia
-          onClose={onMembresiaChange}
+        <ModalSeleccionarMembresia
+          isOpen={isMembresiaOpen}
+          onOpenChange={setMembresiaOpen}
           onSeleccionar={(membresiaSeleccionada) => {
-            setMembresia(membresiaSeleccionada._id);
-            cargarDatos();
+            setMembresia(membresiaSeleccionada);
+            setMembresiaOpen(false);
           }}
         />
       )}
 
-      {/* Modal de selección de entrenador */}
-      <ModalVerEntrenadores
-        isOpen={isEntrenadorOpen}
-        onOpenChange={onEntrenadorChange}
-        onSeleccionar={(entrenadorSeleccionado) => {
-          setEntrenador(entrenadorSeleccionado._id);
-          cargarDatos();
-        }}
+      <ModalSeleccionarEntrenador
+        isOpen={isEntrenadorModalOpen}
+        onOpenChange={setEntrenadorModalOpen}
+        onSeleccionar={handleSeleccionarEntrenador}
       />
     </>
   );

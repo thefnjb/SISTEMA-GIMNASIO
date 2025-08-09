@@ -84,3 +84,16 @@ exports.eliminarEntrenador = async (req, res) => {
     res.status(500).json({ error: "Error al eliminar el entrenador" });
   }
 };
+
+exports.verFotoPerfil = async (req, res) => {
+  try {
+    const entrenador = await Entrenador.findById(req.params.id);
+    if (!entrenador || !entrenador.fotoPerfil.data) {
+      return res.status(404).send("No se encontró la imagen.");
+    }
+    res.set("Content-Type", entrenador.fotoPerfil.contentType);
+    res.send(entrenador.fotoPerfil.data);
+  } catch (error) {
+    res.status(500).send("Error al obtener la imagen.");
+  }
+};

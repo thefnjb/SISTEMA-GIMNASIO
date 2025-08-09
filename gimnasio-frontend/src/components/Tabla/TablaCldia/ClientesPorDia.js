@@ -8,17 +8,25 @@ import {
   TableCell,
   Pagination,
   Spinner,
+  Button
 } from "@heroui/react";
 import axios from "axios";
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
+import ModalResumenPagos from "../../Modal/ModalResumenPagos"; // Importar el nuevo modal
 
 export default function TablaClientesHoy({ refresh }) {
   const [clientes, setClientes] = useState([]);
+  const [resumenPagos, setResumenPagos] = useState({ Yape: 0, Plin: 0, Efectivo: 0, Total: 0 });
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [sortDescriptor, setSortDescriptor] = useState({
+    column: "nombre",
+    direction: "ascending",
+  });
+  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
 
-  const rowsPerPage = 5;
+  const rowsPerPage = 3;
 
   const fetchClientes = async () => {
     try {
@@ -26,7 +34,8 @@ export default function TablaClientesHoy({ refresh }) {
       const res = await axios.get("http://localhost:4000/visits/clientesdia", {
         withCredentials: true,
       });
-      setClientes(res.data);
+      setClientes(res.data.clientes);
+      setResumenPagos(res.data.resumenPagos);
     } catch (err) {
       console.error("Error al obtener clientes:", err);
     } finally {
@@ -42,31 +51,30 @@ export default function TablaClientesHoy({ refresh }) {
     fetchClientes();
   }, [refresh]);
 
-  // === Filtrar clientes de hoy ===
-  const hoy = new Date();
-  const inicioHoy = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
-
-  const clientesHoy = clientes.filter((c) => {
-    const fecha = new Date(c.fecha);
-    return fecha.setHours(0, 0, 0, 0) === inicioHoy.setHours(0, 0, 0, 0);
-  });
-
-  // === Total de hoy ===
-  const totalHoy = clientesHoy.reduce((acc, c) => acc + (c.precio || 7), 0);
-
   // === Paginación ===
   const pages = useMemo(() => {
-    return clientesHoy.length ? Math.ceil(clientesHoy.length / rowsPerPage) : 0;
-  }, [clientesHoy.length]);
+    return clientes.length ? Math.ceil(clientes.length / rowsPerPage) : 0;
+  }, [clientes.length]);
 
   const items = useMemo(() => {
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
-    return clientesHoy.slice(start, end);
-  }, [page, clientesHoy]);
+    return clientes.slice(start, end);
+  }, [page, clientes]);
+
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const first = a[sortDescriptor.column];
+      const second = b[sortDescriptor.column];
+      const cmp = first < second ? -1 : first > second ? 1 : 0;
+
+      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+    });
+  }, [sortDescriptor, items]);
+
 
   const loadingState =
-    isLoading || clientesHoy.length === 0 ? "loading" : "idle";
+    isLoading || clientes.length === 0 ? "loading" : "idle";
 
   // === Función para eliminar cliente ===
   const handleDelete = async (id) => {
@@ -86,6 +94,11 @@ export default function TablaClientesHoy({ refresh }) {
     }
   };
 
+  // Calcular el total de montos pagados
+  const totalMontoHoy = useMemo(() => {
+    return clientes.reduce((acc, cliente) => acc + (cliente.precio || 7), 0);
+  }, [clientes]);
+
   if (!Array.isArray(clientes)) return null;
 
   return (
@@ -94,6 +107,8 @@ export default function TablaClientesHoy({ refresh }) {
 
       <Table
         aria-label="Tabla de clientes de hoy"
+        sortDescriptor={sortDescriptor}
+        onSortChange={setSortDescriptor}
         bottomContent={
           pages > 1 ? (
             <div className="flex justify-center w-full mt-3">
@@ -115,16 +130,26 @@ export default function TablaClientesHoy({ refresh }) {
         }}
       >
         <TableHeader>
-          <TableColumn>Nombre</TableColumn>
-          <TableColumn>Fecha</TableColumn>
-          <TableColumn>Hora de Inicio</TableColumn>
-          <TableColumn>Método de Pago</TableColumn>
-          <TableColumn className="text-right">Monto (S/)</TableColumn>
-          <TableColumn className="text-center">Eliminar</TableColumn>
+          <TableColumn key="nombre" allowsSorting>
+            Nombre
+          </TableColumn>
+          <TableColumn key="fecha" allowsSorting>
+            Fecha
+          </TableColumn>
+          <TableColumn key="horaInicio" allowsSorting>
+            Hora de Inicio
+          </TableColumn>
+          <TableColumn key="metododePago" allowsSorting>
+            Método de Pago
+          </TableColumn>
+          <TableColumn key="precio" className="text-right" allowsSorting>
+            Monto (S/)
+          </TableColumn>
+          <TableColumn key="eliminar" className="text-center">Eliminar</TableColumn>
         </TableHeader>
 
         <TableBody
-          items={items}
+          items={sortedItems}
           loadingState={loadingState}
           loadingContent={<Spinner label="Cargando clientes..." />}
           emptyContent={"No hay clientes registrados hoy"}
@@ -163,11 +188,22 @@ export default function TablaClientesHoy({ refresh }) {
         </TableBody>
       </Table>
 
-      {/* Total de Hoy */}
-      <div className="flex justify-end mt-4 text-lg font-bold text-black">
-        <span className="mr-2">Total de Hoy:</span>
-        <span className="text-red-600">S/ {totalHoy}</span>
+      {/* Información de Resumen y Botón */}
+      <div className="flex items-center justify-end gap-4 mt-4">
+        <div className="text-lg font-bold text-black">
+          Total Recaudado Hoy: <span className="text-red-600">S/ {totalMontoHoy.toFixed(2)}</span>
+        </div>
+        <Button className="text-white" style={{ backgroundColor: "#7a0f16" }} variant="solid" onClick={() => setIsModalOpen(true)}>
+          Detalles de Pagos
+        </Button>
       </div>
+      {/* Modal de Resumen de Pagos */}
+      <ModalResumenPagos
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        clientes={clientes}
+        resumenPagos={resumenPagos}
+      />
     </div>
   );
 }

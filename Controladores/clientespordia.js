@@ -1,15 +1,59 @@
 const ClientesPorDia = require("../Modelos/ClientesporDia");
 
 
-// Obtener todos los clientes del día
+// Obtener todos los clientes del día y el conteo de métodos de pago
 exports.getAllClientes = async (req, res) => {
     try {
-    const clientes = await ClientesPorDia.find({ gym: req.gym._id })
-        .sort({ createdAt: -1 });
-    res.status(200).json(clientes);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Establecer al inicio del día actual
+
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1); 
+
+        const clientes = await ClientesPorDia.find({
+            gym: req.gym._id,
+            fecha: {
+                $gte: today,
+                $lt: tomorrow
+            }
+        }).sort({ createdAt: -1 });
+
+        const conteoPagos = await ClientesPorDia.aggregate([
+            {
+                $match: {
+                    gym: req.gym._id,
+                    fecha: {
+                        $gte: today,
+                        $lt: tomorrow
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$metododePago",
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const resumenPagos = {
+            Yape: 0,
+            Plin: 0,
+            Efectivo: 0,
+            Total: 0
+        };
+
+        conteoPagos.forEach(item => {
+            if (resumenPagos.hasOwnProperty(item._id)) {
+                resumenPagos[item._id] = item.count;
+                resumenPagos.Total += item.count;
+            }
+        });
+
+        res.status(200).json({ clientes, resumenPagos });
     } catch (err) {
         console.error("Error en getAllClientes:", err);
-        res.status(500).json({ error: "Error al obtener los clientes por día" });
+        res.status(500).json({ error: "Error al obtener los clientes por día y el resumen de pagos" });
     }
 };
 // Actualizar clientes por dia
@@ -62,14 +106,14 @@ exports.registrarCliente = async (req, res) => {
 
     // Capturar hora actual en formato HH:mm
     const now = new Date();
-    const horaInicio = now.toTimeString().slice(0, 5); // Resultado: "14:38"
+    const horaInicio = now.toTimeString().slice(0, 5); 
 
     const nuevoCliente = new ClientesPorDia({
       nombre,
       fecha,
-      horaInicio, // ⬅️ Guardar hora exacta aquí
+      horaInicio, 
       metododePago,
-      gym: req.gym._id, // auth inyecta el gym
+      gym: req.gym._id, 
     });
 
     await nuevoCliente.save();
