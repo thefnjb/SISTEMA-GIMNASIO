@@ -32,26 +32,22 @@ export default function ActualizarSuscripciones({ miembro, onClose, onUpdated })
  const handleActualizar = async () => {
   setIsLoading(true);
   try {
-    if (!mesesRenovacion) {
-      alert("Por favor selecciona los meses de renovación");
-      return;
+    // Si hay meses de renovación, calcular fechas
+    let datosActualizados = { ...datos };
+
+    if (mesesRenovacion) {
+      const fechaActual = new Date();
+      const fechaBase = datos.renovacion ? new Date(datos.renovacion) : fechaActual;
+      const fechaRenovacionFinal = new Date(fechaBase);
+      fechaRenovacionFinal.setMonth(fechaBase.getMonth() + parseInt(mesesRenovacion));
+
+      datosActualizados = {
+        ...datos,
+        renovacion: fechaRenovacionFinal.toISOString(),
+        mesesRenovacion: mesesRenovacion,
+        fechaInicioRenovacion: datos.renovacion || fechaActual.toISOString(),
+      };
     }
-
-    const fechaActual = new Date();
-    const fechaBase = datos.renovacion ? new Date(datos.renovacion) : fechaActual;
-    const fechaRenovacionFinal = new Date(fechaBase);
-    fechaRenovacionFinal.setMonth(fechaBase.getMonth() + parseInt(mesesRenovacion));
-
-    const datosActualizados = {
-      ...datos,
-      renovacion: fechaRenovacionFinal.toISOString(),
-      mesesRenovacion: mesesRenovacion,
-      fechaInicioRenovacion: datos.renovacion || fechaActual.toISOString(),
-      estado: "Activo",
-      estadoPago: "Pagado",
-      fechaIngreso: fechaActual.toISOString(), // Actualizar fecha de ingreso
-      ultimoPago: fechaActual.toISOString()    // Actualizar último pago
-    };
 
     console.log('Datos a enviar:', datosActualizados);
 
@@ -62,13 +58,13 @@ export default function ActualizarSuscripciones({ miembro, onClose, onUpdated })
     );
 
     if (response.data) {
-      alert("Renovación actualizada exitosamente");
+      alert("Datos actualizados exitosamente");
       onUpdated();
       onClose();
     }
   } catch (error) {
     console.error("Error al actualizar:", error);
-    alert("Error al actualizar la renovación");
+    alert("Error al actualizar los datos");
   } finally {
     setIsLoading(false);
   }

@@ -94,6 +94,7 @@ exports.registroMiembros = async (req, res) => {
     const {
       nombre,
       celular,
+      fechaIngreso, // ✅ Añadido aquí
       membresia,
       estadoPago,
       estado,
@@ -117,6 +118,7 @@ exports.registroMiembros = async (req, res) => {
     const nuevoMiembro = new Miembro({
       nombre,
       celular,
+      fechaIngreso: new Date(`${fechaIngreso}T00:00:00`), // ✅ Guardar la fecha seleccionada
       membresia,
       estadoPago,
       estado,
@@ -138,3 +140,4 @@ exports.registroMiembros = async (req, res) => {
     res.status(500).json({ error: "Error al registrar el miembro" });
   }
 };
+

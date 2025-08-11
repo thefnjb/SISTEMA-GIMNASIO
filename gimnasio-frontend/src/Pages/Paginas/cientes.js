@@ -9,12 +9,16 @@ import {
   TableCell,
   Input,
   Chip,
-  Button,
   Spinner,
   Pagination
 } from "@nextui-org/react";
 import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ActualizarSuscripcion from "../../components/Actualizarmodal/ActualizarSuscripciones";
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import EditSquareIcon from '@mui/icons-material/EditSquare';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
+import { IconButton } from "@mui/material";
 
 export default function TablaMiembros() {
   const [miembros, setMiembros] = useState([]);
@@ -22,6 +26,7 @@ export default function TablaMiembros() {
   const [cargando, setCargando] = useState(true);
   const [miembroSeleccionado, setMiembroSeleccionado] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
+  const [mostrarModalDetalles, setMostrarModalDetalles] = useState(false);
 
   const obtenerMiembros = async () => {
     try {
@@ -43,32 +48,30 @@ export default function TablaMiembros() {
     }
   };
 
-  const formatearFecha = (fecha) => {
-    if (!fecha) return "-";
-    return new Date(fecha).toLocaleDateString("es-PE");
-  };
+  function formatearFecha(fecha) {
+    if (!fecha) return "";
+    const fechaObj = new Date(fecha);
+    const dia = String(fechaObj.getDate()).padStart(2, "0");
+    const mes = String(fechaObj.getMonth() + 1).padStart(2, "0");
+    const anio = fechaObj.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
 
   const abrirModalActualizar = (miembro) => {
     setMiembroSeleccionado(miembro);
     setMostrarModal(true);
   };
 
+  const handleVerDetalles = (miembro) => {
+    setMiembroSeleccionado(miembro);
+    setMostrarModalDetalles(true);
+  };
+
   const formatearRenovacion = (miembro) => {
-    console.log('Datos del miembro:', miembro); // Para depuración
-
-    if (!miembro.mesesRenovacion || !miembro.fechaInicioRenovacion) {
-      return "-";
-    }
-
+    if (!miembro.mesesRenovacion || !miembro.fechaInicioRenovacion) return "-";
     try {
-      // Formatear la fecha de inicio
       const fechaInicio = new Date(miembro.fechaInicioRenovacion);
-      
-      // Verificar si la fecha es válida
-      if (isNaN(fechaInicio.getTime())) {
-        console.error('Fecha inválida:', miembro.fechaInicioRenovacion);
-        return "-";
-      }
+      if (isNaN(fechaInicio.getTime())) return "-";
 
       const fechaFormateada = fechaInicio.toLocaleDateString('es-ES', {
         day: 'numeric',
@@ -87,34 +90,67 @@ export default function TablaMiembros() {
         </div>
       );
     } catch (error) {
-      console.error('Error al formatear renovación:', error);
       return "-";
     }
   };
+function verificarEstadoRenovacion(miembro) {
+  const parseFecha = (fecha) => {
+    if (!fecha) return null;
 
-  const verificarEstadoRenovacion = (miembro) => {
-    if (!miembro.renovacion) return "Inactivo";
-    
-    const fechaActual = new Date();
-    const fechaRenovacion = new Date(miembro.renovacion);
-    
-    return fechaActual > fechaRenovacion ? "Inactivo" : "Activo";
+    // Si la fecha viene como string dd/mm/yyyy
+    if (typeof fecha === "string" && fecha.includes("/")) {
+      const [dia, mes, año] = fecha.split("/").map(Number);
+      return new Date(año, mes - 1, dia);
+    }
+
+    // Si ya es Date o formato ISO
+    return new Date(fecha);
   };
+
+  // Siempre usar la fecha de ingreso como base
+  const fechaBase = parseFecha(miembro.fechaIngreso);
+  if (!fechaBase || isNaN(fechaBase)) return "Inactivo";
+
+  // Meses según la membresía seleccionada
+  const meses = parseInt(miembro.mesesRenovacion || miembro.membresia?.meses || 1);
+
+  // Calcular fecha de vencimiento
+  const fechaVencimiento = new Date(fechaBase);
+  fechaVencimiento.setMonth(fechaVencimiento.getMonth() + meses);
+
+  // Comparar con la fecha actual
+  return new Date() <= fechaVencimiento ? "Activo" : "Inactivo";
+}
+
 
   useEffect(() => {
     obtenerMiembros();
   }, []);
 
+  // 🔍 DEBUG: ver qué datos llegan realmente
+  useEffect(() => {
+    if (miembros.length > 0) {
+      console.log("=== DEBUG FECHAS ===");
+      miembros.forEach(m => {
+        console.log(
+          m.nombre,
+          "Ingreso:", m.fechaIngreso,
+          "Inicio Renovación:", m.fechaInicioRenovacion,
+          "Meses:", m.mesesRenovacion
+        );
+      });
+    }
+  }, [miembros]);
+
   useEffect(() => {
     const intervalId = setInterval(() => {
-      setMiembros(prevMiembros => 
+      setMiembros(prevMiembros =>
         prevMiembros.map(miembro => ({
           ...miembro,
           estado: verificarEstadoRenovacion(miembro)
         }))
       );
-    }, 60000); // Verificar cada minuto
-
+    }, 60000);
     return () => clearInterval(intervalId);
   }, []);
 
@@ -126,11 +162,13 @@ export default function TablaMiembros() {
     <div className="p-6 bg-white shadow-xl rounded-xl">
       <Input
         type="text"
-        label="Buscar por nombre"
+        placeholder="Buscar por nombre"
         value={filtro}
         onChange={(e) => setFiltro(e.target.value)}
         className="max-w-lg mb-6"
+        startContent={<SearchIcon className="text-gray-500" />}
       />
+
       {cargando ? (
         <div className="flex items-center justify-center h-64">
           <Spinner label="Cargando miembros..." color="primary" />
@@ -140,9 +178,11 @@ export default function TablaMiembros() {
           aria-label="Tabla de miembros"
           isStriped
           classNames={{
-            table: "bg-white shadow-sm",
-            th: "bg-slate-200 text-slate-800 uppercase text-sm",
-            td: "text-gray-700",
+            base: "border border-red-200",
+            table: "bg-white",
+            th: "bg-gradient-to-r from-gray-900 to-red-900 text-white font-bold text-sm",
+            td: "text-gray-800 border-b border-gray-200 h-[45px] align-middle",
+            tr: "hover:bg-gray-50 transition-colors",
           }}
         >
           <TableHeader>
@@ -150,7 +190,6 @@ export default function TablaMiembros() {
             <TableColumn>NOMBRE</TableColumn>
             <TableColumn>CELULAR</TableColumn>
             <TableColumn>INGRESO</TableColumn>
-            <TableColumn>ÚLT. PAGO</TableColumn>
             <TableColumn>RENOVACIÓN</TableColumn>
             <TableColumn>ESTADO</TableColumn>
             <TableColumn>PAGO</TableColumn>
@@ -159,7 +198,7 @@ export default function TablaMiembros() {
           </TableHeader>
           <TableBody emptyContent={"No hay miembros encontrados."}>
             {miembrosFiltrados.map((miembro) => (
-              <TableRow key={miembro._id}>
+              <TableRow key={miembro._id} className="align-middle">
                 <TableCell>
                   <div className="p-2 rounded-full bg-slate-300 w-fit">
                     <AccountCircleOutlinedIcon className="text-slate-700" />
@@ -168,10 +207,7 @@ export default function TablaMiembros() {
                 <TableCell>{miembro.nombre}</TableCell>
                 <TableCell>{miembro.celular}</TableCell>
                 <TableCell>{formatearFecha(miembro.fechaIngreso)}</TableCell>
-                <TableCell>{formatearFecha(miembro.ultimoPago)}</TableCell>
-                <TableCell>
-                  {formatearRenovacion(miembro)}
-                </TableCell>
+                <TableCell>{formatearRenovacion(miembro)}</TableCell>
                 <TableCell>
                   <Chip
                     color={verificarEstadoRenovacion(miembro) === "Activo" ? "success" : "danger"}
@@ -189,21 +225,32 @@ export default function TablaMiembros() {
                   </Chip>
                 </TableCell>
                 <TableCell>{miembro.metodoPago}</TableCell>
-                <TableCell className="space-x-2">
-                  <Button
-                    size="sm"
-                    color="primary"
-                    onClick={() => abrirModalActualizar(miembro)}
-                  >
-                    Editar
-                  </Button>
-                  <Button
-                    size="sm"
-                    color="danger"
-                    onClick={() => eliminarMiembro(miembro._id)}
-                  >
-                    Eliminar
-                  </Button>
+                <TableCell>
+                  <div className="flex items-center gap-2 h-[45px]">
+                    <IconButton 
+                      size="small"
+                      onClick={() => handleVerDetalles(miembro)}
+                      sx={{ color: 'black' }}
+                    >
+                      <VisibilityIcon />
+                    </IconButton>
+                    
+                    <IconButton 
+                      size="small"
+                      onClick={() => abrirModalActualizar(miembro)}
+                      sx={{ color: 'black' }}
+                    >
+                      <EditSquareIcon />
+                    </IconButton>
+                    
+                    <IconButton 
+                      size="small"
+                      onClick={() => eliminarMiembro(miembro._id)}
+                      sx={{ color: 'black' }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -211,7 +258,15 @@ export default function TablaMiembros() {
         </Table>
       )}
       <div className="flex justify-center mt-6">
-        <Pagination total={10} initialPage={1} />
+        <Pagination 
+          total={10} 
+          initialPage={1}
+          classNames={{
+            wrapper: "text-gray-800",
+            item: "text-gray-800 bg-transparent hover:bg-red-200", 
+            cursor: "bg-[#800020]" 
+          }}
+        />
       </div>
 
       {mostrarModal && (
