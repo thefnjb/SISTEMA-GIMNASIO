@@ -8,7 +8,7 @@ import {
   Input,
   useDisclosure,
 } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import ModalSeleccionarMembresia from "../Membresia/ModalSeleccionarMembresia";
 import ModalSeleccionarEntrenador from "./ModalSeleccionarEntrenador";
@@ -35,43 +35,62 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const [membresia, setMembresia] = useState(null);
   const [entrenador, setEntrenador] = useState(null);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
+  const [gimnasioId, setGimnasioId] = useState(null);
 
-  
-
-  const guardarSuscripcion = async (onClose) => {
-    if (!nombre || !celular || !membresia || !entrenador || !fechaInicio) {
-      alert("Por favor completa todos los campos obligatorios");
-      return;
-    }
-
-    try {
-      await axios.post(
-        "http://localhost:4000/members/registrarmiembros",
-        {
-          nombre,
-          celular,
-          membresia: membresia._id,
-          entrenador: entrenador._id,
-          estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
-          metodoPago: metodoSeleccionado
-            ? metodosPago[metodoSeleccionado].nombre
-            : "Pendiente",
-          ultimoPago: fechaInicio,
-          renovacion: fechaInicio,
-        },
-        { withCredentials: true }
-      );
-      limpiarCampos();
-      onClose();
-    } catch (err) {
-      console.error("Error al registrar suscripción:", err);
-      if (err.response?.data?.error) {
-        alert(`Error: ${err.response.data.error}`);
-      } else {
-        alert("Ocurrió un error al registrar la suscripción.");
+  useEffect(() => {
+    const obtenerGimnasioId = async () => {
+      try {
+        const response = await axios.get("http://localhost:4000/gym/migimnasio", {
+          withCredentials: true
+        });
+        setGimnasioId(response.data._id);
+      } catch (error) {
+        console.error("Error al obtener el gimnasio:", error);
       }
-    }
-  };
+    };
+
+    obtenerGimnasioId();
+  }, []);
+
+  // Modificar la función guardarSuscripcion
+const guardarSuscripcion = async (onClose) => {
+  if (!nombre || !celular || !membresia || !entrenador || !fechaInicio) {
+    alert("Por favor completa todos los campos obligatorios");
+    return;
+  }
+
+  try {
+    const fechaSeleccionada = fechaInicio;
+
+    const nuevoMiembro = {
+      nombre,
+      celular,
+      membresia: membresia._id,
+      mesesRenovacion: membresia.meses, // 👈 Aquí enviamos los meses
+      entrenador: entrenador._id,
+      estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
+      metodoPago: metodoSeleccionado
+        ? metodosPago[metodoSeleccionado].nombre
+        : "Pendiente",
+      fechaIngreso: fechaSeleccionada,
+      gym: gimnasioId
+    };
+
+    await axios.post(
+      "http://localhost:4000/members/registrarmiembros",
+      nuevoMiembro,
+      { withCredentials: true }
+    );
+
+    limpiarCampos();
+    onClose();
+  } catch (err) {
+    console.error("Error al registrar suscripción:", err);
+    alert("Ocurrió un error al registrar la suscripción.");
+  }
+};
+
+
 
   const limpiarCampos = () => {
     setNombre("");
@@ -85,6 +104,32 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const handleSeleccionarEntrenador = (entrenadorSeleccionado) => {
     setEntrenador(entrenadorSeleccionado);
     setEntrenadorModalOpen(false);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (!gimnasioId) {
+        alert("Error: No se pudo obtener el ID del gimnasio");
+        return;
+      }
+
+      const fechaIngresoSeleccionada = new Date(fechaInicio);
+      
+      const datosNuevoMiembro = {
+        nombre,
+        celular,
+        fechaIngreso: fechaIngresoSeleccionada.toISOString(),
+        membresia: membresia?._id,
+        entrenador: entrenador?._id,
+        metodoPago: metodoSeleccionado,
+        gym: gimnasioId
+      };
+
+      // ... resto del código del submit ...
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   return (

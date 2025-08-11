@@ -8,10 +8,9 @@ const MiembroSchema = new mongoose.Schema({
     estadoPago: { type: String, enum: ["Pagado", "Pendiente"], default: "Pendiente" },
     estado: { type: String, enum: ["Activo", "Inactivo"], default: "Activo" },
     gym: { type: mongoose.Schema.Types.ObjectId, ref: "gym" },
-    ultimoPago: { type: Date },
     renovacion: { type: Date },
-    mesesRenovacion: { type: String }, // Nuevo campo para almacenar los meses seleccionados
-    fechaInicioRenovacion: { type: Date }, // Nuevo campo para la fecha de inicio de renovación
+    mesesRenovacion: { type: String },
+    fechaInicioRenovacion: { type: Date },
     entrenador: { type: mongoose.Schema.Types.ObjectId, ref: "Entrenador" },
     metodoPago: { 
         type: String, 
