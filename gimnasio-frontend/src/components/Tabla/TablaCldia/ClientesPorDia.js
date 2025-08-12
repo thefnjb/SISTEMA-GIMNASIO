@@ -13,7 +13,24 @@ import {
 import axios from "axios";
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
-import ModalResumenPagos from "../../Modal/ModalResumenPagos"; // Importar el nuevo modal
+import ModalResumenPagos from "../../Modal/ModalResumenPagos";
+
+/**
+  @param {string} timeString 
+  @returns {string} 
+ */
+
+const formatTime12Hour = (timeString) => {
+  if (!timeString || typeof timeString !== 'string') {
+    return "Sin hora";
+  }
+
+  const date = new Date(`1970-01-01T${timeString}`);
+  if (isNaN(date.getTime())) {
+    return timeString; 
+  }
+  return date.toLocaleTimeString('es-PE', { hour: 'numeric', minute: '2-digit', hour12: true });
+};
 
 export default function TablaClientesHoy({ refresh }) {
   const [clientes, setClientes] = useState([]);
@@ -24,9 +41,9 @@ export default function TablaClientesHoy({ refresh }) {
     column: "nombre",
     direction: "ascending",
   });
-  const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar el modal
+  const [isModalOpen, setIsModalOpen] = useState(false); 
 
-  const rowsPerPage = 3;
+  const rowsPerPage = 4;
 
   const fetchClientes = async () => {
     try {
@@ -164,7 +181,7 @@ export default function TablaClientesHoy({ refresh }) {
                       ? new Date(cliente.fecha).toLocaleDateString()
                       : "Sin fecha"}
                   </TableCell>
-                  <TableCell>{cliente.horaInicio || "Sin hora"}</TableCell>
+                  <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
                   <TableCell>{cliente.metododePago || "No definido"}</TableCell>
                   <TableCell className="text-right">
                     {cliente.precio || 7}
