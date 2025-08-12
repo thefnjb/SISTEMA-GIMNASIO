@@ -19,9 +19,16 @@ const Barralateral = ({ active, setActive }) => {
 
   return (
     <div className="flex">
-      <aside className="fixed top-0 left-0 flex flex-col items-center min-h-screen p-6 text-white shadow-2xl w-72 bg-gradient-to-b from-black via-gray-900 to-gray-800">
+      <aside
+        className="fixed top-0 left-0 flex flex-col items-center min-h-screen p-6 text-white shadow-2xl w-72"
+        style={{
+          background: 'linear-gradient(to bottom, #D72838 0%, #2E2E2E 40%, #1B1B1B 80%, #000 100%)', 
+        }}
+      >
         <div className="w-full mb-8 text-center">
-          <h1 className="mb-2 text-3xl font-extrabold tracking-wide">Gimnasio Terrones</h1>
+          <h1 className="mb-2 text-3xl font-extrabold tracking-wide text-white">
+            Gimnasio Terrones
+          </h1>
         </div>
         <Admin />
         <nav className="flex flex-col flex-1 w-full gap-4 mt-8">
@@ -53,6 +60,7 @@ const Barralateral = ({ active, setActive }) => {
     </div>
   );
 };
+
 const SidebarItem = ({ icon, label, active, onClick }) => (
   <Grow in={true} timeout={600}>
     <div>
@@ -68,7 +76,12 @@ const SidebarItem = ({ icon, label, active, onClick }) => (
           fontSize: '1.1rem',
           my: 1,
           borderRadius: 2,
-          textTransform: 'none'
+          textTransform: 'none',
+          backgroundColor: active ? '#D72838' : 'rgba(255,255,255,0.1)',
+          color: active ? '#fff' : '#f5f5f5',
+          '&:hover': {
+            backgroundColor: active ? '#b71c1c' : 'rgba(255,255,255,0.2)',
+          },
         }}
       >
         {label}

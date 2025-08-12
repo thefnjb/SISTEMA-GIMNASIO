@@ -1,14 +1,45 @@
 const Miembro = require("../Modelos/Miembro");
 const Membresia = require("../Modelos/Membresia");
 
+function calcularVencimiento(fechaIngreso, meses) {
+  const base = new Date(fechaIngreso);
+  const venc = new Date(base);
+  venc.setMonth(venc.getMonth() + Number(meses || 1));
+  return venc;
+}
+
+function calcularEstado(vencimiento, umbralDias = 7) {
+  if (!vencimiento) return "vencido";
+  const hoy = new Date();
+  const msRestantes = vencimiento.getTime() - hoy.getTime();
+  if (msRestantes < 0) return "vencido";
+  const dias = Math.ceil(msRestantes / (1000 * 60 * 60 * 24));
+  if (dias <= umbralDias) return "a_punto_de_vencer";
+  return "activo";
+}
+
 exports.getAllMiembros = async (req, res) => {
   try {
     const miembros = await Miembro.find()
-      .populate("membresia")
+      .populate("mensualidad")
+      .populate("membresia") // compatibilidad
       .populate("entrenador")
       .populate("gym");
 
-    res.json(miembros);
+    // normalizar salida
+    const salida = miembros.map((m) => ({
+      _id: m._id,
+      nombreCompleto: m.nombreCompleto || m.nombre,
+      telefono: m.telefono || m.celular,
+      fechaIngreso: m.fechaIngreso,
+      mensualidad: m.mensualidad || m.membresia,
+      entrenador: m.entrenador,
+      metodoPago: (m.metodoPago || "efectivo").toLowerCase(),
+      vencimiento: m.vencimiento,
+      estado: calcularEstado(m.vencimiento),
+    }));
+
+    res.json(salida);
   } catch (error) {
     console.error("Error en getAllMiembros:", error);
     res.status(500).json({ error: "Error al obtener miembros" });
@@ -32,9 +63,8 @@ exports.actualizarMiembro = async (req, res) => {
 
     // Filtrar solo los campos válidos del modelo
     const camposValidos = [
-      'nombre', 'celular', 'membresia', 'estadoPago', 
-      'estado', 'ultimoPago', 'renovacion', 'metodoPago', 
-      'entrenador', 'gym'
+      'nombreCompleto', 'telefono', 'mensualidad', 'membresia', 'estadoPago',
+      'estado', 'renovacion', 'metodoPago', 'entrenador', 'gym', 'fechaIngreso'
     ];
 
     const datosFiltrados = {};
@@ -44,11 +74,22 @@ exports.actualizarMiembro = async (req, res) => {
       }
     });
 
-    const miembroActualizado = await Miembro.findByIdAndUpdate(
-      id,
-      { $set: datosFiltrados },
-      { new: true, runValidators: true }
-    );
+    // si cambió fechaIngreso o mensualidad y no hay vencimiento explícito, recalcular
+    let updateDoc = { $set: datosFiltrados };
+    if ((datosFiltrados.fechaIngreso || datosFiltrados.mensualidad || datosFiltrados.membresia) && !datosActualizados.vencimiento) {
+      const miembroActual = await Miembro.findById(id).populate('mensualidad').populate('membresia');
+      const mensualidadRef = datosFiltrados.mensualidad || datosFiltrados.membresia || miembroActual?.mensualidad || miembroActual?.membresia;
+      const mensualidadDoc = mensualidadRef ? await Membresia.findById(mensualidadRef) : null;
+      const meses = mensualidadDoc?.duracion || 1;
+      const baseFecha = datosFiltrados.fechaIngreso ? new Date(datosFiltrados.fechaIngreso) : miembroActual.fechaIngreso;
+      const nuevoVenc = calcularVencimiento(baseFecha, meses);
+      updateDoc.$set.vencimiento = nuevoVenc;
+      updateDoc.$set.estado = calcularEstado(nuevoVenc);
+    }
+
+    const miembroActualizado = await Miembro.findByIdAndUpdate(id, updateDoc, { new: true, runValidators: true })
+      .populate('mensualidad')
+      .populate('entrenador');
 
     if (!miembroActualizado) {
       return res.status(404).json({ error: "Miembro no encontrado" });
@@ -92,41 +133,52 @@ exports.eliminarMiembro = async (req, res) => {
 exports.registroMiembros = async (req, res) => {
   try {
     const {
-      nombre,
-      celular,
-      fechaIngreso, // ✅ Añadido aquí
-      membresia,
+      nombreCompleto,
+      telefono,
+      fechaIngreso,
+      mensualidad,
       estadoPago,
-      estado,
-      ultimoPago,
-      renovacion,
       metodoPago,
       entrenador,
       gym,
     } = req.body;
 
-    const miembroExistente = await Miembro.findOne({ celular });
+    // Validaciones básicas
+    if (!nombreCompleto) return res.status(400).json({ error: "nombreCompleto es requerido" });
+    if (!/^\d{9}$/.test(String(telefono || ""))) return res.status(400).json({ error: "telefono inválido, 9 dígitos" });
+    if (!mensualidad) return res.status(400).json({ error: "mensualidad es requerida" });
+
+    // Prevenir colisiones con documentos antiguos (que tenían índice en celular)
+    const miembroExistente = await Miembro.findOne({
+      $or: [
+        { telefono },
+        { celular: telefono },
+        { $and: [{ celular: { $ne: null } }, { telefono: { $exists: false } }] },
+      ],
+    });
     if (miembroExistente) {
       return res.status(409).json({ error: "El miembro ya está registrado" });
     }
 
-    const membresiaDoc = await Membresia.findById(membresia);
+    const membresiaDoc = await Membresia.findById(mensualidad);
     if (!membresiaDoc) {
       return res.status(404).json({ error: "La membresía especificada no existe" });
     }
 
+    const fechaIngresoDate = fechaIngreso ? new Date(`${fechaIngreso}T00:00:00`) : new Date();
+    const vencimiento = calcularVencimiento(fechaIngresoDate, membresiaDoc.duracion);
+
     const nuevoMiembro = new Miembro({
-      nombre,
-      celular,
-      fechaIngreso: new Date(`${fechaIngreso}T00:00:00`), // ✅ Guardar la fecha seleccionada
-      membresia,
-      estadoPago,
-      estado,
-      ultimoPago,
-      renovacion,
-      metodoPago,
+      nombreCompleto,
+      telefono,
+      fechaIngreso: fechaIngresoDate,
+      mensualidad,
+      estadoPago: estadoPago || "Pendiente",
+      metodoPago: (metodoPago || "efectivo").toLowerCase(),
       entrenador,
       gym,
+      vencimiento,
+      estado: calcularEstado(vencimiento),
     });
 
     await nuevoMiembro.save();
@@ -138,6 +190,53 @@ exports.registroMiembros = async (req, res) => {
   } catch (err) {
     console.error("Error en registroMiembros:", err);
     res.status(500).json({ error: "Error al registrar el miembro" });
+  }
+};
+
+exports.verMiembro = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const m = await Miembro.findById(id).populate('mensualidad').populate('entrenador');
+    if (!m) return res.status(404).json({ error: 'Miembro no encontrado' });
+    return res.json({
+      _id: m._id,
+      nombreCompleto: m.nombreCompleto || m.nombre,
+      telefono: m.telefono || m.celular,
+      fechaIngreso: m.fechaIngreso,
+      mensualidad: m.mensualidad || m.membresia,
+      entrenador: m.entrenador,
+      metodoPago: (m.metodoPago || 'efectivo').toLowerCase(),
+      vencimiento: m.vencimiento,
+      estado: calcularEstado(m.vencimiento),
+    });
+  } catch (err) {
+    console.error('Error en verMiembro:', err);
+    res.status(500).json({ error: 'Error al obtener el miembro' });
+  }
+};
+
+exports.renovarMiembro = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { meses } = req.body;
+    const miembro = await Miembro.findById(id).populate('mensualidad');
+    if (!miembro) return res.status(404).json({ error: 'Miembro no encontrado' });
+    const mesesNum = Number(meses || 0);
+    if (!mesesNum || mesesNum < 1) return res.status(400).json({ error: 'Meses inválidos' });
+
+    const base = miembro.vencimiento && new Date(miembro.vencimiento) > new Date()
+      ? new Date(miembro.vencimiento)
+      : new Date();
+    const nuevoVenc = calcularVencimiento(base, mesesNum);
+
+    miembro.vencimiento = nuevoVenc;
+    miembro.estado = calcularEstado(nuevoVenc);
+    await miembro.save();
+
+    res.json({ message: 'Renovación realizada', miembro });
+  } catch (err) {
+    console.error('Error en renovarMiembro:', err);
+    res.status(500).json({ error: 'Error al renovar' });
   }
 };
 

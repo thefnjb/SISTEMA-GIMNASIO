@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const Membresias = mongoose.Schema({
-
-    titulo:{
-        type:String,
+    
+    duracion:{
+        type:Number,
         required: true,
     },
     precio:{

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
   Table,
@@ -10,14 +10,12 @@ import {
   Input,
   Chip,
   Spinner,
-  Pagination
 } from "@nextui-org/react";
-import AccountCircleOutlinedIcon from "@mui/icons-material/AccountCircleOutlined";
 import ActualizarSuscripcion from "../../components/Actualizarmodal/ActualizarSuscripciones";
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditSquareIcon from '@mui/icons-material/EditSquare';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 import { IconButton } from "@mui/material";
 
 export default function TablaMiembros() {
@@ -26,7 +24,10 @@ export default function TablaMiembros() {
   const [cargando, setCargando] = useState(true);
   const [miembroSeleccionado, setMiembroSeleccionado] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
-  const [mostrarModalDetalles, setMostrarModalDetalles] = useState(false);
+  const [modoModal, setModoModal] = useState('editar');
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 10;
+  // const [mostrarModalDetalles, setMostrarModalDetalles] = useState(false);
 
   const obtenerMiembros = async () => {
     try {
@@ -57,198 +58,128 @@ export default function TablaMiembros() {
     return `${dia}/${mes}/${anio}`;
   }
 
-  const abrirModalActualizar = (miembro) => {
+  const calcularEstado = (vencimiento) => {
+    if (!vencimiento) return { etiqueta: 'vencido', color: 'danger' };
+    const hoy = new Date();
+    const v = new Date(vencimiento);
+    const diff = Math.ceil((v.getTime() - hoy.getTime()) / (1000*60*60*24));
+    if (diff < 0) return { etiqueta: 'vencido', color: 'danger' };
+    if (diff <= 7) return { etiqueta: 'a punto de vencer', color: 'warning' };
+    return { etiqueta: 'activo', color: 'success' };
+  };
+
+  const formatearMensualidadNumero = (miembro) => {
+    const numero = miembro?.mensualidad?.duracion || miembro?.mensualidad?.numero || miembro?.membresia?.duracion || miembro?.membresia?.numero;
+    if (!numero) return '-';
+    return `${numero} MES`;
+  };
+
+  const tituloMensualidadVence = (miembro) => {
+    const numero = miembro?.mensualidad?.duracion || miembro?.mensualidad?.numero || miembro?.membresia?.duracion || miembro?.membresia?.numero;
+    const ven = miembro?.vencimiento;
+    if (!numero || !ven) return '-';
+    return `${numero} MES — vence ${formatearFecha(ven)}`;
+  };
+
+  const abrirModalActualizar = (miembro, modo = 'editar') => {
     setMiembroSeleccionado(miembro);
+    setModoModal(modo);
     setMostrarModal(true);
   };
-
-  const handleVerDetalles = (miembro) => {
-    setMiembroSeleccionado(miembro);
-    setMostrarModalDetalles(true);
-  };
-
-  const formatearRenovacion = (miembro) => {
-    if (!miembro.mesesRenovacion || !miembro.fechaInicioRenovacion) return "-";
-    try {
-      const fechaInicio = new Date(miembro.fechaInicioRenovacion);
-      if (isNaN(fechaInicio.getTime())) return "-";
-
-      const fechaFormateada = fechaInicio.toLocaleDateString('es-ES', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric'
-      });
-
-      return (
-        <div className="flex flex-col">
-          <span className="font-semibold text-blue-600">
-            {miembro.mesesRenovacion} {parseInt(miembro.mesesRenovacion) === 1 ? 'mes' : 'meses'}
-          </span>
-          <span className="text-sm text-gray-600">
-            Desde: {fechaFormateada}
-          </span>
-        </div>
-      );
-    } catch (error) {
-      return "-";
-    }
-  };
-function verificarEstadoRenovacion(miembro) {
-  const parseFecha = (fecha) => {
-    if (!fecha) return null;
-
-    // Si la fecha viene como string dd/mm/yyyy
-    if (typeof fecha === "string" && fecha.includes("/")) {
-      const [dia, mes, año] = fecha.split("/").map(Number);
-      return new Date(año, mes - 1, dia);
-    }
-
-    // Si ya es Date o formato ISO
-    return new Date(fecha);
-  };
-
-  // Siempre usar la fecha de ingreso como base
-  const fechaBase = parseFecha(miembro.fechaIngreso);
-  if (!fechaBase || isNaN(fechaBase)) return "Inactivo";
-
-  // Meses según la membresía seleccionada
-  const meses = parseInt(miembro.mesesRenovacion || miembro.membresia?.meses || 1);
-
-  // Calcular fecha de vencimiento
-  const fechaVencimiento = new Date(fechaBase);
-  fechaVencimiento.setMonth(fechaVencimiento.getMonth() + meses);
-
-  // Comparar con la fecha actual
-  return new Date() <= fechaVencimiento ? "Activo" : "Inactivo";
-}
-
-
   useEffect(() => {
     obtenerMiembros();
   }, []);
 
-  // 🔍 DEBUG: ver qué datos llegan realmente
-  useEffect(() => {
-    if (miembros.length > 0) {
-      console.log("=== DEBUG FECHAS ===");
-      miembros.forEach(m => {
-        console.log(
-          m.nombre,
-          "Ingreso:", m.fechaIngreso,
-          "Inicio Renovación:", m.fechaInicioRenovacion,
-          "Meses:", m.mesesRenovacion
-        );
-      });
-    }
-  }, [miembros]);
+
+  const miembrosFiltrados = useMemo(() =>
+    miembros.filter((miembro) => (miembro.nombreCompleto || '').toLowerCase().includes(filtro.toLowerCase()))
+  , [miembros, filtro]);
+
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(miembrosFiltrados.length / rowsPerPage)), [miembrosFiltrados.length]);
+  const paginaSegura = Math.min(page, totalPages);
+  const itemsVisibles = useMemo(() => {
+    const start = (paginaSegura - 1) * rowsPerPage;
+    return miembrosFiltrados.slice(start, start + rowsPerPage);
+  }, [miembrosFiltrados, paginaSegura]);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setMiembros(prevMiembros =>
-        prevMiembros.map(miembro => ({
-          ...miembro,
-          estado: verificarEstadoRenovacion(miembro)
-        }))
-      );
-    }, 60000);
-    return () => clearInterval(intervalId);
-  }, []);
-
-  const miembrosFiltrados = miembros.filter((miembro) =>
-    miembro.nombre.toLowerCase().includes(filtro.toLowerCase())
-  );
+   
+    setPage(1);
+  }, [filtro, miembrosFiltrados.length]);
 
   return (
-    <div className="p-6 bg-white shadow-xl rounded-xl">
-      <Input
-        type="text"
-        placeholder="Buscar por nombre"
-        value={filtro}
-        onChange={(e) => setFiltro(e.target.value)}
-        className="max-w-lg mb-6"
-        startContent={<SearchIcon className="text-gray-500" />}
-      />
+    <div className="p-3 sm:p-4 md:p-6 bg-white shadow-xl rounded-xl max-w-full md:max-w-5xl mx-auto">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <Input
+          type="text"
+          placeholder="Buscar por nombre"
+          value={filtro}
+          onChange={(e) => setFiltro(e.target.value)}
+          className="w-full sm:max-w-md"
+          startContent={<SearchIcon className="text-gray-500" />}
+        />
+        <div className="text-sm text-gray-600 px-1">{miembrosFiltrados.length} resultados</div>
+      </div>
 
       {cargando ? (
         <div className="flex items-center justify-center h-64">
           <Spinner label="Cargando miembros..." color="primary" />
         </div>
       ) : (
+        <div className="max-h-[60vh] overflow-auto rounded-lg border overflow-x-auto">
         <Table
           aria-label="Tabla de miembros"
+          removeWrapper
           isStriped
           classNames={{
-            base: "border border-red-200",
-            table: "bg-white",
-            th: "bg-gradient-to-r from-gray-900 to-red-900 text-white font-bold text-sm",
-            td: "text-gray-800 border-b border-gray-200 h-[45px] align-middle",
+            base: "",
+            table: "bg-white min-w-full",
+            th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[11px] sm:text-xs md:text-sm font-semibold",
+            td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] sm:text-xs md:text-sm",
             tr: "hover:bg-gray-50 transition-colors",
           }}
         >
           <TableHeader>
-            <TableColumn>ICONO</TableColumn>
-            <TableColumn>NOMBRE</TableColumn>
-            <TableColumn>CELULAR</TableColumn>
-            <TableColumn>INGRESO</TableColumn>
-            <TableColumn>RENOVACIÓN</TableColumn>
-            <TableColumn>ESTADO</TableColumn>
-            <TableColumn>PAGO</TableColumn>
-            <TableColumn>MÉTODO</TableColumn>
-            <TableColumn>ACCIONES</TableColumn>
+            <TableColumn className="min-w-[10rem] sm:min-w-[12rem] md:w-[16rem]">NOMBRE Y APELLIDO</TableColumn>
+            <TableColumn className="w-[7rem] sm:w-[8rem]">TELÉFONO</TableColumn>
+            <TableColumn className="hidden md:table-cell w-[8rem]">INGRESO</TableColumn>
+            <TableColumn className="hidden md:table-cell w-[7rem]">MENSUAL.</TableColumn>
+            <TableColumn className="hidden lg:table-cell w-[10rem]">ENTRENADOR</TableColumn>
+            <TableColumn className="hidden md:table-cell w-[9rem]">PAGO</TableColumn>
+            <TableColumn className="min-w-[10rem] sm:w-[12rem]">MENSUALIDAD / VENCE</TableColumn>
+            <TableColumn className="w-[7rem]">ESTADO</TableColumn>
+            <TableColumn className="w-[12rem] text-right">ACCIONES</TableColumn>
           </TableHeader>
           <TableBody emptyContent={"No hay miembros encontrados."}>
-            {miembrosFiltrados.map((miembro) => (
+            {itemsVisibles.map((miembro) => (
               <TableRow key={miembro._id} className="align-middle">
+                <TableCell className="whitespace-nowrap text-ellipsis overflow-hidden">{miembro.nombreCompleto}</TableCell>
+                <TableCell className="whitespace-nowrap">{miembro.telefono}</TableCell>
+                <TableCell className="hidden md:table-cell whitespace-nowrap">{formatearFecha(miembro.fechaIngreso)}</TableCell>
+                <TableCell className="hidden md:table-cell whitespace-nowrap">{formatearMensualidadNumero(miembro)}</TableCell>
+                <TableCell className="hidden lg:table-cell whitespace-nowrap">{miembro?.entrenador?.nombre || '-'}</TableCell>
+                <TableCell className="hidden md:table-cell capitalize whitespace-nowrap">{miembro.metodoPago}</TableCell>
+                <TableCell className="truncate" title={tituloMensualidadVence(miembro)}>{tituloMensualidadVence(miembro)}</TableCell>
                 <TableCell>
-                  <div className="p-2 rounded-full bg-slate-300 w-fit">
-                    <AccountCircleOutlinedIcon className="text-slate-700" />
-                  </div>
+                  {(() => {
+                    const est = calcularEstado(miembro.vencimiento);
+                    return (
+                      <Chip color={est.color} variant="flat">
+                        {est.etiqueta}
+                      </Chip>
+                    );
+                  })()}
                 </TableCell>
-                <TableCell>{miembro.nombre}</TableCell>
-                <TableCell>{miembro.celular}</TableCell>
-                <TableCell>{formatearFecha(miembro.fechaIngreso)}</TableCell>
-                <TableCell>{formatearRenovacion(miembro)}</TableCell>
                 <TableCell>
-                  <Chip
-                    color={verificarEstadoRenovacion(miembro) === "Activo" ? "success" : "danger"}
-                    variant="flat"
-                  >
-                    {verificarEstadoRenovacion(miembro)}
-                  </Chip>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    color={miembro.estadoPago === "Pagado" ? "success" : "warning"}
-                    variant="flat"
-                  >
-                    {miembro.estadoPago}
-                  </Chip>
-                </TableCell>
-                <TableCell>{miembro.metodoPago}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2 h-[45px]">
-                    <IconButton 
-                      size="small"
-                      onClick={() => handleVerDetalles(miembro)}
-                      sx={{ color: 'black' }}
-                    >
-                      <VisibilityIcon />
+                  <div className="flex items-center gap-1 sm:gap-2 h-[45px] justify-end">
+                    <IconButton size="small" onClick={() => abrirModalActualizar(miembro)} sx={{ color: '#555' }} title="Editar">
+                      <EditSquareIcon fontSize="small" />
                     </IconButton>
-                    
-                    <IconButton 
-                      size="small"
-                      onClick={() => abrirModalActualizar(miembro)}
-                      sx={{ color: 'black' }}
-                    >
-                      <EditSquareIcon />
+                    <IconButton size="small" onClick={() => abrirModalActualizar(miembro, 'renovar')} sx={{ color: '#555' }} title="Renovar">
+                      <AutorenewIcon fontSize="small" />
                     </IconButton>
-                    
-                    <IconButton 
-                      size="small"
-                      onClick={() => eliminarMiembro(miembro._id)}
-                      sx={{ color: 'black' }}
-                    >
-                      <DeleteIcon />
+                    <IconButton size="small" onClick={() => eliminarMiembro(miembro._id)} sx={{ color: '#555' }} title="Eliminar">
+                      <DeleteIcon fontSize="small" />
                     </IconButton>
                   </div>
                 </TableCell>
@@ -256,22 +187,14 @@ function verificarEstadoRenovacion(miembro) {
             ))}
           </TableBody>
         </Table>
+        </div>
       )}
-      <div className="flex justify-center mt-6">
-        <Pagination 
-          total={10} 
-          initialPage={1}
-          classNames={{
-            wrapper: "text-gray-800",
-            item: "text-gray-800 bg-transparent hover:bg-red-200", 
-            cursor: "bg-[#800020]" 
-          }}
-        />
-      </div>
+
 
       {mostrarModal && (
         <ActualizarSuscripcion
           miembro={miembroSeleccionado}
+          modo={modoModal}
           onClose={() => setMostrarModal(false)}
           onUpdated={obtenerMiembros}
         />

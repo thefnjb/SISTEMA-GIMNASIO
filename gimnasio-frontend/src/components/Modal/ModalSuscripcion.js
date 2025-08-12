@@ -8,7 +8,7 @@ import {
   Input,
   useDisclosure,
 } from "@heroui/react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import axios from "axios";
 import ModalSeleccionarMembresia from "../Membresia/ModalSeleccionarMembresia";
 import ModalSeleccionarEntrenador from "./ModalSeleccionarEntrenador";
@@ -22,11 +22,10 @@ const metodosPago = {
 const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isMembresiaOpen, setMembresiaOpen] = useState(false);
-  
   const [isEntrenadorModalOpen, setEntrenadorModalOpen] = useState(false);
 
-  const [nombre, setNombre] = useState("");
-  const [celular, setCelular] = useState("");
+  const [nombreCompleto, setNombreCompleto] = useState("");
+  const [telefono, setTelefono] = useState("");
   const [fechaInicio, setFechaInicio] = useState(() => {
     const hoy = new Date();
     return hoy.toISOString().split("T")[0];
@@ -35,49 +34,28 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const [membresia, setMembresia] = useState(null);
   const [entrenador, setEntrenador] = useState(null);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
-  const [gimnasioId, setGimnasioId] = useState(null);
 
-  useEffect(() => {
-    const obtenerGimnasioId = async () => {
-      try {
-        const response = await axios.get("http://localhost:4000/gym/migimnasio", {
-          withCredentials: true
-        });
-        setGimnasioId(response.data._id);
-      } catch (error) {
-        console.error("Error al obtener el gimnasio:", error);
-      }
-    };
-
-    obtenerGimnasioId();
-  }, []);
-
-  // Modificar la función guardarSuscripcion
+// Guardar con nuevo contrato de backend
 const guardarSuscripcion = async (onClose) => {
-  if (!nombre || !celular || !membresia || !entrenador || !fechaInicio) {
-    alert("Por favor completa todos los campos obligatorios");
-    return;
-  }
+  // Validaciones
+  if (!nombreCompleto.trim()) return alert("El nombre completo es obligatorio");
+  if (!/^\d{9}$/.test(telefono)) return alert("El teléfono debe tener 9 dígitos");
+  if (!membresia?._id) return alert("Selecciona una membresía");
+  if (metodoSeleccionado && !["yape","plin","efectivo"].includes(metodoSeleccionado)) return alert("Método de pago inválido");
 
   try {
-    const fechaSeleccionada = fechaInicio;
-
     const nuevoMiembro = {
-      nombre,
-      celular,
-      membresia: membresia._id,
-      mesesRenovacion: membresia.meses, // 👈 Aquí enviamos los meses
-      entrenador: entrenador._id,
+      nombreCompleto: nombreCompleto.trim(),
+      telefono,
+      fechaIngreso: fechaInicio,
+      mensualidad: membresia._id,
+      entrenador: entrenador?._id,
       estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
-      metodoPago: metodoSeleccionado
-        ? metodosPago[metodoSeleccionado].nombre
-        : "Pendiente",
-      fechaIngreso: fechaSeleccionada,
-      gym: gimnasioId
+      metodoPago: metodoSeleccionado || undefined,
     };
 
     await axios.post(
-      "http://localhost:4000/members/registrarmiembros",
+      "http://localhost:4000/members/miembros",
       nuevoMiembro,
       { withCredentials: true }
     );
@@ -86,15 +64,16 @@ const guardarSuscripcion = async (onClose) => {
     onClose();
   } catch (err) {
     console.error("Error al registrar suscripción:", err);
-    alert("Ocurrió un error al registrar la suscripción.");
+    const mensaje = err?.response?.data?.error || "Ocurrió un error al registrar la suscripción.";
+    alert(mensaje);
   }
 };
 
 
 
   const limpiarCampos = () => {
-    setNombre("");
-    setCelular("");
+    setNombreCompleto("");
+    setTelefono("");
     setFechaInicio("");
     setMembresia(null);
     setEntrenador(null);
@@ -104,32 +83,6 @@ const guardarSuscripcion = async (onClose) => {
   const handleSeleccionarEntrenador = (entrenadorSeleccionado) => {
     setEntrenador(entrenadorSeleccionado);
     setEntrenadorModalOpen(false);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      if (!gimnasioId) {
-        alert("Error: No se pudo obtener el ID del gimnasio");
-        return;
-      }
-
-      const fechaIngresoSeleccionada = new Date(fechaInicio);
-      
-      const datosNuevoMiembro = {
-        nombre,
-        celular,
-        fechaIngreso: fechaIngresoSeleccionada.toISOString(),
-        membresia: membresia?._id,
-        entrenador: entrenador?._id,
-        metodoPago: metodoSeleccionado,
-        gym: gimnasioId
-      };
-
-      // ... resto del código del submit ...
-    } catch (error) {
-      console.error("Error:", error);
-    }
   };
 
   return (
@@ -164,14 +117,14 @@ const guardarSuscripcion = async (onClose) => {
                 <Input
                   label="Nombre y Apellido"
                   placeholder="Ingresa el nombre"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
+                  value={nombreCompleto}
+                  onChange={(e) => setNombreCompleto(e.target.value)}
                 />
                 <Input
-                  label="Celular"
-                  placeholder="Número de celular"
-                  value={celular}
-                  onChange={(e) => setCelular(e.target.value)}
+                  label="Teléfono"
+                  placeholder="987654321"
+                  value={telefono}
+                  onChange={(e) => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 9))}
                 />
                 <Input
                   label="Fecha de inicio"
@@ -188,7 +141,10 @@ const guardarSuscripcion = async (onClose) => {
                       className="flex items-center justify-between w-full p-2 text-black bg-gray-200 rounded cursor-pointer"
                     >
                       <span>
-                        {membresia ? membresia.titulo : "Selecciona una membresía"}
+                        {membresia
+                          ? `${membresia.duracion === 12 ? "1 Año" : `${membresia.duracion} Mes${membresia.duracion > 1 ? 'es' : ''}`} - S/ ${Number(membresia.precio).toFixed(2)}`
+                          : "Selecciona una membresía"
+                        }
                       </span>
                       <svg
                         className="w-4 h-4 text-gray-600"

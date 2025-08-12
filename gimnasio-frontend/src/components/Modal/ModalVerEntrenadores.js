@@ -9,6 +9,8 @@ import {
 } from "@heroui/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { IconButton } from "@mui/material";
 
 const ModalVerEntrenadores = ({ triggerText, refresh }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
@@ -28,6 +30,21 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
       setEntrenadores(res.data);
     } catch (err) {
       console.error("Error al cargar entrenadores:", err);
+    }
+  };
+
+  const handleEliminar = async (id) => {
+    if (window.confirm("¿Estás seguro de que quieres eliminar este entrenador?")) {
+      try {
+        await axios.delete(`http://localhost:4000/trainers/eliminar/${id}`, {
+          withCredentials: true,
+        });
+        // Refrescar la lista de entrenadores después de eliminar
+        fetchEntrenadores();
+      } catch (err) {
+        console.error("Error al eliminar entrenador:", err);
+        alert("Ocurrió un error al eliminar el entrenador.");
+      }
     }
   };
 
@@ -74,6 +91,14 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
                       </p>
                     </div>
                   </div>
+                  <IconButton
+                    size="small"
+                    onClick={() => handleEliminar(entrenador._id)}
+                    sx={{ color: "white", "&:hover": { color: "red" } }}
+                    title="Eliminar entrenador"
+                  >
+                    <DeleteIcon />
+                  </IconButton>
                 </div>
               ))}
             </div>

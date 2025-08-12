@@ -13,7 +13,7 @@ import axios from "axios";
 
 const Membresia = ({ onClose }) => {
   const { isOpen, onOpenChange } = useDisclosure({ defaultOpen: true });
-  const [titulo, setTitulo] = useState("");
+  const [duracion, setDuracion] = useState("");
   const [precio, setPrecio] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -22,8 +22,9 @@ const Membresia = ({ onClose }) => {
   }, [isOpen, onClose]);
 
   const handleGuardar = async (modalClose) => {
-    if (!titulo.trim()) return alert("El título es obligatorio.");
-    if (!precio || isNaN(precio) || Number(precio) <= 0)
+    if (!duracion || isNaN(duracion) || Number(duracion) <= 0)
+      return alert("La duración debe ser un número positivo.");
+    if (!precio || isNaN(precio) || Number(precio) < 0)
       return alert("Precio inválido");
 
     setLoading(true);
@@ -32,7 +33,7 @@ const Membresia = ({ onClose }) => {
       const response = await axios.post(
         "http://localhost:4000/plans/nuevamembresia",
         {
-          titulo: titulo.trim(),
+          duracion: Number(duracion),
           precio: Number(precio),
         },
         {
@@ -42,7 +43,7 @@ const Membresia = ({ onClose }) => {
       );
 
       alert(response.data.message || "Membresía guardada correctamente");
-      setTitulo("");
+      setDuracion("");
       setPrecio("");
       modalClose();
     } catch (err) {
@@ -62,25 +63,28 @@ const Membresia = ({ onClose }) => {
   onOpenChange={onOpenChange}
   backdrop="blur"
   isDismissable={false}
-  className="bg-black text-white"
+  className="text-white bg-black"
 >
   <ModalContent>
     {(modalClose) => (
-      <div className="bg-neutral-600 rounded-xl text-white">
+      <div className="text-white bg-neutral-600 rounded-xl">
         <ModalHeader>
-          <div className="w-full text-center text-red-500 text-3xl font-bold">
+          <div className="w-full text-3xl font-bold text-center text-red-500">
             Agregar Nueva Membresía
           </div>
         </ModalHeader>
 
         <ModalBody className="space-y-4">
           <Input
-            label="Título"
-            placeholder="Ej. Mensual"
-            value={titulo}
-            onChange={(e) => setTitulo(e.target.value)}
+            label="Duración (en meses)"
+            placeholder="Ej. 1, 3, 6, 12"
+            type="number"
+            value={duracion}
+            onChange={(e) => setDuracion(e.target.value)}
             className="text-black"
             isRequired
+            min="1"
+            description="Para un año, ingresa 12."
           />
           <Input
             label="Precio"
@@ -104,7 +108,7 @@ const Membresia = ({ onClose }) => {
             Cancelar
           </Button>
           <Button
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="text-white bg-red-600 hover:bg-red-700"
             onPress={() => handleGuardar(modalClose)}
             isLoading={loading}
             isDisabled={loading}

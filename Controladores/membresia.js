@@ -2,17 +2,17 @@ const Membresia = require("../Modelos/Membresia");
 
 exports.crearMembresia = async (req, res) => {
     try{
-        const {titulo,precio} = req.body;
-        const nuevaMembresia = await Membresia.findOne({  gym: req.gym._id, titulo });
-        if(nuevaMembresia){
-            nuevaMembresia.precio =precio;
-            await nuevaMembresia.save();
+        const {duracion,precio} = req.body; // Cambiado de titulo a duracion
+        const membresiaExistente = await Membresia.findOne({  gym: req.gym._id, duracion });
+        if(membresiaExistente){
+            membresiaExistente.precio = precio;
+            await membresiaExistente.save();
             return res.status(200).json({
                 message:"Membresía actualizada correctamente",
             });
         }else{
-            const nuevaMembresia = new Membresia({precio,titulo,gym:req.gym._id});
-            await nuevaMembresia.save();
+            const membresiaNueva = new Membresia({precio, duracion, gym:req.gym._id}); // Cambiado de titulo a duracion
+            await membresiaNueva.save();
             res.status(200).json({
                 message:"Membresía creada correctamente"
             });
@@ -39,11 +39,11 @@ exports.verMembresia = async (req, res) => {
 exports.actualizarMembresia = async (req, res) => {
     try {
         const { id } = req.params;
-        const { titulo, precio } = req.body;
+        const { duracion, precio } = req.body; // Cambiado de titulo a duracion
 
         const membresiaActualizada = await Membresia.findOneAndUpdate(
             { _id: id, gym: req.gym._id },
-            { titulo, precio },
+            { duracion, precio }, // Cambiado de titulo a duracion
             { new: true }
         );
 

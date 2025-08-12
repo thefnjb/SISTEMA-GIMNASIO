@@ -121,15 +121,12 @@ const ModalviewMembresia = ({ onClose }) => {
                               className="flex items-center justify-between p-3 transition-colors bg-gray-700 rounded-lg hover:bg-gray-600"
                             >
                               <div className="flex flex-col">
-                                <span className="font-medium text-white">{m.titulo}</span>
+                                <span className="font-medium text-white">
+                                  {m.duracion === 12 ? "1 Año" : `${m.duracion} Mes${m.duracion > 1 ? 'es' : ''}`}
+                                </span>
                                 <span className="font-semibold text-green-400">
                                   S/ {Number(m.precio).toFixed(2)}
                                 </span>
-                                {m.duracion && (
-                                  <span className="text-sm text-gray-300">
-                                    Duración: {m.duracion}
-                                  </span>
-                                )}
                               </div>
                               <div className="flex gap-2">
                                 <Button
