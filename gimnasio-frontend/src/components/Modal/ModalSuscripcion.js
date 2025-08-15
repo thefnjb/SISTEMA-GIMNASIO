@@ -7,9 +7,12 @@ import {
   Button,
   Input,
   useDisclosure,
+  Alert,
 } from "@heroui/react";
 import { useState } from "react";
 import axios from "axios";
+import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
+import FitnessCenterOutlinedIcon from '@mui/icons-material/FitnessCenterOutlined';
 import ModalSeleccionarMembresia from "../Membresia/ModalSeleccionarMembresia";
 import ModalSeleccionarEntrenador from "./ModalSeleccionarEntrenador";
 
@@ -23,6 +26,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isMembresiaOpen, setMembresiaOpen] = useState(false);
   const [isEntrenadorModalOpen, setEntrenadorModalOpen] = useState(false);
+  // Estados para las alertas
+  const [alerta, setAlerta] = useState({ show: false, type: "", message: "", title: "" });
 
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -35,41 +40,65 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const [entrenador, setEntrenador] = useState(null);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
 
-// Guardar con nuevo contrato de backend
-const guardarSuscripcion = async (onClose) => {
-  // Validaciones
-  if (!nombreCompleto.trim()) return alert("El nombre completo es obligatorio");
-  if (!/^\d{9}$/.test(telefono)) return alert("El teléfono debe tener 9 dígitos");
-  if (!membresia?._id) return alert("Selecciona una membresía");
-  if (metodoSeleccionado && !["yape","plin","efectivo"].includes(metodoSeleccionado)) return alert("Método de pago inválido");
+  // Función para mostrar alertas
+  const mostrarAlerta = (type, title, message) => {
+    setAlerta({ show: true, type, title, message });
+    setTimeout(() => {
+      setAlerta({ show: false, type: "", message: "", title: "" });
+    }, 6000); 
+  };
 
-  try {
-    const nuevoMiembro = {
-      nombreCompleto: nombreCompleto.trim(),
-      telefono,
-      fechaIngreso: fechaInicio,
-      mensualidad: membresia._id,
-      entrenador: entrenador?._id,
-      estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
-      metodoPago: metodoSeleccionado || undefined,
-    };
+  // Guardar con nuevo contrato de backend
+  const guardarSuscripcion = async (onClose) => {
+    // Validaciones
+    if (!nombreCompleto.trim()) {
+      return mostrarAlerta("warning", "Campo obligatorio", "El nombre completo es obligatorio");
+    }
+    if (!/^\d{9}$/.test(telefono)) {
+      return mostrarAlerta("warning", "Teléfono inválido", "El teléfono debe tener 9 dígitos");
+    }
+    if (!membresia?._id) {
+      return mostrarAlerta("warning", "Membresía requerida", "Selecciona una membresía");
+    }
+    if (metodoSeleccionado && !["yape","plin","efectivo"].includes(metodoSeleccionado)) {
+      return mostrarAlerta("danger", "Método de pago inválido", "El método de pago seleccionado no es válido");
+    }
 
-    await axios.post(
-      "http://localhost:4000/members/miembros",
-      nuevoMiembro,
-      { withCredentials: true }
-    );
+    try {
+      const nuevoMiembro = {
+        nombreCompleto: nombreCompleto.trim(),
+        telefono,
+        fechaIngreso: fechaInicio,
+        mensualidad: membresia._id,
+        entrenador: entrenador?._id,
+        estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
+        metodoPago: metodoSeleccionado || undefined,
+      };
 
-    limpiarCampos();
-    onClose();
-  } catch (err) {
-    console.error("Error al registrar suscripción:", err);
-    const mensaje = err?.response?.data?.error || "Ocurrió un error al registrar la suscripción.";
-    alert(mensaje);
-  }
-};
-
-
+      await axios.post(
+        "http://localhost:4000/members/miembros",
+        nuevoMiembro,
+        { withCredentials: true }
+      );
+      
+      mostrarAlerta("success", "¡Éxito!", "Suscripción registrada correctamente");
+      
+      setTimeout(() => {
+        limpiarCampos();
+        onClose();
+      }, 2000);
+      
+    } catch (err) {
+      console.error("Error al registrar suscripción:", err);
+      const mensaje = err?.response?.data?.error || "Ocurrió un error al registrar la suscripción.";
+      
+      if (err?.response?.status === 409) {
+        mostrarAlerta("warning", "Dato duplicado", mensaje);
+      } else {
+        mostrarAlerta("danger", "Error en el registro", mensaje);
+      }
+    }
+  };
 
   const limpiarCampos = () => {
     setNombreCompleto("");
@@ -78,6 +107,7 @@ const guardarSuscripcion = async (onClose) => {
     setMembresia(null);
     setEntrenador(null);
     setMetodoSeleccionado(null);
+    setAlerta({ show: false, type: "", message: "", title: "" });
   };
 
   const handleSeleccionarEntrenador = (entrenadorSeleccionado) => {
@@ -87,6 +117,7 @@ const guardarSuscripcion = async (onClose) => {
 
   return (
     <>
+      {/* Botón para abrir modal */}
       <Button
         onPress={onOpen}
         className="text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
@@ -95,6 +126,20 @@ const guardarSuscripcion = async (onClose) => {
         {triggerText}
       </Button>
 
+      {/* Toast de alerta fuera del modal */}
+      {alerta.show && (
+        <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[2000] animate-in slide-in-from-bottom">
+          <Alert
+            color={alerta.type}
+            title={alerta.title}
+            description={alerta.message}
+            variant="faded"
+            className="shadow-lg"
+          />
+        </div>
+      )}
+
+      {/* Modal principal */}
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
@@ -122,7 +167,7 @@ const guardarSuscripcion = async (onClose) => {
                 />
                 <Input
                   label="Teléfono"
-                  placeholder="987654321"
+                  placeholder="984225114"
                   value={telefono}
                   onChange={(e) => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 9))}
                 />
@@ -134,60 +179,34 @@ const guardarSuscripcion = async (onClose) => {
                 />
 
                 <div>
-                  <label className="block mb-1 text-sm">Membresía</label>
-                  <div className="w-full">
-                    <div
-                      onClick={() => setMembresiaOpen(true)}
-                      className="flex items-center justify-between w-full p-2 text-black bg-gray-200 rounded cursor-pointer"
-                    >
-                      <span>
-                        {membresia
-                          ? `${membresia.duracion === 12 ? "1 Año" : `${membresia.duracion} Mes${membresia.duracion > 1 ? 'es' : ''}`} - S/ ${Number(membresia.precio).toFixed(2)}`
-                          : "Selecciona una membresía"
-                        }
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </div>
-                  </div>
+                  <label className="block mb-2 text-sm">Membresía</label>
+                  <button
+                    type="button"
+                    onClick={() => setMembresiaOpen(true)}
+                    className="flex items-center w-full gap-3 p-3 text-white transition-all duration-200 bg-black border border-red-500 rounded-lg hover:bg-gray-900 hover:scale-105 hover:shadow-lg hover:border-red-400"
+                  >
+                    <DateRangeOutlinedIcon className="text-red-500" />
+                    <span className="text-lg font-medium">
+                      {membresia
+                        ? `${membresia.duracion === 12 ? "1 Año" : `${membresia.duracion} Mes${membresia.duracion > 1 ? 'es' : ''}`} - S/ ${Number(membresia.precio).toFixed(2)}`
+                        : "Selecciona una membresía"
+                      }
+                    </span>
+                  </button>
                 </div>
 
                 <div>
-                  <label className="block mb-1 text-sm">Entrenador</label>
-                  <div className="w-full">
-                    <div
-                      onClick={() => setEntrenadorModalOpen(true)}
-                      className="flex items-center justify-between w-full p-2 text-black bg-gray-200 rounded cursor-pointer"
-                    >
-                      <span>
-                        {entrenador ? entrenador.nombre : "Selecciona un entrenador"}
-                      </span>
-                      <svg
-                        className="w-4 h-4 text-gray-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </div>
-                  </div>
+                  <label className="block mb-2 text-sm">Entrenador</label>
+                  <button
+                    type="button"
+                    onClick={() => setEntrenadorModalOpen(true)}
+                    className="flex items-center w-full gap-3 p-3 text-white transition-all duration-200 bg-red-600 border border-black rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg hover:border-gray-800"
+                  >
+                    <FitnessCenterOutlinedIcon className="text-white" />
+                    <span className="text-lg font-medium">
+                      {entrenador ? entrenador.nombre : "Selecciona un entrenador"}
+                    </span>
+                  </button>
                 </div>
 
                 <div>
@@ -197,7 +216,7 @@ const guardarSuscripcion = async (onClose) => {
                       <button
                         key={key}
                         type="button"
-                        className={`w-full p-3 rounded text-white flex items-center justify-between ${metodo.color} ${
+                        className={`w-full p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${
                           metodoSeleccionado === key ? "ring-4 ring-red-400" : ""
                         }`}
                         onClick={() => setMetodoSeleccionado(key)}

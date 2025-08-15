@@ -18,21 +18,21 @@ export const CustomCard = ({ imageUrl, title, description, children }) => {
           <img
             src={imageUrl}
             alt={title || "Imagen"}
-            className="w-full h-full object-cover"
+            className="object-cover w-full h-full"
             onError={handleImageError}
           />
         ) : (
-          <div className="w-full h-48 bg-gray-300 flex items-center justify-center text-xs text-gray-500 rounded">
+          <div className="flex items-center justify-center w-full h-48 text-xs text-gray-500 bg-gray-300 rounded">
             {imageError ? "Imagen no disponible" : "Sin imagen"}
           </div>
         )}
       </div>
-      <div className="flex flex-col space-y-2 mt-4">
+      <div className="flex flex-col mt-4 space-y-2">
         <h3 className="text-base font-semibold text-center text-black">
           {title || ""}
         </h3>
         <p className="text-sm text-default-500">{description || ""}</p>
-        {children && <div className="mt-4 flex justify-center">{children}</div>}
+        {children && <div className="flex justify-center mt-4">{children}</div>}
       </div>
     </Card>
   );

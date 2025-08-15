@@ -6,8 +6,9 @@ import {
   ModalFooter,
   Button,
   useDisclosure,
+  Alert,
 } from "@heroui/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton } from "@mui/material";
@@ -16,13 +17,23 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [entrenadores, setEntrenadores] = useState([]);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchEntrenadores();
-    }
-  }, [isOpen, refresh]);
+  // Estado para alertas tipo toast
+  const [alerta, setAlerta] = useState({
+    show: false,
+    type: "default",
+    title: "",
+    message: "",
+  });
 
-  const fetchEntrenadores = async () => {
+  // Función para mostrar toast
+  const mostrarAlerta = useCallback((type, title, message) => {
+    setAlerta({ show: true, type, title, message });
+    setTimeout(() => {
+      setAlerta({ show: false, type: "default", title: "", message: "" });
+    }, 3000); 
+  }, []);
+
+  const fetchEntrenadores = useCallback(async () => {
     try {
       const res = await axios.get("http://localhost:4000/trainers/ver", {
         withCredentials: true,
@@ -30,21 +41,33 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
       setEntrenadores(res.data);
     } catch (err) {
       console.error("Error al cargar entrenadores:", err);
+
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchEntrenadores();
+    } else {
+      // al cerrar el modal ocultamos la alerta
+      setAlerta({ show: false, type: "default", title: "", message: "" });
+    }
+  }, [isOpen, refresh, fetchEntrenadores]);
 
   const handleEliminar = async (id) => {
-    if (window.confirm("¿Estás seguro de que quieres eliminar este entrenador?")) {
-      try {
-        await axios.delete(`http://localhost:4000/trainers/eliminar/${id}`, {
-          withCredentials: true,
-        });
-        // Refrescar la lista de entrenadores después de eliminar
-        fetchEntrenadores();
-      } catch (err) {
-        console.error("Error al eliminar entrenador:", err);
-        alert("Ocurrió un error al eliminar el entrenador.");
-      }
+    try {
+      await axios.delete(`http://localhost:4000/trainers/eliminar/${id}`, {
+        withCredentials: true,
+      });
+      fetchEntrenadores();
+      mostrarAlerta("success", "Éxito", "Entrenador eliminado correctamente.");
+    } catch (err) {
+      console.error("Error al eliminar entrenador:", err);
+      mostrarAlerta(
+        "danger",
+        "Error",
+        "Ocurrió un error al eliminar el entrenador."
+      );
     }
   };
 
@@ -57,6 +80,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
       >
         {triggerText}
       </Button>
+
       <Modal
         isOpen={isOpen}
         onOpenChange={onOpenChange}
@@ -115,6 +139,19 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Toast en esquina inferior derecha */}
+      {alerta.show && (
+        <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[2000] animate-in slide-in-from-bottom">
+          <Alert
+            color={alerta.type}
+            title={alerta.title}
+            description={alerta.message}
+            variant="faded"
+            className="shadow-lg"
+          />
+        </div>
+      )}
     </>
   );
 };

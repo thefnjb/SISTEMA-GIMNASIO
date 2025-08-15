@@ -148,16 +148,17 @@ exports.registroMiembros = async (req, res) => {
     if (!/^\d{9}$/.test(String(telefono || ""))) return res.status(400).json({ error: "telefono inválido, 9 dígitos" });
     if (!mensualidad) return res.status(400).json({ error: "mensualidad es requerida" });
 
-    // Prevenir colisiones con documentos antiguos (que tenían índice en celular)
-    const miembroExistente = await Miembro.findOne({
-      $or: [
-        { telefono },
-        { celular: telefono },
-        { $and: [{ celular: { $ne: null } }, { telefono: { $exists: false } }] },
-      ],
+    // Verificar duplicados por nombre Y teléfono antes de intentar guardar
+    const miembroPorNombre = await Miembro.findOne({
+      nombreCompleto: { $regex: new RegExp(`^${nombreCompleto.trim()}$`, 'i') }
     });
-    if (miembroExistente) {
-      return res.status(409).json({ error: "El miembro ya está registrado" });
+    if (miembroPorNombre) {
+      return res.status(409).json({ error: `Ya existe un miembro registrado con el nombre "${nombreCompleto.trim()}"` });
+    }
+
+    const miembroPorTelefono = await Miembro.findOne({ telefono: telefono.trim() });
+    if (miembroPorTelefono) {
+      return res.status(409).json({ error: `El número de teléfono "${telefono.trim()}" ya está registrado.` });
     }
 
     const membresiaDoc = await Membresia.findById(mensualidad);
@@ -169,7 +170,7 @@ exports.registroMiembros = async (req, res) => {
     const vencimiento = calcularVencimiento(fechaIngresoDate, membresiaDoc.duracion);
 
     const nuevoMiembro = new Miembro({
-      nombreCompleto,
+      nombreCompleto: nombreCompleto.trim(), 
       telefono,
       fechaIngreso: fechaIngresoDate,
       mensualidad,
@@ -180,15 +181,24 @@ exports.registroMiembros = async (req, res) => {
       vencimiento,
       estado: calcularEstado(vencimiento),
     });
-
     await nuevoMiembro.save();
-
     res.status(201).json({
       message: "Miembro registrado correctamente",
       miembro: nuevoMiembro,
     });
   } catch (err) {
     console.error("Error en registroMiembros:", err);
+    if (err.code === 11000) {
+      let campo = Object.keys(err.keyValue)[0];
+      let valor = err.keyValue[campo];
+      let mensaje = `El valor '${valor}' ya existe para el campo '${campo}'.`;
+      if (campo === 'nombreCompleto') {
+        mensaje = `Ya existe un miembro con el nombre "${valor}"`;
+      } else if (campo === 'telefono') {
+        mensaje = `El número de teléfono "${valor}" ya está registrado.`;
+      }
+      return res.status(409).json({ error: mensaje });
+    }
     res.status(500).json({ error: "Error al registrar el miembro" });
   }
 };
@@ -239,4 +249,3 @@ exports.renovarMiembro = async (req, res) => {
     res.status(500).json({ error: 'Error al renovar' });
   }
 };
-

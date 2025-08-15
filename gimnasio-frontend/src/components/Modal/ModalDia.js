@@ -7,11 +7,10 @@ import {
   Button,
   Input,
   useDisclosure,
+  Alert,
 } from "@heroui/react";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import Alert from '@mui/material/Alert';
-import Stack from '@mui/material/Stack';
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -19,19 +18,28 @@ const metodosPago = {
   efectivo: { nombre: "Efectivo", color: "bg-green-600", icono: "/iconos/eefctivo.png" },
 };
 
-const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registro del Día", onClienteAgregado }) => {
+const ModalDia = ({
+  triggerText = "Registrar Cliente por Día",
+  title = "Registro del Día",
+  onClienteAgregado,
+}) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [fechaInscripcion, setFechaInscripcion] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
-  const [alertInfo, setAlertInfo] = useState({ show: false, type: '', message: '' }); 
+
+  const [alertInfo, setAlertInfo] = useState({
+    show: false,
+    color: "default",
+    message: "",
+  });
+  const alertDuration = 3000; 
 
   useEffect(() => {
     if (isOpen) {
-      const today = new Date().toLocaleDateString('en-CA');
+      const today = new Date().toLocaleDateString("en-CA");
       setFechaInscripcion(today);
-      setAlertInfo({ show: false, type: '', message: '' }); 
     }
   }, [isOpen]);
 
@@ -39,36 +47,45 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
     setNombreCompleto("");
     setFechaInscripcion("");
     setMetodoSeleccionado(null);
-    setAlertInfo({ show: false, type: '', message: '' }); 
+  };
+
+  const mostrarAlerta = (color, message) => {
+    setAlertInfo({ show: true, color, message });
+    setTimeout(() => {
+      setAlertInfo({ show: false, color: "default", message: "" });
+    }, alertDuration);
   };
 
   const guardarCliente = async (onClose) => {
     if (!nombreCompleto.trim() || !fechaInscripcion) {
-      setAlertInfo({ show: true, type: 'warning', message: 'Por favor, complete todos los campos obligatorios.' });
-      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 3000);
+      mostrarAlerta("warning", "Por favor, complete todos los campos obligatorios.");
       return;
     }
 
     const correctedDate = new Date(`${fechaInscripcion}T00:00:00`);
 
     try {
-      await axios.post("http://localhost:4000/visits/registrarcliente", {
-        nombre: nombreCompleto,
-        fecha: correctedDate, // Enviar el objeto Date
-        metododePago: metodoSeleccionado ? metodosPago[metodoSeleccionado].nombre : "Efectivo",
-      }, { withCredentials: true });
+      await axios.post(
+        "http://localhost:4000/visits/registrarcliente",
+        {
+          nombre: nombreCompleto,
+          fecha: correctedDate,
+          metododePago: metodoSeleccionado
+            ? metodosPago[metodoSeleccionado].nombre
+            : "Efectivo",
+        },
+        { withCredentials: true }
+      );
 
-      setAlertInfo({ show: true, type: 'success', message: 'Cliente registrado exitosamente.' });
-      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 3000);
-
-      limpiarCampos();            
-      if (onClienteAgregado) onClienteAgregado(); 
+      mostrarAlerta("success", "Cliente registrado exitosamente.");
+      limpiarCampos();
+      if (onClienteAgregado) onClienteAgregado();
       onClose();
     } catch (err) {
       console.error("Error al registrar cliente:", err);
-      const errorMessage = err.response?.data?.error || "Ocurrió un error al registrar el cliente.";
-      setAlertInfo({ show: true, type: 'error', message: `Error: ${errorMessage}` });
-      setTimeout(() => setAlertInfo({ show: false, type: '', message: '' }), 3000);
+      const errorMessage =
+        err.response?.data?.error || "Ocurrió un error al registrar el cliente.";
+      mostrarAlerta("danger", `Error: ${errorMessage}`);
     }
   };
 
@@ -81,6 +98,13 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
       >
         {triggerText}
       </Button>
+
+      {/* 🔹 Alerta persistente aunque el modal se cierre */}
+      {alertInfo.show && (
+        <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[2000]">
+          <Alert color={alertInfo.color} title={alertInfo.message} />
+        </div>
+      )}
 
       <Modal
         isOpen={isOpen}
@@ -100,13 +124,6 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
               </ModalHeader>
 
               <ModalBody className="space-y-4">
-                {alertInfo.show && (
-                  <Stack sx={{ width: '100%' }} spacing={2}>
-                    <Alert variant="filled" severity={alertInfo.type}>
-                      {alertInfo.message}
-                    </Alert>
-                  </Stack>
-                )}
                 <Input
                   label="Nombre y Apellido"
                   placeholder="Ej. Juan Pérez"
@@ -129,26 +146,40 @@ const ModalDia = ({ triggerText = "Registrar Cliente por Día", title = "Registr
                       <button
                         key={key}
                         type="button"
-                        className={`w-full p-3 rounded text-white flex items-center justify-between ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
+                        className={`w-full p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${
+                          metodoSeleccionado === key ? "ring-4 ring-red-400" : ""
+                        }`}
                         onClick={() => setMetodoSeleccionado(key)}
                       >
                         <div className="flex items-center gap-3">
-                          <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
-                          <span className="text-lg font-medium">{metodo.nombre}</span>
+                          <img
+                            src={metodo.icono}
+                            alt={metodo.nombre}
+                            className="w-6 h-6"
+                          />
+                          <span className="text-lg font-medium">
+                            {metodo.nombre}
+                          </span>
                         </div>
-                        {metodoSeleccionado === key && <span className="text-sm font-semibold">Seleccionado</span>}
+                        {metodoSeleccionado === key && (
+                          <span className="text-sm font-semibold">
+                            Seleccionado
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
                 </div>
-
               </ModalBody>
 
               <ModalFooter>
                 <Button
                   color="danger"
                   variant="light"
-                  onPress={() => { limpiarCampos(); onClose(); }}
+                  onPress={() => {
+                    limpiarCampos();
+                    onClose();
+                  }}
                   className="text-white border-white"
                 >
                   Cerrar
