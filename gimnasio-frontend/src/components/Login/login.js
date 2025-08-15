@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AvatarGroup from '../Avatar/avatar';
-import { AlertaCredenciales } from '../Alerta/Alerct';
+import { AlertaCredenciales } from '../Alerta/Alert';
 
 const Button = ({ children, className, ...props }) => (
   <button className={`btn ${className}`} {...props}>
@@ -44,18 +44,18 @@ function Login() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-black text-white lg:flex-row">
+    <div className="flex flex-col min-h-screen text-white bg-black lg:flex-row">
       {/* Imagen lateral */}
       <div className="relative hidden overflow-hidden lg:block lg:w-1/2">
         <div
-          className="animate-zoomImage h-full w-full bg-cover bg-center grayscale"
+          className="w-full h-full bg-center bg-cover animate-zoomImage grayscale"
           style={{ backgroundImage: "url('/images/login.png')" }}
         ></div>
       </div>
 
       {/* Formulario */}
-      <div className="flex w-full items-center justify-center bg-zinc-900 px-6 py-10 shadow-inner lg:w-1/2">
-        <div className="animate-fadeInDown w-full max-w-md space-y-6">
+      <div className="flex items-center justify-center w-full px-6 py-10 shadow-inner bg-zinc-900 lg:w-1/2">
+        <div className="w-full max-w-md space-y-6 animate-fadeInDown">
           <div className="text-center">
             <AvatarGroup />
             <h1 className="text-3xl font-extrabold tracking-wide">ADMIN GIMNASIO</h1>
@@ -66,7 +66,7 @@ function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="usuario" className="mb-2 block text-sm font-semibold">
+              <label htmlFor="usuario" className="block mb-2 text-sm font-semibold">
                 Usuario
               </label>
               <Input
@@ -74,13 +74,13 @@ function Login() {
                 type="text"
                 value={usuario}
                 onChange={(e) => setUsuario(e.target.value)}
-                className="w-full rounded-lg border border-gray-600 bg-zinc-800 px-4 py-3 text-white focus:ring-2 focus:ring-red-500"
+                className="w-full px-4 py-3 text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-semibold">
+              <label htmlFor="password" className="block mb-2 text-sm font-semibold">
                 Contraseña
               </label>
               <div className="relative">
@@ -89,13 +89,13 @@ function Login() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-lg border border-gray-600 bg-zinc-800 px-4 py-3 pr-12 text-white focus:ring-2 focus:ring-red-500"
+                  className="w-full px-4 py-3 pr-12 text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 transform text-gray-400 hover:text-white"
+                  className="absolute text-gray-400 transform -translate-y-1/2 right-3 top-1/2 hover:text-white"
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
@@ -116,7 +116,7 @@ function Login() {
 
             <Button
               type="submit"
-              className="w-full animate-pulse rounded-lg bg-red-600 py-3 font-semibold text-white hover:bg-red-700"
+              className="w-full py-3 font-semibold text-white bg-red-600 rounded-lg animate-pulse hover:bg-red-700"
             >
               Iniciar Sesión
             </Button>

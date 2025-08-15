@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Table,
   TableHeader,
@@ -7,8 +7,14 @@ import {
   TableRow,
   TableCell,
   Pagination,
-  Spinner,
-  Button
+  Button,
+  CircularProgress,
+  Alert,
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter
 } from "@heroui/react";
 import axios from "axios";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -19,7 +25,6 @@ import ModalResumenPagos from "../../Modal/ModalResumenPagos";
   @param {string} timeString 
   @returns {string} 
  */
-
 const formatTime12Hour = (timeString) => {
   if (!timeString || typeof timeString !== 'string') {
     return "Sin hora";
@@ -41,32 +46,54 @@ export default function TablaClientesHoy({ refresh }) {
     column: "nombre",
     direction: "ascending",
   });
-  const [isModalOpen, setIsModalOpen] = useState(false); 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Estados para alertas y confirmación
+  const [alert, setAlert] = useState({ show: false, type: 'success', message: '' });
+  const [confirmModal, setConfirmModal] = useState({ show: false, clienteId: null, clienteNombre: '' });
 
   const rowsPerPage = 4;
 
-  const fetchClientes = async () => {
+  // Función para mostrar alertas
+  const showAlert = useCallback((type, message) => {
+    setAlert({ show: true, type, message });
+    // Auto-ocultar la alerta después de 5 segundos
+    setTimeout(() => {
+      setAlert({ show: false, type: '', message: '' });
+    }, 5000);
+  }, []);
+
+  const fetchClientes = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get("http://localhost:4000/visits/clientesdia", {
+      // Promesa que simula un retraso mínimo para mejorar la UX del spinner
+      const delayPromise = new Promise(resolve => setTimeout(resolve, 500));
+
+      const apiCallPromise = axios.get("http://localhost:4000/visits/clientesdia", {
         withCredentials: true,
       });
+
+      // Esperar a que tanto la llamada a la API como el retraso se completen
+      const [res] = await Promise.all([apiCallPromise, delayPromise]);
+
       setClientes(res.data.clientes);
       setResumenPagos(res.data.resumenPagos);
     } catch (err) {
       console.error("Error al obtener clientes:", err);
+      showAlert('danger', 'Error al cargar los clientes. Por favor, inténtalo de nuevo.');
     } finally {
       setIsLoading(false);
     }
+  }, [showAlert]);
+
+  // Función para cerrar alerta manualmente
+  const closeAlert = () => {
+    setAlert({ show: false, type: '', message: '' });
   };
 
   useEffect(() => {
     fetchClientes();
-  }, []);
-
-  useEffect(() => {
-    fetchClientes();
-  }, [refresh]);
+  }, [refresh, fetchClientes]);
 
   // === Paginación ===
   const pages = useMemo(() => {
@@ -89,26 +116,42 @@ export default function TablaClientesHoy({ refresh }) {
     });
   }, [sortDescriptor, items]);
 
+  const loadingState = isLoading ? "loading" : "idle";
 
-  const loadingState =
-    isLoading || clientes.length === 0 ? "loading" : "idle";
+  // === Función para confirmar eliminación ===
+  const handleDeleteConfirm = (cliente) => {
+    setConfirmModal({
+      show: true,
+      clienteId: cliente._id,
+      clienteNombre: cliente.nombre
+    });
+  };
 
   // === Función para eliminar cliente ===
-  const handleDelete = async (id) => {
-    if (!id) return;
-    const confirm = window.confirm("¿Estás seguro de eliminar este cliente?");
-    if (!confirm) return;
+  const handleDelete = async () => {
+    const { clienteId } = confirmModal;
+    if (!clienteId) return;
 
     try {
-      await axios.delete(`http://localhost:4000/visits/eliminarcliente/${id}`, {
+      await axios.delete(`http://localhost:4000/visits/eliminarcliente/${clienteId}`, {
         withCredentials: true,
       });
-      fetchClientes(); // Refrescar la tabla
-      alert("Cliente eliminado exitosamente");
+      // Cerrar modal de confirmación
+      setConfirmModal({ show: false, clienteId: null, clienteNombre: '' });
+      // Refrescar la tabla
+      await fetchClientes();
+      // Mostrar alerta de éxito
+      showAlert('success', 'Cliente eliminado exitosamente');
+      
     } catch (err) {
       console.error("Error al eliminar cliente:", err);
-      alert("Error al eliminar el cliente");
+      showAlert('danger', 'Error al eliminar el cliente. Por favor, inténtalo de nuevo.');
+      setConfirmModal({ show: false, clienteId: null, clienteNombre: '' });
     }
+  };
+  // Cancelar eliminación
+  const cancelDelete = () => {
+    setConfirmModal({ show: false, clienteId: null, clienteNombre: '' });
   };
 
   // Calcular el total de montos pagados
@@ -121,6 +164,19 @@ export default function TablaClientesHoy({ refresh }) {
   return (
     <div className="p-4 bg-gray-100 rounded-xl">
       <h2 className="mb-4 text-xl font-bold text-black">Clientes de Hoy</h2>
+      {/* Sistema de Alertas */}
+      {alert.show && (
+        <div className="mb-4">
+          <Alert
+            color={alert.type}
+            title={alert.type === 'success' ? 'Éxito' : alert.type === 'danger' ? 'Error' : 'Información'}
+            description={alert.message}
+            variant="faded"
+            isClosable
+            onClose={closeAlert}
+          />
+        </div>
+      )}
 
       <Table
         aria-label="Tabla de clientes de hoy"
@@ -168,8 +224,16 @@ export default function TablaClientesHoy({ refresh }) {
         <TableBody
           items={sortedItems}
           loadingState={loadingState}
-          loadingContent={<Spinner label="Cargando clientes..." />}
-          emptyContent={"No hay clientes registrados hoy"}
+          loadingContent={
+            <div className="flex items-center justify-center h-40">
+              <CircularProgress
+                aria-label="Cargando..."
+                size="lg"
+                color="default"
+              />
+            </div>
+          }
+          emptyContent={"Inscriba los Clientes de hoy"}
         >
           {(cliente) => {
             try {
@@ -190,7 +254,7 @@ export default function TablaClientesHoy({ refresh }) {
                     <IconButton
                       aria-label="Eliminar cliente"
                       color="error"
-                      onClick={() => handleDelete(cliente._id)}
+                      onClick={() => handleDeleteConfirm(cliente)}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -210,10 +274,16 @@ export default function TablaClientesHoy({ refresh }) {
         <div className="text-lg font-bold text-black">
           Total Recaudado Hoy: <span className="text-red-600">S/ {totalMontoHoy.toFixed(2)}</span>
         </div>
-        <Button className="text-white" style={{ backgroundColor: "#7a0f16" }} variant="solid" onClick={() => setIsModalOpen(true)}>
+        <Button 
+          className="text-white" 
+          style={{ backgroundColor: "#7a0f16" }} 
+          variant="solid" 
+          onClick={() => setIsModalOpen(true)}
+        >
           Detalles de Pagos
         </Button>
       </div>
+
       {/* Modal de Resumen de Pagos */}
       <ModalResumenPagos
         isOpen={isModalOpen}
@@ -221,6 +291,39 @@ export default function TablaClientesHoy({ refresh }) {
         clientes={clientes}
         resumenPagos={resumenPagos}
       />
+      {/* Modal de Confirmación para Eliminar */}
+      <Modal 
+        isOpen={confirmModal.show} 
+        onClose={cancelDelete}
+        placement="center"
+      >
+        <ModalContent>
+          <ModalHeader className="flex flex-col gap-1">
+            Confirmar Eliminación
+          </ModalHeader>
+          <ModalBody>
+            <p>¿Deseas borrar al cliente <strong>{confirmModal.clienteNombre}</strong>?</p>
+          </ModalBody>
+          <ModalFooter>
+            <Button 
+              color="default"
+              style={{ backgroundColor: "#e5e7eb" }} 
+              variant="light" 
+              onPress={cancelDelete}
+            >
+              Cancelar
+            </Button>
+            <Button
+              color="danger"
+              style={{ backgroundColor: "#7a0f16" }} 
+              variant="solid" 
+              onPress={handleDelete}
+            >
+            <DeleteIcon />
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

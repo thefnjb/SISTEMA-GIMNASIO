@@ -7,9 +7,11 @@ import {
   Button,
   Input,
   useDisclosure,
+  Alert,
 } from "@heroui/react";
 import { useState, useRef } from "react";
 import axios from "axios";
+import ArchiveRoundedIcon from '@mui/icons-material/ArchiveRounded';
 
 const ModalEntrenadores = ({
   triggerText = "INGRESAR",
@@ -24,9 +26,25 @@ const ModalEntrenadores = ({
   const [telefono, setTelefono] = useState("");
   const [fotoPerfil, setFotoPerfil] = useState(null);
 
+  // 🔹 Estado de la alerta
+  const [alertInfo, setAlertInfo] = useState({
+    show: false,
+    color: "default",
+    message: "",
+  });
+  const alertDuration = 3000; 
+
+
+  const mostrarAlerta = (color, message) => {
+    setAlertInfo({ show: true, color, message });
+    setTimeout(() => {
+      setAlertInfo({ show: false, color: "default", message: "" });
+    }, alertDuration);
+  };
+
   const agregarEntrenador = async () => {
     if (!nombre.trim() || !edad.trim() || !telefono.trim()) {
-      alert("Completa todos los campos.");
+      mostrarAlerta("warning", "Completa todos los campos.");
       return;
     }
 
@@ -42,6 +60,7 @@ const ModalEntrenadores = ({
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      // Limpieza
       setNombre("");
       setEdad("");
       setTelefono("");
@@ -49,9 +68,12 @@ const ModalEntrenadores = ({
 
       if (onEntrenadorAgregado) onEntrenadorAgregado();
 
+      mostrarAlerta("success", "Entrenador agregado correctamente.");
+
       if (closeModalRef.current) closeModalRef.current();
     } catch (err) {
       console.error("Error al agregar entrenador:", err);
+      mostrarAlerta("danger", "Error al agregar entrenador.");
     }
   };
 
@@ -64,6 +86,13 @@ const ModalEntrenadores = ({
       >
         {triggerText}
       </Button>
+
+      {/* 🔹 Alerta tipo toast */}
+      {alertInfo.show && (
+        <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[2000]">
+          <Alert color={alertInfo.color} title={alertInfo.message} />
+        </div>
+      )}
 
       <Modal
         isOpen={isOpen}
@@ -86,18 +115,20 @@ const ModalEntrenadores = ({
 
                 <ModalBody className="space-y-4">
                   <Input
-                    placeholder="Nombre"
+                    label="Nombre y Apellido"
+                    placeholder="Ingresa el nombre"
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
                   />
                   <Input
-                    placeholder="Edad"
-                    type="number"
+                    label="Edad"
+                    placeholder="Ingresa la edad"
                     value={edad}
                     onChange={(e) => setEdad(e.target.value)}
                   />
                   <Input
-                    placeholder="Teléfono"
+                    label="Teléfono"
+                    placeholder="Ingresa el teléfono"
                     value={telefono}
                     onChange={(e) => setTelefono(e.target.value)}
                   />
@@ -116,11 +147,10 @@ const ModalEntrenadores = ({
                         as="span"
                         className="text-white border border-white"
                         style={{
-                          backgroundColor: "rgba(122, 15, 22, 0.3)", // rojo vino con transparencia
-                          backdropFilter: "blur(4px)", // opcional: da efecto de fondo difuminado
+                          backgroundColor: "rgba(122, 15, 22, 0.3)",
+                          backdropFilter: "blur(4px)",
                         }}
-                      >
-                        Elegir archivo
+                      ><ArchiveRoundedIcon/>
                       </Button>
                     </label>
                     {fotoPerfil && (
@@ -140,7 +170,14 @@ const ModalEntrenadores = ({
 
                 <ModalFooter>
                   <Button
-                    onPress={onClose}
+                    onPress={() => {
+                      setAlertInfo({
+                        show: false,
+                        color: "default",
+                        message: "",
+                      }); // 🔹 ocultar alerta al cerrar
+                      onClose();
+                    }}
                     className="text-white border-white"
                     variant="light"
                     color="danger"
