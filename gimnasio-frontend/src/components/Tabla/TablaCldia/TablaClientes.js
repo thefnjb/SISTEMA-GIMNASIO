@@ -11,12 +11,15 @@ import {
   Chip,
   Spinner,
 } from "@nextui-org/react";
-import ActualizarSuscripcion from "../../components/Actualizarmodal/ActualizarSuscripciones";
+import ActualizarSuscripcion from "../../Actualizarmodal/ActualizarSuscripciones";
 import EditSquareIcon from '@mui/icons-material/EditSquare';
 import DeleteIcon from '@mui/icons-material/Delete';
 import SearchIcon from '@mui/icons-material/Search';
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import { IconButton } from "@mui/material";
+import AccountCircleRoundedIcon from '@mui/icons-material/AccountCircleRounded';
+import CreateIcon from '@mui/icons-material/Create';
+import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
 
 export default function TablaMiembros() {
   const [miembros, setMiembros] = useState([]);
@@ -40,14 +43,14 @@ export default function TablaMiembros() {
     }
   };
 
-  const eliminarMiembro = async (id) => {
-    try {
-      await axios.delete(`http://localhost:4000/members/eliminarmiembro/${id}`, { withCredentials: true });
-      obtenerMiembros();
-    } catch (error) {
-      console.error("Error al eliminar miembro:", error);
-    }
-  };
+ const eliminarMiembro = async (id) => {
+  try {
+    await axios.delete(`http://localhost:4000/members/miembros/${id}`, { withCredentials: true });
+    obtenerMiembros();
+  } catch (error) {
+    console.error("Error al eliminar miembro:", error.response?.data || error.message);
+  }
+};
 
   function formatearFecha(fecha) {
     if (!fecha) return "";
@@ -68,11 +71,12 @@ export default function TablaMiembros() {
     return { etiqueta: 'activo', color: 'success' };
   };
 
-  const formatearMensualidadNumero = (miembro) => {
-    const numero = miembro?.mensualidad?.duracion || miembro?.mensualidad?.numero || miembro?.membresia?.duracion || miembro?.membresia?.numero;
-    if (!numero) return '-';
-    return `${numero} MES`;
-  };
+const formatearMensualidadNumero = (miembro) => {
+  const numero = miembro?.mensualidad?.duracion || miembro?.membresia?.duracion;
+  if (!numero) return '-';
+  return `${numero} MES${numero > 1 ? 'ES' : ''}`;
+};
+
 
   const tituloMensualidadVence = (miembro) => {
     const numero = miembro?.mensualidad?.duracion || miembro?.mensualidad?.numero || miembro?.membresia?.duracion || miembro?.membresia?.numero;
@@ -108,7 +112,8 @@ export default function TablaMiembros() {
   }, [filtro, miembrosFiltrados.length]);
 
   return (
-    <div className="p-3 sm:p-4 md:p-6 bg-white shadow-xl rounded-xl max-w-full md:max-w-5xl mx-auto">
+    <div className="p-3 sm:p-4 md:p-6 max-w-full">
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <Input
           type="text"
@@ -126,7 +131,6 @@ export default function TablaMiembros() {
           <Spinner label="Cargando miembros..." color="primary" />
         </div>
       ) : (
-        <div className="max-h-[60vh] overflow-auto rounded-lg border overflow-x-auto">
         <Table
           aria-label="Tabla de miembros"
           removeWrapper
@@ -140,25 +144,78 @@ export default function TablaMiembros() {
           }}
         >
           <TableHeader>
-            <TableColumn className="min-w-[10rem] sm:min-w-[12rem] md:w-[16rem]">NOMBRE Y APELLIDO</TableColumn>
-            <TableColumn className="w-[7rem] sm:w-[8rem]">TELÉFONO</TableColumn>
-            <TableColumn className="hidden md:table-cell w-[8rem]">INGRESO</TableColumn>
-            <TableColumn className="hidden md:table-cell w-[7rem]">MENSUAL.</TableColumn>
-            <TableColumn className="hidden lg:table-cell w-[10rem]">ENTRENADOR</TableColumn>
-            <TableColumn className="hidden md:table-cell w-[9rem]">PAGO</TableColumn>
-            <TableColumn className="min-w-[10rem] sm:w-[12rem]">MENSUALIDAD / VENCE</TableColumn>
-            <TableColumn className="w-[7rem]">ESTADO</TableColumn>
-            <TableColumn className="w-[12rem] text-right">ACCIONES</TableColumn>
-          </TableHeader>
+          <TableColumn className="min-w-[10rem] sm:min-w-[12rem] md:w-[16rem]">NOMBRE Y APELLIDO</TableColumn>
+          <TableColumn className="w-[7rem] sm:w-[8rem]">TELÉFONO</TableColumn>
+          <TableColumn className="hidden md:table-cell w-[8rem]">INGRESO</TableColumn>
+          <TableColumn className="hidden md:table-cell w-[7rem]">MENSUAL.</TableColumn>
+          <TableColumn className="hidden lg:table-cell w-[10rem]">ENTRENADOR</TableColumn>
+          <TableColumn className="hidden md:table-cell w-[9rem]">PAGO</TableColumn>
+          {/* 👇 NUEVA COLUMNA DEBE */}
+          <TableColumn className="hidden md:table-cell w-[9rem]">DEBE</TableColumn>
+          <TableColumn className="min-w-[10rem] sm:w-[12rem]">MENSUALIDAD / VENCE</TableColumn>
+          <TableColumn className="w-[7rem]">ESTADO</TableColumn>
+          <TableColumn className="w-[12rem] text-right">ACCIONES</TableColumn>
+        </TableHeader>
+
           <TableBody emptyContent={"No hay miembros encontrados."}>
             {itemsVisibles.map((miembro) => (
               <TableRow key={miembro._id} className="align-middle">
-                <TableCell className="whitespace-nowrap text-ellipsis overflow-hidden">{miembro.nombreCompleto}</TableCell>
+                {/* 👇 Aquí agregamos el icono de usuario antes del nombre */}
+                <TableCell className="whitespace-nowrap text-ellipsis overflow-hidden">
+                  <div className="flex items-center gap-2">
+                    <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} /> 
+                    <span>{miembro.nombreCompleto}</span>
+                  </div>
+                </TableCell>
+
+                
                 <TableCell className="whitespace-nowrap">{miembro.telefono}</TableCell>
                 <TableCell className="hidden md:table-cell whitespace-nowrap">{formatearFecha(miembro.fechaIngreso)}</TableCell>
-                <TableCell className="hidden md:table-cell whitespace-nowrap">{formatearMensualidadNumero(miembro)}</TableCell>
+                <TableCell className="hidden md:table-cell whitespace-nowrap">
+                  <div className="flex flex-col">
+                    <span className="font-medium">{formatearMensualidadNumero(miembro)}</span>
+                    <span className="text-xs text-gray-500">
+                      Turno: S/ {miembro?.mensualidad?.precio?.toFixed(2) || miembro?.membresia?.precio?.toFixed(2) || "0.00"}
+                    </span>
+                  </div>
+                </TableCell>
+
                 <TableCell className="hidden lg:table-cell whitespace-nowrap">{miembro?.entrenador?.nombre || '-'}</TableCell>
                 <TableCell className="hidden md:table-cell capitalize whitespace-nowrap">{miembro.metodoPago}</TableCell>
+                  <TableCell className="hidden md:table-cell whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      {(() => {
+                        const deuda = Number(miembro?.debe || 0);
+
+                        if (deuda <= 0) {
+                          return (
+                            <Chip color="success" variant="flat">
+                              S/ 0.00
+                            </Chip>
+                          );
+                        }
+
+                        return (
+                          <Chip color="warning" variant="flat">
+                            S/ {deuda.toFixed(2)}
+                          </Chip>
+                        );
+                      })()}
+                      
+                      {/* Icono de lápiz */}
+                      <IconButton 
+                        size="small" 
+                        onClick={() => abrirModalActualizar(miembro, 'editarDeuda')} 
+                        sx={{ color: '#555' }}
+                        title="Editar deuda"
+                      >
+                        <CreateIcon fontSize="small" />
+                      </IconButton>
+                    </div>
+                  </TableCell>
+
+
+
                 <TableCell className="truncate" title={tituloMensualidadVence(miembro)}>{tituloMensualidadVence(miembro)}</TableCell>
                 <TableCell>
                   {(() => {
@@ -187,18 +244,27 @@ export default function TablaMiembros() {
             ))}
           </TableBody>
         </Table>
-        </div>
       )}
 
+     {mostrarModal && modoModal !== 'editarDeuda' && (
+  <ActualizarSuscripcion
+    miembro={miembroSeleccionado}
+    modo={modoModal}
+    onClose={() => setMostrarModal(false)}
+    onUpdated={obtenerMiembros}
+  />
+)}
 
-      {mostrarModal && (
-        <ActualizarSuscripcion
-          miembro={miembroSeleccionado}
-          modo={modoModal}
-          onClose={() => setMostrarModal(false)}
-          onUpdated={obtenerMiembros}
-        />
-      )}
+{mostrarModal && modoModal === 'editarDeuda' && (
+  <EditarDeuda
+    miembro={miembroSeleccionado}
+    onClose={() => setMostrarModal(false)}
+    onUpdated={obtenerMiembros}
+  />
+)}
+
+
     </div>
+    
   );
 }
