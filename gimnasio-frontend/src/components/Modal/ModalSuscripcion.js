@@ -26,9 +26,11 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isMembresiaOpen, setMembresiaOpen] = useState(false);
   const [isEntrenadorModalOpen, setEntrenadorModalOpen] = useState(false);
+
   // Estados para las alertas
   const [alerta, setAlerta] = useState({ show: false, type: "", message: "", title: "" });
 
+  // Estados del formulario
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [telefono, setTelefono] = useState("");
   const [fechaInicio, setFechaInicio] = useState(() => {
@@ -40,65 +42,71 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const [entrenador, setEntrenador] = useState(null);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
 
+  // 👇 Nuevo estado para el campo DEBE
+  const [debe, setDebe] = useState("");
+
   // Función para mostrar alertas
   const mostrarAlerta = (type, title, message) => {
     setAlerta({ show: true, type, title, message });
     setTimeout(() => {
       setAlerta({ show: false, type: "", message: "", title: "" });
-    }, 6000); 
+    }, 4000);
   };
 
   // Guardar con nuevo contrato de backend
-  const guardarSuscripcion = async (onClose) => {
-    // Validaciones
-    if (!nombreCompleto.trim()) {
-      return mostrarAlerta("warning", "Campo obligatorio", "El nombre completo es obligatorio");
-    }
-    if (!/^\d{9}$/.test(telefono)) {
-      return mostrarAlerta("warning", "Teléfono inválido", "El teléfono debe tener 9 dígitos");
-    }
-    if (!membresia?._id) {
-      return mostrarAlerta("warning", "Membresía requerida", "Selecciona una membresía");
-    }
-    if (metodoSeleccionado && !["yape","plin","efectivo"].includes(metodoSeleccionado)) {
-      return mostrarAlerta("danger", "Método de pago inválido", "El método de pago seleccionado no es válido");
-    }
+// Guardar con nuevo contrato de backend
+const guardarSuscripcion = async (onClose) => {
+  if (!nombreCompleto.trim()) {
+    return mostrarAlerta("warning", "Campo obligatorio", "El nombre completo es obligatorio");
+  }
+  if (!/^\d{9}$/.test(telefono)) {
+    return mostrarAlerta("warning", "Teléfono inválido", "El teléfono debe tener 9 dígitos");
+  }
+  if (!membresia?._id) {
+    return mostrarAlerta("warning", "Membresía requerida", "Selecciona una membresía");
+  }
 
-    try {
-      const nuevoMiembro = {
-        nombreCompleto: nombreCompleto.trim(),
-        telefono,
-        fechaIngreso: fechaInicio,
-        mensualidad: membresia._id,
-        entrenador: entrenador?._id,
-        estadoPago: metodoSeleccionado ? "Pagado" : "Pendiente",
-        metodoPago: metodoSeleccionado || undefined,
-      };
+  // 🚨 Validación de método de pago
+  if (!metodoSeleccionado) {
+    return mostrarAlerta("danger", "Método de pago requerido", "Debes elegir un método de pago");
+  }
 
-      await axios.post(
-        "http://localhost:4000/members/miembros",
-        nuevoMiembro,
-        { withCredentials: true }
-      );
-      
-      mostrarAlerta("success", "¡Éxito!", "Suscripción registrada correctamente");
-      
-      setTimeout(() => {
-        limpiarCampos();
-        onClose();
-      }, 2000);
-      
-    } catch (err) {
-      console.error("Error al registrar suscripción:", err);
-      const mensaje = err?.response?.data?.error || "Ocurrió un error al registrar la suscripción.";
-      
-      if (err?.response?.status === 409) {
-        mostrarAlerta("warning", "Dato duplicado", mensaje);
-      } else {
-        mostrarAlerta("danger", "Error en el registro", mensaje);
-      }
+  try {
+    const nuevoMiembro = {
+      nombreCompleto: nombreCompleto.trim(),
+      telefono,
+      fechaIngreso: fechaInicio,
+      mensualidad: membresia._id,
+      entrenador: entrenador?._id,
+      estadoPago: "Pagado", // 👈 ya no es condicional porque lo validamos arriba
+      metodoPago: metodoSeleccionado,
+      debe: Number(debe) || 0,
+    };
+
+    await axios.post(
+      "http://localhost:4000/members/miembros",
+      nuevoMiembro,
+      { withCredentials: true }
+    );
+
+    mostrarAlerta("success", "¡Éxito!", "Suscripción registrada correctamente");
+
+    setTimeout(() => {
+      limpiarCampos();
+      onClose();
+    }, 2000);
+
+  } catch (err) {
+    console.error("Error al registrar suscripción:", err);
+    const mensaje = err?.response?.data?.error || "Ocurrió un error al registrar la suscripción.";
+    if (err?.response?.status === 409) {
+      mostrarAlerta("warning", "Dato duplicado", mensaje);
+    } else {
+      mostrarAlerta("danger", "Error en el registro", mensaje);
     }
-  };
+  }
+};
+
 
   const limpiarCampos = () => {
     setNombreCompleto("");
@@ -107,6 +115,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
     setMembresia(null);
     setEntrenador(null);
     setMetodoSeleccionado(null);
+    setDebe(""); // 👈 limpiamos debe
     setAlerta({ show: false, type: "", message: "", title: "" });
   };
 
@@ -126,7 +135,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
         {triggerText}
       </Button>
 
-      {/* Toast de alerta fuera del modal */}
+      {/* Toast de alerta */}
       {alerta.show && (
         <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[2000] animate-in slide-in-from-bottom">
           <Alert
@@ -178,6 +187,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                   onChange={(e) => setFechaInicio(e.target.value)}
                 />
 
+                {/* Membresía */}
                 <div>
                   <label className="block mb-2 text-sm">Membresía</label>
                   <button
@@ -195,6 +205,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                   </button>
                 </div>
 
+                {/* Entrenador */}
                 <div>
                   <label className="block mb-2 text-sm">Entrenador</label>
                   <button
@@ -209,6 +220,17 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                   </button>
                 </div>
 
+                {/* 👇 NUEVO CAMPO DEBE */}
+                <Input
+                  label="Debe (S/)"
+                  placeholder="Ej: 50.00"
+                  type="number"
+                  min="0"
+                  value={debe}
+                  onChange={(e) => setDebe(e.target.value)}
+                />
+
+                {/* Método de pago */}
                 <div>
                   <label className="block mb-1 text-sm">Método de Pago</label>
                   <div className="flex flex-col gap-2">
@@ -216,17 +238,11 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
                       <button
                         key={key}
                         type="button"
-                        className={`w-full p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${
-                          metodoSeleccionado === key ? "ring-4 ring-red-400" : ""
-                        }`}
+                        className={`w-full p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
                         onClick={() => setMetodoSeleccionado(key)}
                       >
                         <div className="flex items-center gap-3">
-                          <img
-                            src={metodo.icono}
-                            alt={metodo.nombre}
-                            className="w-6 h-6"
-                          />
+                          <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
                           <span className="text-lg font-medium">{metodo.nombre}</span>
                         </div>
                         {metodoSeleccionado === key && (

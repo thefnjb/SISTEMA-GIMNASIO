@@ -1,27 +1,28 @@
 const Membresia = require("../Modelos/Membresia");
 
 exports.crearMembresia = async (req, res) => {
-    try{
-        const {duracion,precio} = req.body; // Cambiado de titulo a duracion
-        const membresiaExistente = await Membresia.findOne({  gym: req.gym._id, duracion });
-        if(membresiaExistente){
+    try {
+        const { duracion, precio, turno } = req.body;
+
+        // Buscar membresía con la misma duración y mismo turno
+        const membresiaExistente = await Membresia.findOne({
+            gym: req.gym._id,
+            duracion,
+            turno
+        });
+
+        if (membresiaExistente) {
             membresiaExistente.precio = precio;
             await membresiaExistente.save();
-            return res.status(200).json({
-                message:"Membresía actualizada correctamente",
-            });
-        }else{
-            const membresiaNueva = new Membresia({precio, duracion, gym:req.gym._id}); // Cambiado de titulo a duracion
+            return res.status(200).json({ message: "Membresía actualizada correctamente" });
+        } else {
+            const membresiaNueva = new Membresia({ duracion, precio, turno, gym: req.gym._id });
             await membresiaNueva.save();
-            res.status(200).json({
-                message:"Membresía creada correctamente"
-            });
+            res.status(200).json({ message: "Membresía creada correctamente" });
         }
-    }catch(err){
+    } catch (err) {
         console.log(err);
-        res.status(500).json({
-            error:"Error al crear la membresía"
-        })
+        res.status(500).json({ error: "Error al crear la membresía" });
     }
 }
 exports.verMembresia = async (req, res) => {
