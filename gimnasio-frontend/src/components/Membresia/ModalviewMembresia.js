@@ -6,11 +6,9 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Input,
-  Select,
-  SelectItem,
   useDisclosure,
   Spinner,
+  Alert,
 } from "@heroui/react";
 import axios from "axios";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -19,13 +17,17 @@ const ModalviewMembresia = ({ onClose }) => {
   const { isOpen, onOpenChange } = useDisclosure({ defaultOpen: true });
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-
+  const [alerta, setAlerta] = useState({ show: false, type: "", message: "", title: "" });
 
   useEffect(() => {
     if (!isOpen && onClose) onClose();
   }, [isOpen, onClose]);
+
+  const mostrarAlerta = (type, title, message) => {
+    setAlerta({ show: true, type, title, message });
+    setTimeout(() => setAlerta({ show: false, type: "", message: "", title: "" }), 4000);
+  };
 
   // Traer membresías
   useEffect(() => {
@@ -56,14 +58,14 @@ const ModalviewMembresia = ({ onClose }) => {
 
   // Eliminar membresía
   const handleEliminar = async id => {
-    if (!window.confirm("¿Estás seguro de eliminar esta membresía?")) return;
     try {
       await axios.delete(`http://localhost:4000/plans/eliminarmembresia/${id}`, {
         withCredentials: true,
       });
       setData(prev => prev.filter(m => m._id !== id));
+      mostrarAlerta("success", "¡Éxito!", "Membresía eliminada correctamente.");
     } catch (err) {
-      alert("Error al eliminar membresía");
+      mostrarAlerta("danger", "Error", "Error al eliminar la membresía.");
     }
   };
 
@@ -86,7 +88,17 @@ const ModalviewMembresia = ({ onClose }) => {
             </ModalHeader>
 
             <ModalBody className="space-y-4">
-         
+              {alerta.show && (
+                <div className="mb-4">
+                  <Alert
+                    color={alerta.type}
+                    title={alerta.title}
+                    description={alerta.message}
+                    variant="faded"
+                    className="shadow-lg"
+                  />
+                </div>
+              )}
 
               {/* Lista de Membresías */}
               {loading ? (

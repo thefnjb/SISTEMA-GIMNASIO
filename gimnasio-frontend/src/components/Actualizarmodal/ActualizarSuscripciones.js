@@ -25,19 +25,19 @@ const CustomAlert = ({ visible, message, onClose }) => {
         transform: visible ? "translateX(0)" : "translateX(100%)"
       }}
     >
-      <div className="bg-green-100 border border-green-400 text-green-800 px-4 py-3 rounded-lg shadow-lg flex items-start gap-3">
+      <div className="flex items-start gap-3 px-4 py-3 text-green-800 bg-green-100 border border-green-400 rounded-lg shadow-lg">
         <div className="flex-shrink-0 mt-1">
-          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center text-white font-bold">
+          <div className="flex items-center justify-center w-6 h-6 font-bold text-white bg-green-500 rounded-full">
             ✓
           </div>
         </div>
         <div className="flex-1">
-          <p className="font-bold text-sm">¡Éxito!</p>
+          <p className="text-sm font-bold">¡Éxito!</p>
           <p className="text-sm">{message}</p>
         </div>
         <button
           onClick={onClose}
-          className="flex-shrink-0 text-green-700 hover:text-green-900 text-lg font-bold px-1"
+          className="flex-shrink-0 px-1 text-lg font-bold text-green-700 hover:text-green-900"
         >
           ×
         </button>
@@ -61,6 +61,10 @@ export default function ActualizarSuscripciones({
 
   const [errors, setErrors] = useState({ nombreCompleto: "", telefono: "", general: "" });
   const [entrenadores, setEntrenadores] = useState([]);
+  const [planes, setPlanes] = useState([]);
+  const [loadingPlanes, setLoadingPlanes] = useState(false);
+  const [planError, setPlanError] = useState(null);
+  const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [mesesAgregar, setMesesAgregar] = useState(0);
   const [deuda, setDeuda] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,6 +110,26 @@ export default function ActualizarSuscripciones({
     };
     cargarEntrenadores();
   }, []);
+
+  // Cargar planes (membresías) cuando se abra en modo renovar
+  useEffect(() => {
+    const fetchPlanes = async () => {
+      if (modo !== "renovar") return;
+      setLoadingPlanes(true);
+      setPlanError(null);
+      try {
+        const res = await axios.get("http://localhost:4000/plans/vermembresia", { withCredentials: true });
+        // res.data puede ser un arreglo
+        setPlanes(Array.isArray(res.data) ? res.data : (res.data?.plans || []));
+      } catch (err) {
+        console.error("Error cargando planes", err);
+        setPlanError("No se pudieron cargar las membresías");
+      } finally {
+        setLoadingPlanes(false);
+      }
+    };
+    fetchPlanes();
+  }, [modo]);
 
   const validarCampos = () => {
     const err = { nombreCompleto: "", telefono: "" };
@@ -215,153 +239,175 @@ export default function ActualizarSuscripciones({
     <>
       <Modal isOpen={true} onClose={onClose} size="2xl" scrollBehavior="inside" className="z-50">
         <ModalContent className={`${modalBg} text-white`}>
-          <ModalHeader className={`flex flex-col gap-1 p-4 ${headerBg} rounded-t-lg`}>
-            <h2 className="text-xl font-semibold text-white">
-              {modo === "renovar" ? "Renovar membresía" : "Editar miembro"}
-            </h2>
-            <p className="text-sm text-gray-200">
-              {modo === "renovar"
-                ? "Agrega meses, deuda y confirma el nuevo vencimiento"
-                : "Actualiza datos principales del miembro"}
-            </p>
+          <ModalHeader className={`p-4 ${headerBg} rounded-t-lg`}>
+            {modo === "renovar" ? (
+              <div className="w-full text-center">
+                <div className="text-2xl font-bold text-red-400">Renovar membresía</div>
+                <p className="mt-1 text-sm text-gray-200">Agrega meses, deuda y confirma el nuevo vencimiento</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1">
+                <h2 className="text-xl font-semibold text-white">Editar miembro</h2>
+                <p className="text-sm text-gray-200">Actualiza datos principales del miembro</p>
+              </div>
+            )}
           </ModalHeader>
 
           <ModalBody className="p-4">
             {errors.general && (
-              <div className="mb-3 text-sm text-red-300 bg-red-900/20 p-2 rounded">
+              <div className="p-2 mb-3 text-sm text-red-300 rounded bg-red-900/20">
                 {errors.general}
               </div>
             )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Nombre */}
-              <div className={`${modo === "renovar" ? "hidden" : ""}`}>
-                <label className={labelClass}>Nombre y Apellido</label>
-                <Input
-                  type="text"
-                  placeholder="Juan Pérez"
-                  value={datos.nombreCompleto}
-                  onChange={(e) => handleNombreChange(e.target.value)}
-                  onBlur={() => setDatos(prev => ({ ...prev, nombreCompleto: prev.nombreCompleto.trim() }))}
-                  className={`w-full mt-2 ${inputClass}`}
-                  clearable
-                />
-                {errors.nombreCompleto && (
-                  <p className="mt-1 text-xs text-red-300">{errors.nombreCompleto}</p>
-                )}
-              </div>
+              {modo !== "renovar" && (
+                <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                  <label className={labelClass}>Nombre y Apellido</label>
+                  <Input
+                    type="text"
+                    placeholder="Juan Pérez"
+                    value={datos.nombreCompleto}
+                    onChange={(e) => handleNombreChange(e.target.value)}
+                    onBlur={() => setDatos(prev => ({ ...prev, nombreCompleto: prev.nombreCompleto.trim() }))}
+                    className={`w-full mt-2 ${inputClass}`}
+                    clearable
+                  />
+                  {errors.nombreCompleto && (
+                    <p className="mt-1 text-xs text-red-300">{errors.nombreCompleto}</p>
+                  )}
+                </div>
+              )}
 
               {/* Teléfono */}
-              <div className={`${modo === "renovar" ? "hidden" : ""}`}>
-                <label className={labelClass}>Teléfono</label>
-                <Input
-                  type="tel"
-                  placeholder="987654321"
-                  value={datos.telefono}
-                  onChange={(e) => handleTelefonoChange(e.target.value)}
-                  inputMode="numeric"
-                  maxLength={9}
-                  className={`w-full mt-2 ${inputClass}`}
-                />
-                <p className="mt-1 text-xs text-gray-300">Formato: 9 dígitos (ej.: 987654321)</p>
-                {errors.telefono && <p className="mt-1 text-xs text-red-300">{errors.telefono}</p>}
-              </div>
+              {modo !== "renovar" && (
+                <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                  <label className={labelClass}>Teléfono</label>
+                  <Input
+                    type="tel"
+                    placeholder="987654321"
+                    value={datos.telefono}
+                    onChange={(e) => handleTelefonoChange(e.target.value)}
+                    inputMode="numeric"
+                    maxLength={9}
+                    className={`w-full mt-2 ${inputClass}`}
+                  />
+                  <p className="mt-1 text-xs text-gray-300">Formato: 9 dígitos (ej.: 987654321)</p>
+                  {errors.telefono && <p className="mt-1 text-xs text-red-300">{errors.telefono}</p>}
+                </div>
+              )}
 
               {/* Método de pago */}
-              <div className={`${modo === "renovar" ? "hidden" : ""}`}>
-                <p className="text-sm font-medium text-gray-200 mb-2">Método de pago</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {["yape", "plin", "efectivo"].map((m) => (
-                    <Button
-                      key={m}
-                      size="sm"
-                      variant={datos.metodoPago === m ? "solid" : "bordered"}
-                      className={`${datos.metodoPago === m ? btnPrimaryClass : btnDefaultClass} capitalize`}
-                      onClick={() => setDatos({ ...datos, metodoPago: m })}
-                    >
-                      {m}
-                    </Button>
-                  ))}
+              {modo !== "renovar" && (
+                <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                  <p className="mb-2 text-sm font-medium text-gray-200">Método de pago</p>
+                  <div className="flex gap-2">
+                    {["yape", "plin", "efectivo"].map((m) => (
+                      <Button
+                        key={m}
+                        size="sm"
+                        variant={datos.metodoPago === m ? "solid" : "bordered"}
+                        className={`${datos.metodoPago === m ? btnPrimaryClass : btnDefaultClass} capitalize`}
+                        onClick={() => setDatos({ ...datos, metodoPago: m })}
+                      >
+                        {m}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
                 {/* Entrenador */}
-                <div className={`${modo === "renovar" ? "hidden" : ""} md:col-span-2`}>
-                  <p className="text-sm font-medium text-gray-200 mb-2">Entrenador</p>
-                  <select
-                    className="w-full border rounded-md px-3 py-2 bg-neutral-900 text-white border-neutral-700"
-                    value={datos.entrenador}
-                    onChange={(e) => setDatos({ ...datos, entrenador: e.target.value })}
-                  >
-                    <option value="" className="bg-neutral-900 text-white">Sin entrenador</option>
-                    {Array.isArray(entrenadores) &&
-                      entrenadores.map((t) => (
-                        <option key={t._id} value={t._id} className="bg-neutral-900 text-white">
-                          {t.nombre}
-                        </option>
-                      ))}
-                  </select>
-                </div>
+                {modo !== "renovar" && (
+                  <div className="p-3 bg-gray-800 border rounded-md md:col-span-2 border-neutral-700">
+                    <p className="mb-2 text-sm font-medium text-gray-200">Entrenador</p>
+                    <select
+                      className="w-full px-3 py-2 text-white border rounded-md bg-neutral-900 border-neutral-700"
+                      value={datos.entrenador}
+                      onChange={(e) => setDatos({ ...datos, entrenador: e.target.value })}
+                    >
+                      <option value="" className="text-white bg-neutral-900">Sin entrenador</option>
+                      {Array.isArray(entrenadores) &&
+                        entrenadores.map((t) => (
+                          <option key={t._id} value={t._id} className="text-white bg-neutral-900">
+                            {t.nombre}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                )}
 
 
               {/* Renovación */}
               {modo === "renovar" && (
-                <div className="md:col-span-2 border-t pt-4 border-neutral-700">
-                  <p className="text-sm font-medium mb-2 text-gray-200">Renovar membresía</p>
+                <div className="pt-4 border-t md:col-span-2 border-neutral-700">
+                  {/* Sección estilo "selección" similar a ModalSeleccionarMembresia */}
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                      {loadingPlanes ? (
+                        <div className="col-span-3 p-3 text-center text-gray-400">Cargando membresías...</div>
+                      ) : planError ? (
+                        <div className="col-span-3 p-3 text-center text-red-400">{planError}</div>
+                      ) : planes.length === 0 ? (
+                        <div className="col-span-3 p-3 text-center text-gray-400">No hay membresías disponibles</div>
+                      ) : (
+                        planes.map((plan) => {
+                          const dur = Number(plan.duracion || plan.meses || plan.numero || 0);
+                          const selected = selectedPlanId === plan._id;
+                          return (
+                            <button
+                              key={plan._id}
+                              type="button"
+                              onClick={() => { setSelectedPlanId(plan._id); setMesesAgregar(dur); }}
+                              className={`p-3 rounded-lg cursor-pointer transition-colors text-left border ${selected ? 'border-red-500 bg-gray-700 ring-2 ring-red-600' : 'border-neutral-700 bg-gray-800 hover:bg-gray-700'}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex flex-col">
+                                  <span className="font-medium text-white">{dur === 12 ? '1 Año' : `+${dur} mes${dur > 1 ? 'es' : ''}`}</span>
+                                  <span className="text-sm text-gray-400">Turno: {plan.turno || '-'}</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {selected && (
+                                    <span className="inline-block font-bold text-red-400">✓</span>
+                                  )}
+                                  <span className="text-sm font-semibold text-green-400">{`S/ ${Number(plan.precio || 0).toFixed(2)}`}</span>
+                                </div>
+                              </div>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
 
-                  <div className="flex flex-wrap items-center gap-2 mb-3">
-                    {[1, 3, 6].map((n) => (
-                      <Button
-                        key={n}
-                        size="sm"
-                        variant={mesesAgregar === n ? "solid" : "bordered"}
-                        className={`${mesesAgregar === n ? btnPrimaryClass : btnDefaultClass}`}
-                        onClick={() => setMesesAgregar(n)}
-                      >
-                        +{n} mes{n > 1 ? "es" : ""}
-                      </Button>
-                    ))}
+                    <div className="flex flex-col gap-3">
+                      {/* Contenedor mejorado para input de meses y info de deuda actual */}
+                      <div className="flex flex-col gap-3">
+                        <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                          <div className="text-sm text-gray-400">Deuda actual</div>
+                          <div className="font-semibold text-white">S/ {Number(deuda || 0).toFixed(2)}</div>
+                        </div>
+                      </div>
 
-                    <Input
-                      type="number"
-                      min={1}
-                      max={12}
-                      value={mesesAgregar || ""}
-                      onChange={(e) => setMesesAgregar(Number(e.target.value))}
-                      className="w-28 mt-1"
-                      variant="bordered"
-                      label="Meses"
-                    />
+                      {/* Fechas ordenadas y claras */}
+                      <div className="grid grid-cols-1 gap-3 mt-2 text-sm sm:grid-cols-2">
+                        <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                          <div className="text-gray-400">Vence actualmente</div>
+                          <div className="font-semibold text-white">{formatearFecha(vencimientoActual)}</div>
+                        </div>
+
+                        <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                          <div className="text-gray-400">Vencimiento estimado</div>
+                          <div className="font-semibold text-white">{formatearFecha(vencimientoEstimado)}</div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-
-               {/* Input de deuda */}
-            <div className="flex flex-col gap-2 mt-2">
-              <label className="text-sm font-medium text-gray-200">Monto de deuda</label>
-              <Input
-                type="number"
-                min={0}
-                value={deuda || 0}
-                onChange={(e) => setDeuda(Number(e.target.value))}
-                className="w-32"
-                variant="bordered"
-                placeholder="0"
-              />
-
-              <div className="text-sm flex flex-col gap-1 text-gray-200">
-                <span>
-                  Vence actualmente: <b>{formatearFecha(vencimientoActual)}</b>
-                </span>
-                <span>
-                  Vencimiento estimado: <b>{formatearFecha(vencimientoEstimado)}</b>
-                </span>
-              </div>
-            </div>
-
                 </div>
               )}
             </div>
           </ModalBody>
 
-          <ModalFooter className="flex gap-2 p-4 justify-end bg-black/80 rounded-b-lg">
+          <ModalFooter className="flex justify-end gap-2 p-4 rounded-b-lg bg-black/80">
             {modo === "editar" && (
               <Button
                 color="primary"
@@ -386,7 +432,7 @@ export default function ActualizarSuscripciones({
             <Button
               variant="bordered"
               onPress={onClose}
-              className="bg-transparent text-white border-neutral-700"
+              className="text-white bg-transparent border-neutral-700"
             >
               Cancelar
             </Button>

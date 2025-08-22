@@ -11,7 +11,7 @@ import {
 } from "@heroui/react";
 import { useState, useRef } from "react";
 import axios from "axios";
-import ArchiveRoundedIcon from '@mui/icons-material/ArchiveRounded';
+import ArchiveRoundedIcon from "@mui/icons-material/ArchiveRounded";
 
 const ModalEntrenadores = ({
   triggerText = "INGRESAR",
@@ -26,25 +26,39 @@ const ModalEntrenadores = ({
   const [telefono, setTelefono] = useState("");
   const [fotoPerfil, setFotoPerfil] = useState(null);
 
-  // 🔹 Estado de la alerta
-  const [alertInfo, setAlertInfo] = useState({
+  // ✅ Alerta interna (dentro del modal)
+  const [alertaInterna, setAlertaInterna] = useState({
     show: false,
     color: "default",
     message: "",
   });
-  const alertDuration = 3000; 
 
+  // ✅ Alerta externa (toast fuera del modal)
+  const [alertaExterna, setAlertaExterna] = useState({
+    show: false,
+    color: "default",
+    message: "",
+  });
 
-  const mostrarAlerta = (color, message) => {
-    setAlertInfo({ show: true, color, message });
+  // Mostrar alerta interna
+  const mostrarAlertaInterna = (color, message) => {
+    setAlertaInterna({ show: true, color, message });
     setTimeout(() => {
-      setAlertInfo({ show: false, color: "default", message: "" });
-    }, alertDuration);
+      setAlertaInterna({ show: false, color: "default", message: "" });
+    }, 4000);
+  };
+
+  // Mostrar alerta externa
+  const mostrarAlertaExterna = (color, message) => {
+    setAlertaExterna({ show: true, color, message });
+    setTimeout(() => {
+      setAlertaExterna({ show: false, color: "default", message: "" });
+    }, 5000);
   };
 
   const agregarEntrenador = async () => {
     if (!nombre.trim() || !edad.trim() || !telefono.trim()) {
-      mostrarAlerta("warning", "Completa todos los campos.");
+      mostrarAlertaInterna("warning","Todos los campos son obligatorios.");
       return;
     }
 
@@ -68,12 +82,15 @@ const ModalEntrenadores = ({
 
       if (onEntrenadorAgregado) onEntrenadorAgregado();
 
-      mostrarAlerta("success", "Entrenador agregado correctamente.");
+      mostrarAlertaExterna("success", "Entrenador agregado correctamente.");
 
-      if (closeModalRef.current) closeModalRef.current();
+      // 🔹 Cerrar modal después de éxito
+      setTimeout(() => {
+        if (closeModalRef.current) closeModalRef.current();
+      }, 300);
     } catch (err) {
       console.error("Error al agregar entrenador:", err);
-      mostrarAlerta("danger", "Error al agregar entrenador.");
+      mostrarAlertaExterna("danger", "Error al agregar entrenador.");
     }
   };
 
@@ -87,10 +104,10 @@ const ModalEntrenadores = ({
         {triggerText}
       </Button>
 
-      {/* 🔹 Alerta tipo toast */}
-      {alertInfo.show && (
+      {/* 🔹 Alerta externa tipo toast */}
+      {alertaExterna.show && (
         <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[2000]">
-          <Alert color={alertInfo.color} title={alertInfo.message} />
+          <Alert color={alertaExterna.color} title={alertaExterna.message} />
         </div>
       )}
 
@@ -114,6 +131,14 @@ const ModalEntrenadores = ({
                 </ModalHeader>
 
                 <ModalBody className="space-y-4">
+                  {/* 🔹 Alerta interna dentro del modal */}
+                  {alertaInterna.show && (
+                    <Alert
+                      color={alertaInterna.color}
+                      title={alertaInterna.message}
+                    />
+                  )}
+
                   <Input
                     label="Nombre y Apellido"
                     placeholder="Ingresa el nombre"
@@ -133,7 +158,7 @@ const ModalEntrenadores = ({
                     onChange={(e) => setTelefono(e.target.value)}
                   />
 
-                  {/* Botón personalizado para subir archivo */}
+                  {/* Botón subir archivo */}
                   <div className="flex flex-col items-start space-y-2">
                     <input
                       id="upload-foto"
@@ -150,7 +175,8 @@ const ModalEntrenadores = ({
                           backgroundColor: "rgba(122, 15, 22, 0.3)",
                           backdropFilter: "blur(4px)",
                         }}
-                      ><ArchiveRoundedIcon/>
+                      >
+                        <ArchiveRoundedIcon />
                       </Button>
                     </label>
                     {fotoPerfil && (
@@ -171,11 +197,11 @@ const ModalEntrenadores = ({
                 <ModalFooter>
                   <Button
                     onPress={() => {
-                      setAlertInfo({
+                      setAlertaInterna({
                         show: false,
                         color: "default",
                         message: "",
-                      }); // 🔹 ocultar alerta al cerrar
+                      });
                       onClose();
                     }}
                     className="text-white border-white"

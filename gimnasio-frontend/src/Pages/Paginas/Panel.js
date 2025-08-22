@@ -19,11 +19,11 @@ function Panel() {
   const [active, setActive] = useState("INICIO");
   const [showAgregar, setShowAgregar] = useState(false);
   const [showVer, setShowVer] = useState(false);
-  const [refreshClientes, setRefreshClientes] = useState(false);
+  const [refreshClientes, setRefreshClientes] = useState(0);
   const [refreshEntrenadores, setRefreshEntrenadores] = useState(false);
 
   const handleClienteAgregado = () => {
-    setRefreshClientes((prev) => !prev); 
+    setRefreshClientes((prev) => prev + 1); 
   };
 
   const handleEntrenadorAgregado = () => {
@@ -65,7 +65,10 @@ function Panel() {
 
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               <CustomCard imageUrl="/images/suscripcion.png">
-                <ModalSuscripcion triggerText={<GetAppRoundedIcon fontSize="large" />} />
+                <ModalSuscripcion 
+                  triggerText={<GetAppRoundedIcon fontSize="large" />}
+                  onSuscripcionExitosa={handleClienteAgregado} 
+                />
               </CustomCard>
 
               <CustomCard imageUrl="/images/clientespordiaa.png">
@@ -95,32 +98,60 @@ function Panel() {
             </div>
 
             <div className="mt-4 sm:mt-6 md:mt-8 lg:mt-10 xl:mt-12">
-            <TablaClientesDia refresh={refreshClientes} />
+              <TablaClientesDia refresh={refreshClientes} />
 
-            {showAgregar && (
-              <Membresia onClose={() => setShowAgregar(false)} />
-            )}
+              {showAgregar && (
+                <Membresia onClose={() => setShowAgregar(false)} />
+              )}
 
-            {showVer && (
-              <ModalviewMembresia onClose={() => setShowVer(false)} />
-            )}
+              {showVer && (
+                <ModalviewMembresia onClose={() => setShowVer(false)} />
+              )}
+            </div>
           </div>
-          </div>
-          );
-          case "INGRESOS":
-            return <Ingresos />;
-          case "CLIENTES":
-  return <TablaClientes />;
+        );
 
-          default:
-            return null;
-          }
-          };
+      case "INGRESOS":
+        return <Ingresos />;
+
+      case "CLIENTES":
+        return (
+          <div className="w-full p-4 overflow-x-auto">
+            <TablaClientes refresh={refreshClientes} />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div className="flex">
-      <Barralateral active={active} setActive={setActive} />
-      <div className="flex-1 ml-72">{renderContent()}</div>
+    <div className="relative w-full min-h-screen bg-white">
+      {/* Grid Background */}
+      <div
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `
+        linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+        linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
+      `,
+          backgroundSize: "40px 40px",
+        }}
+      />
+
+      <div className="relative z-10 flex h-screen overflow-hidden">
+        {/* Barra lateral fija */}
+        <div className="flex-shrink-0 w-72">
+          <Barralateral active={active} setActive={setActive} />
+        </div>
+
+        <div className="flex-1 overflow-x-auto">
+          <div className="min-w-[900px]">
+            {renderContent()}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
