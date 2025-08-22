@@ -22,13 +22,14 @@ const metodosPago = {
   efectivo: { nombre: "Efectivo", color: "bg-green-600", icono: "/iconos/eefctivo.png" },
 };
 
-const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
+const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExitosa }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isMembresiaOpen, setMembresiaOpen] = useState(false);
   const [isEntrenadorModalOpen, setEntrenadorModalOpen] = useState(false);
 
   // Estados para las alertas
-  const [alerta, setAlerta] = useState({ show: false, type: "", message: "", title: "" });
+  const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
+  const [alertaExterna, setAlertaExterna] = useState({ show: false, type: "", message: "", title: "" });
 
   // Estados del formulario
   const [nombreCompleto, setNombreCompleto] = useState("");
@@ -41,72 +42,83 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción" }) => {
   const [membresia, setMembresia] = useState(null);
   const [entrenador, setEntrenador] = useState(null);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
-
-  // 👇 Nuevo estado para el campo DEBE
   const [debe, setDebe] = useState("");
 
-  // Función para mostrar alertas
-  const mostrarAlerta = (type, title, message) => {
-    setAlerta({ show: true, type, title, message });
+  // Alerta dentro del modal 
+  const mostrarAlertaInterna = (type, title, message) => {
+    setAlertaInterna({ show: true, type, title, message });
     setTimeout(() => {
-      setAlerta({ show: false, type: "", message: "", title: "" });
+      setAlertaInterna({ show: false, type: "", message: "", title: "" });
+    }, 4000);
+  };
+
+  // Alerta fuera del modal
+  const mostrarAlertaExterna = (type, title, message) => {
+    setAlertaExterna({ show: true, type, title, message });
+    setTimeout(() => {
+      setAlertaExterna({ show: false, type: "", message: "", title: "" });
     }, 4000);
   };
 
   // Guardar con nuevo contrato de backend
-// Guardar con nuevo contrato de backend
-const guardarSuscripcion = async (onClose) => {
-  if (!nombreCompleto.trim()) {
-    return mostrarAlerta("warning", "Campo obligatorio", "El nombre completo es obligatorio");
-  }
-  if (!/^\d{9}$/.test(telefono)) {
-    return mostrarAlerta("warning", "Teléfono inválido", "El teléfono debe tener 9 dígitos");
-  }
-  if (!membresia?._id) {
-    return mostrarAlerta("warning", "Membresía requerida", "Selecciona una membresía");
-  }
-
-  // 🚨 Validación de método de pago
-  if (!metodoSeleccionado) {
-    return mostrarAlerta("danger", "Método de pago requerido", "Debes elegir un método de pago");
-  }
-
-  try {
-    const nuevoMiembro = {
-      nombreCompleto: nombreCompleto.trim(),
-      telefono,
-      fechaIngreso: fechaInicio,
-      mensualidad: membresia._id,
-      entrenador: entrenador?._id,
-      estadoPago: "Pagado", // 👈 ya no es condicional porque lo validamos arriba
-      metodoPago: metodoSeleccionado,
-      debe: Number(debe) || 0,
-    };
-
-    await axios.post(
-      "http://localhost:4000/members/miembros",
-      nuevoMiembro,
-      { withCredentials: true }
-    );
-
-    mostrarAlerta("success", "¡Éxito!", "Suscripción registrada correctamente");
-
-    setTimeout(() => {
-      limpiarCampos();
-      onClose();
-    }, 2000);
-
-  } catch (err) {
-    console.error("Error al registrar suscripción:", err);
-    const mensaje = err?.response?.data?.error || "Ocurrió un error al registrar la suscripción.";
-    if (err?.response?.status === 409) {
-      mostrarAlerta("warning", "Dato duplicado", mensaje);
-    } else {
-      mostrarAlerta("danger", "Error en el registro", mensaje);
+  const guardarSuscripcion = async (onClose) => {
+    // 🚨 Validaciones - Alertas INTERNAS (dentro del modal)
+    if (!nombreCompleto.trim()) {
+      return mostrarAlertaInterna("warning", "Campo obligatorio", "El nombre completo es obligatorio");
     }
-  }
-};
+    if (!/^\d{9}$/.test(telefono)) {
+      return mostrarAlertaInterna("warning", "Teléfono inválido", "El teléfono debe tener 9 dígitos");
+    }
+    if (!membresia?._id) {
+      return mostrarAlertaInterna("warning", "Membresía requerida", "Selecciona una membresía");
+    }
+    if (!metodoSeleccionado) {
+      return mostrarAlertaInterna("danger", "Método de pago requerido", "Debes elegir un método de pago");
+    }
 
+    try {
+      const nuevoMiembro = {
+        nombreCompleto: nombreCompleto.trim(),
+        telefono,
+        fechaIngreso: fechaInicio,
+        mensualidad: membresia._id,
+        entrenador: entrenador?._id,
+        estadoPago: "Pagado",
+        metodoPago: metodoSeleccionado,
+        debe: Number(debe) || 0,
+      };
+
+      await axios.post(
+        "http://localhost:4000/members/miembros",
+        nuevoMiembro,
+        { withCredentials: true }
+      );
+
+      // ÉXITO - Alerta EXTERNA 
+      mostrarAlertaExterna("success", "¡Éxito!", "Suscripción registrada correctamente");
+      
+      if (onSuscripcionExitosa) {
+        onSuscripcionExitosa();
+      }
+
+      // Cerrar modal 
+      setTimeout(() => {
+        limpiarCampos();
+        onClose();
+      }, 400);
+
+    } catch (err) {
+      console.error("Error al registrar suscripción:", err);
+      const mensaje = err?.response?.data?.error || "Ocurrió un error al registrar la suscripción.";
+      
+      //ERRORES DE SERVIDOR - Alertas INTERNAS 
+      if (err?.response?.status === 409) {
+        mostrarAlertaInterna("warning", "Dato duplicado", mensaje);
+      } else {
+        mostrarAlertaInterna("danger", "Error en el registro", mensaje);
+      }
+    }
+  };
 
   const limpiarCampos = () => {
     setNombreCompleto("");
@@ -115,8 +127,9 @@ const guardarSuscripcion = async (onClose) => {
     setMembresia(null);
     setEntrenador(null);
     setMetodoSeleccionado(null);
-    setDebe(""); // 👈 limpiamos debe
-    setAlerta({ show: false, type: "", message: "", title: "" });
+    setDebe("");
+    // Limpiar solo alerta interna al cerrar modal
+    setAlertaInterna({ show: false, type: "", message: "", title: "" });
   };
 
   const handleSeleccionarEntrenador = (entrenadorSeleccionado) => {
@@ -135,15 +148,17 @@ const guardarSuscripcion = async (onClose) => {
         {triggerText}
       </Button>
 
-      {/* Toast de alerta */}
-      {alerta.show && (
-        <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[2000] animate-in slide-in-from-bottom">
+      {/* 🌟 ALERTA EXTERNA - Solo para mensajes de ÉXITO */}
+      {alertaExterna.show && (
+        <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[9999] animate-in slide-in-from-bottom">
           <Alert
-            color={alerta.type}
-            title={alerta.title}
-            description={alerta.message}
+            color={alertaExterna.type}
+            title={alertaExterna.title}
+            description={alertaExterna.message}
             variant="faded"
             className="shadow-lg"
+            isClosable
+            onClose={() => setAlertaExterna({ show: false, type: "", message: "", title: "" })}
           />
         </div>
       )}
@@ -168,6 +183,21 @@ const guardarSuscripcion = async (onClose) => {
               </ModalHeader>
 
               <ModalBody className="space-y-4 max-h-[70vh] overflow-y-auto">
+                {/* 🔥 ALERTA INTERNA - Para validaciones y errores */}
+                {alertaInterna.show && (
+                  <div className="mb-4">
+                    <Alert
+                      color={alertaInterna.type}
+                      title={alertaInterna.title}
+                      description={alertaInterna.message}
+                      variant="faded"
+                      className="shadow-lg"
+                      isClosable
+                      onClose={() => setAlertaInterna({ show: false, type: "", message: "", title: "" })}
+                    />
+                  </div>
+                )}
+
                 <Input
                   label="Nombre y Apellido"
                   placeholder="Ingresa el nombre"
@@ -220,7 +250,7 @@ const guardarSuscripcion = async (onClose) => {
                   </button>
                 </div>
 
-                {/* 👇 NUEVO CAMPO DEBE */}
+                {/* Campo DEBE */}
                 <Input
                   label="Debe (S/)"
                   placeholder="Ej: 50.00"

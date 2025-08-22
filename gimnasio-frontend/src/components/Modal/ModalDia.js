@@ -29,12 +29,9 @@ const ModalDia = ({
   const [fechaInscripcion, setFechaInscripcion] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
 
-  const [alertInfo, setAlertInfo] = useState({
-    show: false,
-    color: "default",
-    message: "",
-  });
-  const alertDuration = 3000; 
+  // Estados para alertas híbridas
+  const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
+  const [alertaExterna, setAlertaExterna] = useState({ show: false, type: "", message: "", title: "" });
 
   useEffect(() => {
     if (isOpen) {
@@ -47,19 +44,38 @@ const ModalDia = ({
     setNombreCompleto("");
     setFechaInscripcion("");
     setMetodoSeleccionado(null);
+    // Limpiar solo alerta interna al cerrar modal
+    setAlertaInterna({ show: false, type: "", message: "", title: "" });
   };
 
-  const mostrarAlerta = (color, message) => {
-    setAlertInfo({ show: true, color, message });
+  // 🎯 Función para mostrar alertas DENTRO del modal (validaciones y errores)
+  const mostrarAlertaInterna = (type, title, message) => {
+    setAlertaInterna({ show: true, type, title, message });
     setTimeout(() => {
-      setAlertInfo({ show: false, color: "default", message: "" });
-    }, alertDuration);
+      setAlertaInterna({ show: false, type: "", message: "", title: "" });
+    }, 4000);
+  };
+
+  // 🎯 Función para mostrar alertas FUERA del modal (éxito)
+  const mostrarAlertaExterna = (type, title, message) => {
+    setAlertaExterna({ show: true, type, title, message });
+    setTimeout(() => {
+      setAlertaExterna({ show: false, type: "", message: "", title: "" });
+    }, 4000);
   };
 
   const guardarCliente = async (onClose) => {
-    if (!nombreCompleto.trim() || !fechaInscripcion) {
-      mostrarAlerta("warning", "Por favor, complete todos los campos obligatorios.");
-      return;
+    // 🚨 Validaciones - Alertas INTERNAS (dentro del modal)
+    if (!nombreCompleto.trim()) {
+      return mostrarAlertaInterna("warning", "Campo obligatorio", "El nombre y apellido es obligatorio");
+    }
+
+    if (!fechaInscripcion) {
+      return mostrarAlertaInterna("warning", "Fecha requerida", "Selecciona una fecha de inscripción");
+    }
+
+    if (!metodoSeleccionado) {
+      return mostrarAlertaInterna("warning", "Método de pago requerido", "Selecciona un método de pago");
     }
 
     const correctedDate = new Date(`${fechaInscripcion}T00:00:00`);
@@ -70,22 +86,35 @@ const ModalDia = ({
         {
           nombre: nombreCompleto,
           fecha: correctedDate,
-          metododePago: metodoSeleccionado
-            ? metodosPago[metodoSeleccionado].nombre
-            : "Efectivo",
+          metododePago: metodosPago[metodoSeleccionado].nombre,
         },
         { withCredentials: true }
       );
 
-      mostrarAlerta("success", "Cliente registrado exitosamente.");
+      // ✅ ÉXITO - Alerta EXTERNA (fuera del modal)
+      mostrarAlertaExterna("success", "¡Éxito!", "Cliente registrado exitosamente");
+
+      // Limpiar campos y callbacks
       limpiarCampos();
       if (onClienteAgregado) onClienteAgregado();
-      onClose();
+
+      // Cerrar modal después de un pequeño delay
+      setTimeout(() => {
+        onClose();
+      }, 600);
+
     } catch (err) {
       console.error("Error al registrar cliente:", err);
-      const errorMessage =
-        err.response?.data?.error || "Ocurrió un error al registrar el cliente.";
-      mostrarAlerta("danger", `Error: ${errorMessage}`);
+      const errorMessage = err.response?.data?.error || "Ocurrió un error al registrar el cliente.";
+      
+      // ❌ ERRORES DE SERVIDOR - Alertas INTERNAS (dentro del modal)
+      if (err?.response?.status === 409) {
+        mostrarAlertaInterna("warning", "Cliente duplicado", errorMessage);
+      } else if (err?.response?.status === 400) {
+        mostrarAlertaInterna("warning", "Datos inválidos", errorMessage);
+      } else {
+        mostrarAlertaInterna("danger", "Error del servidor", errorMessage);
+      }
     }
   };
 
@@ -99,10 +128,18 @@ const ModalDia = ({
         {triggerText}
       </Button>
 
-      {/* 🔹 Alerta persistente aunque el modal se cierre */}
-      {alertInfo.show && (
-        <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[2000]">
-          <Alert color={alertInfo.color} title={alertInfo.message} />
+      {/* 🌟 ALERTA EXTERNA - Solo para mensajes de ÉXITO */}
+      {alertaExterna.show && (
+        <div className="fixed bottom-4 right-4 w-[90%] md:w-[350px] z-[9999] animate-in slide-in-from-bottom">
+          <Alert
+            color={alertaExterna.type}
+            title={alertaExterna.title}
+            description={alertaExterna.message}
+            variant="faded"
+            className="shadow-lg"
+            isClosable
+            onClose={() => setAlertaExterna({ show: false, type: "", message: "", title: "" })}
+          />
         </div>
       )}
 
@@ -124,6 +161,21 @@ const ModalDia = ({
               </ModalHeader>
 
               <ModalBody className="space-y-4">
+                {/* 🔥 ALERTA INTERNA - Para validaciones y errores */}
+                {alertaInterna.show && (
+                  <div className="mb-4">
+                    <Alert
+                      color={alertaInterna.type}
+                      title={alertaInterna.title}
+                      description={alertaInterna.message}
+                      variant="faded"
+                      className="shadow-lg"
+                      isClosable
+                      onClose={() => setAlertaInterna({ show: false, type: "", message: "", title: "" })}
+                    />
+                  </div>
+                )}
+
                 <Input
                   label="Nombre y Apellido"
                   placeholder="Ej. Juan Pérez"
