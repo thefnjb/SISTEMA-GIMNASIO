@@ -3,7 +3,7 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 const AvatarGroup = () => {
   return (
     <div className="flex justify-center gap-2 mb-4">
-      <img className="w-20 h-20 rounded-full border-2 border-white" src="/images/logo.jpg" alt="logo" />
+      <img className="w-20 h-20 border-2 border-white rounded-full" src="/images/logo.jpg" alt="logo" />
     </div>
   );
 }
@@ -12,7 +12,7 @@ const Admin = () =>{
    <div className="flex  flex-col items-center justify-center  min-h-[200px]  rounded-xl p-4 shadow-sm">
       <div className="w-[100px] h-[100px] rounded-lg  overflow-hidden mb-4">
         <img 
-          className="w-full h-full object-cover rounded-full border-2 border-white" 
+          className="object-cover w-full h-full border-2 border-white rounded-full" 
           src="/images/logo.jpg" 
           alt="logo"
         />

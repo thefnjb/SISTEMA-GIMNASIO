@@ -9,7 +9,7 @@ import {
   User,
 } from "@heroui/react";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 
 const esNombreFemenino = (nombre) => {
   if (!nombre) return false;
@@ -26,7 +26,7 @@ const ModalviewDia = ({
 
   const fetchClientes = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/visits/clientesdia", {
+      const res = await api.get("/visits/clientesdia", {
         withCredentials: true,
       });
       setClientes(res.data);
@@ -56,13 +56,13 @@ const ModalviewDia = ({
         hideCloseButton
         backdrop="blur"
         isDismissable={false}
-        className="bg-black text-white"
+        className="text-white bg-black"
       >
         <ModalContent>
           {(onClose) => (
-            <div className="bg-neutral-600 rounded-xl text-white">
+            <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-left text-red-500 text-3xl font-bold">
+                <div className="w-full text-3xl font-bold text-left text-red-500">
                   {title}
                 </div>
               </ModalHeader>
@@ -73,10 +73,10 @@ const ModalviewDia = ({
                     {clientes.map((cliente, index) => (
                       <li
                         key={index}
-                        className="bg-white text-black p-3 rounded-md flex flex-col w-full shadow hover:shadow-red-400/20 transition"
+                        className="flex flex-col w-full p-3 text-black transition bg-white rounded-md shadow hover:shadow-red-400/20"
                       >
                         <User
-                          className="w-full justify-start text-left gap-2"
+                          className="justify-start w-full gap-2 text-left"
                           avatarProps={{
                             src: esNombreFemenino(cliente.nombre)
                               ? "/iconos/mujer.png"

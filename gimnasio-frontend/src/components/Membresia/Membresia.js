@@ -12,7 +12,8 @@ import {
   SelectItem,
   Alert,
 } from "@heroui/react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
+
 
 const preciosPorTurno = {
   mañana: 80,
@@ -71,7 +72,7 @@ const Membresia = ({ onClose }) => {
 
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:4000/plans/nuevamembresia", {
+      const response = await api.post("/plans/nuevamembresia", {
         duracion: Number(duracion),
         precio: Number(precio),
         turno,

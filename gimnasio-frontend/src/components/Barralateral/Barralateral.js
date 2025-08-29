@@ -13,7 +13,7 @@ const Barralateral = ({ active, setActive }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('userToken');
+    localStorage.removeItem('token');
     navigate('/');
   };
 

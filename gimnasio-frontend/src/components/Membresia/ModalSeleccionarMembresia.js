@@ -8,7 +8,7 @@ import {
   Button,
   Spinner,
 } from "@heroui/react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 
 const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
   const [data, setData] = useState([]);
@@ -21,7 +21,7 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get("http://localhost:4000/plans/vermembresia", {
+        const response = await api.get("/plans/vermembresia", {
           withCredentials: true,
         });
         setData(response.data);

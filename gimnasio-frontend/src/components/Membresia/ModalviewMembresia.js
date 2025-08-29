@@ -10,7 +10,7 @@ import {
   Spinner,
   Alert,
 } from "@heroui/react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 const ModalviewMembresia = ({ onClose }) => {
@@ -36,7 +36,7 @@ const ModalviewMembresia = ({ onClose }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axios.get("http://localhost:4000/plans/vermembresia", {
+        const response = await api.get("/plans/vermembresia", {
           withCredentials: true,
           timeout: 10000,
         });
@@ -59,7 +59,7 @@ const ModalviewMembresia = ({ onClose }) => {
   // Eliminar membresía
   const handleEliminar = async id => {
     try {
-      await axios.delete(`http://localhost:4000/plans/eliminarmembresia/${id}`, {
+      await api.delete(`/plans/eliminarmembresia/${id}`, {
         withCredentials: true,
       });
       setData(prev => prev.filter(m => m._id !== id));

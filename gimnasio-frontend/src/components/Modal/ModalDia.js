@@ -10,7 +10,7 @@ import {
   Alert,
 } from "@heroui/react";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -81,8 +81,8 @@ const ModalDia = ({
     const correctedDate = new Date(`${fechaInscripcion}T00:00:00`);
 
     try {
-      await axios.post(
-        "http://localhost:4000/visits/registrarcliente",
+      await api.post(
+        "/visits/registrarcliente",
         {
           nombre: nombreCompleto,
           fecha: correctedDate,

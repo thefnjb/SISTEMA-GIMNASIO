@@ -8,7 +8,7 @@ import {
   ModalBody,
   ModalFooter
 } from "@nextui-org/react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 
 const CustomAlert = ({ visible, message, onClose }) => {
   if (!visible) return null;
@@ -101,7 +101,8 @@ export default function ActualizarSuscripciones({
   useEffect(() => {
     const cargarEntrenadores = async () => {
       try {
-        const res = await axios.get("http://localhost:4000/trainers/ver", { withCredentials: true });
+        const apiCallPromise = api.get("/trainers/ver");
+        const [res] = await Promise.all([apiCallPromise]);
         setEntrenadores(res.data || []);
       } catch (e) {
         console.error("No se pudieron cargar entrenadores", e);
@@ -118,7 +119,7 @@ export default function ActualizarSuscripciones({
       setLoadingPlanes(true);
       setPlanError(null);
       try {
-        const res = await axios.get("http://localhost:4000/plans/vermembresia", { withCredentials: true });
+        const res = await api.get("/plans/vermembresia");
         // res.data puede ser un arreglo
         setPlanes(Array.isArray(res.data) ? res.data : (res.data?.plans || []));
       } catch (err) {
@@ -152,8 +153,7 @@ export default function ActualizarSuscripciones({
     if (!validarCampos()) return;
     setIsSaving(true);
     try {
-      await axios.put(
-        `http://localhost:4000/members/miembros/${miembro._id}`,
+      await api.put(`/members/miembros/${miembro._id}`,
         {
           nombreCompleto: datos.nombreCompleto.trim(),
           telefono: datos.telefono,
@@ -186,8 +186,8 @@ export default function ActualizarSuscripciones({
     }
     setIsRenewing(true);
     try {
-      await axios.post(
-        `http://localhost:4000/members/miembros/${miembro._id}/renovar`,
+      await api.post(
+        `/members/miembros/${miembro._id}/renovar`,
         { meses: Number(mesesAgregar), debe: Number(deuda || 0) },
         { withCredentials: true }
       );

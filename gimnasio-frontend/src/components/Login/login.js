@@ -34,7 +34,13 @@ function Login() {
       });
 
       if (response.ok) {
-        navigate("/panel");
+        const data = await response.json();
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          navigate("/panel");
+        } else {
+          setErrorCredenciales(true);
+        }
       } else {
         setErrorCredenciales(true);
       }

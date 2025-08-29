@@ -9,7 +9,7 @@ import {
   Alert,
 } from "@heroui/react";
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton } from "@mui/material";
 
@@ -35,7 +35,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
 
   const fetchEntrenadores = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:4000/trainers/ver", {
+      const res = await api.get("/trainers/ver", {
         withCredentials: true,
       });
       setEntrenadores(res.data);
@@ -56,7 +56,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
 
   const handleEliminar = async (id) => {
     try {
-      await axios.delete(`http://localhost:4000/trainers/eliminar/${id}`, {
+      await api.delete(`/trainers/eliminar/${id}`, {
         withCredentials: true,
       });
       fetchEntrenadores();
@@ -102,7 +102,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
                 >
                   <div className="flex items-center gap-4">
                     <img
-                      src={`http://localhost:4000/trainers/ver/${entrenador._id}/photo`}
+                      src={`/trainers/ver/${entrenador._id}/photo`}
                       alt={entrenador.nombre}
                       className="object-cover w-16 h-16 rounded-full"
                     />

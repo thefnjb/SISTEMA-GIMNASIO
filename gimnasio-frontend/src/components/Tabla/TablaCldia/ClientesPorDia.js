@@ -16,11 +16,10 @@ import {
   ModalBody,
   ModalFooter
 } from "@heroui/react";
-import axios from "axios";
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import ModalResumenPagos from "../../Modal/ModalResumenPagos";
-
+import api from "../../../utils/axiosInstance";
 /**
   @param {string} timeString 
   @returns {string} 
@@ -46,6 +45,17 @@ export default function TablaClientesHoy({ refresh }) {
     column: "nombre",
     direction: "ascending",
   });
+
+  // Sólo permitir ordenar por estos campos
+  const allowedSortFields = useMemo(() => new Set(["nombre", "horaInicio", "metododePago"]), []);
+
+  const handleSortChange = useCallback((descriptor) => {
+    if (!descriptor || !descriptor.column) return;
+    if (allowedSortFields.has(descriptor.column)) {
+      setSortDescriptor(descriptor);
+    }
+  }, [allowedSortFields]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Estados para alertas y confirmación
@@ -57,36 +67,30 @@ export default function TablaClientesHoy({ refresh }) {
   // Función para mostrar alertas
   const showAlert = useCallback((type, message) => {
     setAlert({ show: true, type, message });
-    // Auto-ocultar la alerta después de 5 segundos
     setTimeout(() => {
       setAlert({ show: false, type: '', message: '' });
     }, 5000);
   }, []);
 
+  // 🔹 Usar api (axiosInstance) en lugar de axios directo
   const fetchClientes = useCallback(async () => {
     try {
       setIsLoading(true);
-      // Promesa que simula un retraso mínimo para mejorar la UX del spinner
       const delayPromise = new Promise(resolve => setTimeout(resolve, 500));
 
-      const apiCallPromise = axios.get("http://localhost:4000/visits/clientesdia", {
-        withCredentials: true,
-      });
-
-      // Esperar a que tanto la llamada a la API como el retraso se completen
+      const apiCallPromise = api.get("/visits/clientesdia");
       const [res] = await Promise.all([apiCallPromise, delayPromise]);
 
       setClientes(res.data.clientes);
       setResumenPagos(res.data.resumenPagos);
     } catch (err) {
       console.error("Error al obtener clientes:", err);
-      showAlert('danger', 'Error al cargar los clientes. Por favor, inténtalo de nuevo.');
+      showAlert('danger', 'Error al cargar los clientes.');
     } finally {
       setIsLoading(false);
     }
   }, [showAlert]);
 
-  // Función para cerrar alerta manualmente
   const closeAlert = () => {
     setAlert({ show: false, type: '', message: '' });
   };
@@ -107,12 +111,16 @@ export default function TablaClientesHoy({ refresh }) {
   }, [page, clientes]);
 
   const sortedItems = useMemo(() => {
-    return [...items].sort((a, b) => {
-      const first = a[sortDescriptor.column];
-      const second = b[sortDescriptor.column];
-      const cmp = first < second ? -1 : first > second ? 1 : 0;
+    const column = sortDescriptor?.column || "nombre";
+    const directionFactor = sortDescriptor?.direction === "descending" ? -1 : 1;
 
-      return sortDescriptor.direction === "descending" ? -cmp : cmp;
+    return [...items].sort((a, b) => {
+      const first = (a[column] ?? "").toString().toLowerCase();
+      const second = (b[column] ?? "").toString().toLowerCase();
+
+      if (first < second) return -1 * directionFactor;
+      if (first > second) return 1 * directionFactor;
+      return 0;
     });
   }, [sortDescriptor, items]);
 
@@ -133,14 +141,9 @@ export default function TablaClientesHoy({ refresh }) {
     if (!clienteId) return;
 
     try {
-      await axios.delete(`http://localhost:4000/visits/eliminarcliente/${clienteId}`, {
-        withCredentials: true,
-      });
-      // Cerrar modal de confirmación
+      await api.delete(`/visits/eliminarcliente/${clienteId}`);
       setConfirmModal({ show: false, clienteId: null, clienteNombre: '' });
-      // Refrescar la tabla
       await fetchClientes();
-      // Mostrar alerta de éxito
       showAlert('success', 'Cliente eliminado exitosamente');
       
     } catch (err) {
@@ -149,12 +152,11 @@ export default function TablaClientesHoy({ refresh }) {
       setConfirmModal({ show: false, clienteId: null, clienteNombre: '' });
     }
   };
-  // Cancelar eliminación
+
   const cancelDelete = () => {
     setConfirmModal({ show: false, clienteId: null, clienteNombre: '' });
   };
 
-  // Calcular el total de montos pagados
   const totalMontoHoy = useMemo(() => {
     return clientes.reduce((acc, cliente) => acc + (cliente.precio || 7), 0);
   }, [clientes]);
@@ -181,7 +183,7 @@ export default function TablaClientesHoy({ refresh }) {
       <Table
         aria-label="Tabla de clientes de hoy"
         sortDescriptor={sortDescriptor}
-        onSortChange={setSortDescriptor}
+        onSortChange={handleSortChange}
         bottomContent={
           pages > 1 ? (
             <div className="flex justify-center w-full mt-3">
@@ -291,6 +293,7 @@ export default function TablaClientesHoy({ refresh }) {
         clientes={clientes}
         resumenPagos={resumenPagos}
       />
+
       {/* Modal de Confirmación para Eliminar */}
       <Modal 
         isOpen={confirmModal.show} 
@@ -319,7 +322,7 @@ export default function TablaClientesHoy({ refresh }) {
               variant="solid" 
               onPress={handleDelete}
             >
-            <DeleteIcon />
+              <DeleteIcon />
             </Button>
           </ModalFooter>
         </ModalContent>
