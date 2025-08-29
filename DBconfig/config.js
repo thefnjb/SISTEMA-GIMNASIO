@@ -7,7 +7,6 @@ mongoose.set('debug', false);
 mongoose
   .connect('mongodb://localhost:27017/gymBackend')
   .then(async () => {
-    // Sincronizar índices en silencio para limpiar índices legados (p.ej., celular_1)
     try {
       const Miembro = require('../Modelos/Miembro');
       await Miembro.syncIndexes();

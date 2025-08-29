@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import axios from "axios";
+import api from "../../../utils/axiosInstance";
 import {
   Table,
   TableHeader,
@@ -123,7 +123,7 @@ export default function TablaMiembros({ refresh }) {
   const obtenerMiembros = useCallback(async (searchTerm) => {
     setCargando(true);
     try {
-      const res = await axios.get("http://localhost:4000/members/miembros", {
+      const res = await api.get("/members/miembros", {
         params: { search: searchTerm },
         withCredentials: true,
       });
@@ -149,7 +149,7 @@ export default function TablaMiembros({ refresh }) {
     if (!memberId) return;
     
     try {
-      await axios.delete(`http://localhost:4000/members/miembros/${memberId}`, {
+      await api.delete(`/members/miembros/${memberId}`, {
         withCredentials: true,
       });
       obtenerMiembros(filtro); // Re-fetch con filtro actual

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Avatar } from "@heroui/react";
 
@@ -7,7 +7,7 @@ export default function ListaEntrenadores({ refresh }) {
   const [entrenadores, setEntrenadores] = useState([]);
 
   const fetchData = async () => {
-    const res = await axios.get("http://localhost:4000/trainers/ver", { withCredentials: true });
+    const res = await api.get("/trainers/ver", { withCredentials: true });
     setEntrenadores(res.data);
   };
 
@@ -19,7 +19,7 @@ export default function ListaEntrenadores({ refresh }) {
     if (!window.confirm("¿Seguro que quieres eliminar este entrenador?")) return;
 
     try {
-      await axios.delete(`http://localhost:4000/trainers/eliminar/${id}`, {
+      await api.delete(`/trainers/eliminar/${id}`, {
         withCredentials: true,
       });
       // actualizar lista sin recargar

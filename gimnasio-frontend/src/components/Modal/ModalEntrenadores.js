@@ -10,7 +10,7 @@ import {
   Alert,
 } from "@heroui/react";
 import { useState, useRef } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import ArchiveRoundedIcon from "@mui/icons-material/ArchiveRounded";
 
 const ModalEntrenadores = ({
@@ -69,7 +69,7 @@ const ModalEntrenadores = ({
     if (fotoPerfil) formData.append("fotoPerfil", fotoPerfil);
 
     try {
-      await axios.post("http://localhost:4000/trainers/nuevo", formData, {
+      await api.post("/trainers/nuevo", formData, {
         withCredentials: true,
         headers: { "Content-Type": "multipart/form-data" },
       });

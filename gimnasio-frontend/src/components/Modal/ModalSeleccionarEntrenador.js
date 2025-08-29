@@ -7,7 +7,7 @@ import {
   Button,
 } from "@heroui/react";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 
 const ModalSeleccionarEntrenador = ({ isOpen, onOpenChange, onSeleccionar }) => {
   const [entrenadores, setEntrenadores] = useState([]);
@@ -21,7 +21,7 @@ const ModalSeleccionarEntrenador = ({ isOpen, onOpenChange, onSeleccionar }) => 
 
   const fetchEntrenadores = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/trainers/ver", {
+      const res = await api.get("/trainers/ver", {
         withCredentials: true,
       });
       setEntrenadores(res.data);
@@ -63,9 +63,9 @@ const ModalSeleccionarEntrenador = ({ isOpen, onOpenChange, onSeleccionar }) => 
               >
                 <div className="flex items-center gap-4">
                   <img
-                    src={`http://localhost:4000/trainers/ver/${entrenador._id}/photo`}
+                    src={`/trainers/ver/${entrenador._id}/photo`}
                     alt={entrenador.nombre}
-                    className="w-16 h-16 rounded-full object-cover"
+                    className="object-cover w-16 h-16 rounded-full"
                   />
                   <div>
                     <h3 className="text-lg font-semibold text-white">

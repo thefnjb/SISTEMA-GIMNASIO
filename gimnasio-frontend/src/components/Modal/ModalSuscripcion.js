@@ -10,7 +10,7 @@ import {
   Alert,
 } from "@heroui/react";
 import { useState } from "react";
-import axios from "axios";
+import api from "../../utils/axiosInstance";
 import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
 import FitnessCenterOutlinedIcon from '@mui/icons-material/FitnessCenterOutlined';
 import ModalSeleccionarMembresia from "../Membresia/ModalSeleccionarMembresia";
@@ -88,8 +88,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
         debe: Number(debe) || 0,
       };
 
-      await axios.post(
-        "http://localhost:4000/members/miembros",
+      await api.post(
+        "/members/miembros",
         nuevoMiembro,
         { withCredentials: true }
       );

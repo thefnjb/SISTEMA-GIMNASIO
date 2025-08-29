@@ -26,18 +26,19 @@ exports.login = async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // 🔹 configuración de cookie (válida para localhost)
+    // 🔹 Configuración de cookie mejorada
     const cookieOptions = {
       httpOnly: true,
-      secure: false,     // true solo en producción con HTTPS
-      sameSite: "lax",   // permite cookies entre localhost:3000 y 4000
-      maxAge: 24 * 60 * 60 * 1000,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000, // 1 día
       path: "/"
     };
 
     res.cookie("cookie_token", token, cookieOptions);
 
     res.json({
+      token, // Include the token in the response
       message: "Inicio de sesión exitoso",
       success: true,
       usuario: {
