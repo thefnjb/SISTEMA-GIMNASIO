@@ -1,5 +1,6 @@
 import React from 'react';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
+import ShinyText from './ShinyText';
 const AvatarGroup = () => {
   return (
     <div className="flex justify-center gap-2 mb-4">
@@ -19,7 +20,12 @@ const Admin = () =>{
       </div>
       <span className="flex items-center gap-2 text-base font-medium text-white">
         <AdminPanelSettingsIcon sx={{ fontSize: 25 }} />
-        Nombre Admin
+        <ShinyText 
+          text="Nombre Admin" 
+          disabled={false} 
+          speed={3} 
+          className='custom-class' 
+          />
       </span>
     </div>
   );
