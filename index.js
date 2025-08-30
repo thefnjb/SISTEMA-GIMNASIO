@@ -20,6 +20,7 @@ const MembresiaRoutes = require('./Routes/membresias');
 const MiembrosRoutes = require('./Routes/miembros');
 const EntrenadoresRoutes = require('./Routes/entrenadores');
 const ClientesPorDia = require('./Routes/clientespordia');
+const ReporteRoutes = require('./Routes/reportes');
 
 
 
@@ -28,6 +29,7 @@ app.use('/plans', MembresiaRoutes);
 app.use('/members', MiembrosRoutes);
 app.use('/trainers', EntrenadoresRoutes);
 app.use('/visits', ClientesPorDia);
+app.use('/report', ReporteRoutes);
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);
