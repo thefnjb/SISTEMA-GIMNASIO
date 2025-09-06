@@ -36,4 +36,4 @@ const VisitasDiariasSchema = mongoose.Schema({
     timestamps: true
 });
 
-module.exports = mongoose.model("VisitasDiarias", VisitasDiariasSchema);
+module.exports = mongoose.model("VisitasDiarias", VisitasDiariasSchema, "clientespordias");
