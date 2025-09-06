@@ -10,40 +10,40 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: "Usuario y contraseña son requeridos" });
     }
 
-    const usuarioEncontrado = await Gym.findOne({ Usuario });
-    if (!usuarioEncontrado) {
+    const admin = await Gym.findOne({ Usuario });
+    if (!admin) {
       return res.status(400).json({ error: "Usuario no encontrado" });
     }
 
-    const contraseñaValida = await bcrypt.compare(Contraseña, usuarioEncontrado.Contraseña);
+    const contraseñaValida = await bcrypt.compare(Contraseña, admin.Contraseña);
     if (!contraseñaValida) {
       return res.status(400).json({ error: "Contraseña incorrecta" });
     }
 
+    // --- ¡ESTA ES LA CORRECCIÓN IMPORTANTE! ---
+    // Creamos el payload AÑADIENDO el ID y el ROL
+    const payload = {
+      id: admin._id,       // ID del usuario/admin
+      rol: 'admin',      // Asignamos manualmente el rol de 'admin'
+      gym_id: admin._id  // Para el admin, su ID y el del gym son el mismo
+    };
+
+    // Firmamos el token con el payload correcto
     const token = jwt.sign(
-      { gym_id: usuarioEncontrado._id },
-      process.env.JWT_SecretKey,
+      payload,
+      process.env.JWT_SecretKey, // O la clave secreta que uses para admins
       { expiresIn: '24h' }
     );
 
-    // 🔹 Configuración de cookie mejorada
-    const cookieOptions = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 24 * 60 * 60 * 1000, // 1 día
-      path: "/"
-    };
-
-    res.cookie("cookie_token", token, cookieOptions);
-
+    // Devolvemos el token correcto en el JSON
     res.json({
-      token, // Include the token in the response
+      token, // El token con la información correcta
       message: "Inicio de sesión exitoso",
       success: true,
       usuario: {
-        id: usuarioEncontrado._id,
-        usuario: usuarioEncontrado.Usuario
+        id: admin._id,
+        usuario: admin.Usuario,
+        rol: 'admin' // Informamos al frontend que el rol es admin
       }
     });
   } catch (err) {

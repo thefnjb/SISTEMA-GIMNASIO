@@ -15,21 +15,23 @@ app.use(cors({
 }));
 require('./DBconfig/config');
 
-const GymRoutes = require('./Routes/gym');
+const AuthController = require('./Routes/auth');
 const MembresiaRoutes = require('./Routes/membresias');
 const MiembrosRoutes = require('./Routes/miembros');
 const EntrenadoresRoutes = require('./Routes/entrenadores');
 const ClientesPorDia = require('./Routes/clientespordia');
+const Trabajador = require('./Routes/trabajador');
 const ReporteRoutes = require('./Routes/reportes');
 
 
 
-app.use('/auth', GymRoutes);
+app.use('/auth', AuthController);
 app.use('/plans', MembresiaRoutes);
 app.use('/members', MiembrosRoutes);
 app.use('/trainers', EntrenadoresRoutes);
 app.use('/visits', ClientesPorDia);
 app.use('/report', ReporteRoutes);
+app.use('/workers', Trabajador);
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

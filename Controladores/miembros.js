@@ -1,167 +1,151 @@
-// Controladores/miembros.js
 const Miembro = require("../Modelos/Miembro");
 const Membresia = require("../Modelos/Membresia");
 
-// Función para calcular nuevo estado según vencimiento
+// --- Funciones de Ayuda ---
 const calcularEstado = (fechaVencimiento) => {
   if (!fechaVencimiento) return "inactivo";
   const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0); // Ignorar la hora para la comparación
+  hoy.setHours(0, 0, 0, 0);
   return new Date(fechaVencimiento) < hoy ? "inactivo" : "activo";
 };
 
-// Función para calcular vencimiento sumando meses a una fecha base de forma precisa
 const calcularVencimiento = (fechaBase, meses) => {
   const f = new Date(fechaBase);
-  const diaOriginal = f.getDate();
   f.setMonth(f.getMonth() + Number(meses));
-  if (f.getDate() !== diaOriginal) {
-    f.setDate(0);
-  }
   return f;
 };
 
-// ✅ Obtener todos los miembros con paginación y filtro opcional
+// --- Controladores Refactorizados ---
+
+// Obtener todos los miembros del gimnasio (con filtros y paginación)
 exports.getAllMiembros = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 0;
-    const limit = parseInt(req.query.limit) || 0;
+    const { id: userId, rol, gym_id } = req.usuario;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || "";
+    const skip = (page - 1) * limit;
 
-    const filter = search
-      ? {
-          $or: [
-            { nombreCompleto: { $regex: search, $options: "i" } },
-            { telefono: { $regex: search, $options: "i" } },
-          ],
-        }
-      : {};
+    // El filtro base siempre es por gimnasio
+    let filter = {
+        gym: gym_id,
+    };
 
-    let query = Miembro.find(filter)
-      .populate("mensualidad")
-      .populate("membresia")
-      .populate("entrenador")
-      .populate("gym")
-      .sort({ fechaIngreso: -1 }); // Ordenar por más recientes
-
-    if (page > 0 && limit > 0) {
-      query = query.skip((page - 1) * limit).limit(limit);
+    // Si es trabajador, se añade filtro por creador
+    if (rol === 'trabajador') {
+        filter.creadorId = userId;
     }
 
-    const miembros = await query.exec();
+    // Añadir filtro de búsqueda de texto
+    if (search) {
+        filter.$or = [
+            { nombreCompleto: { $regex: search, $options: "i" } },
+            { telefono: { $regex: search, $options: "i" } },
+        ];
+    }
 
-    if (page > 0 && limit > 0) {
-      const total = await Miembro.countDocuments(filter);
-      return res.json({
+    const miembros = await Miembro.find(filter)
+      .populate("mensualidad")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Miembro.countDocuments(filter);
+
+    res.json({
         miembros,
         total,
         page,
         totalPages: Math.ceil(total / limit),
-      });
-    }
+    });
 
-    res.json(miembros);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Registrar nuevo miembro
+// Registrar un nuevo miembro
 exports.registroMiembros = async (req, res) => {
   try {
-    const {
-      nombreCompleto,
-      telefono,
-      mensualidad, // ID de la membresía
-      entrenador,
-      metodoPago,
-      estadoPago,
-      debe,
-      fechaIngreso, // Recibir la fecha de ingreso del frontend
-    } = req.body;
+    const { nombreCompleto, telefono, mensualidad, entrenador, metodoPago, estadoPago, debe, fechaIngreso } = req.body;
+    const { id: creadorId, rol: creadoPor, gym_id } = req.usuario;
+
+    if (!nombreCompleto || !telefono || !mensualidad) {
+        return res.status(400).json({ error: "Nombre, teléfono y mensualidad son requeridos" });
+    }
 
     const membresiaSeleccionada = await Membresia.findById(mensualidad);
     if (!membresiaSeleccionada) {
       return res.status(404).json({ error: "Membresía no encontrada" });
     }
 
-    // Usar la fecha de ingreso del frontend (asegurando que sea UTC), o la actual si no se provee
+    const miembroExiste = await Miembro.findOne({ telefono, gym: gym_id });
+    if (miembroExiste) {
+        return res.status(409).json({ error: "Ya existe un miembro con este teléfono en este gimnasio" });
+    }
+
     const fechaInicio = fechaIngreso ? new Date(fechaIngreso + 'T00:00:00') : new Date();
     const vencimiento = calcularVencimiento(fechaInicio, membresiaSeleccionada.duracion);
 
     const nuevoMiembro = new Miembro({
-      nombreCompleto,
-      telefono,
-      mensualidad,
-      entrenador,
-      metodoPago,
-      estadoPago,
-      debe: debe || 0,
-      fechaIngreso: fechaInicio,
-      vencimiento,
-      estado: "activo",
+        nombreCompleto: nombreCompleto.trim(),
+        telefono: telefono.trim(),
+        mensualidad,
+        entrenador,
+        metodoPago: metodoPago || 'efectivo',
+        estadoPago: estadoPago || 'Pendiente',
+        debe: debe || 0,
+        fechaIngreso: fechaInicio,
+        vencimiento,
+        estado: "activo",
+        gym: gym_id,
+        creadoPor,
+        creadorId
     });
 
     await nuevoMiembro.save();
-    res.status(201).json(nuevoMiembro);
+    res.status(201).json({ miembro: nuevoMiembro, mensaje: "Miembro registrado exitosamente" });
+
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    if (error.code === 11000) {
+        res.status(400).json({ error: "El teléfono ya está registrado" });
+    } else {
+        res.status(500).json({ error: error.message });
+    }
   }
 };
-
 
 // Ver un miembro específico
 exports.verMiembro = async (req, res) => {
   try {
-    const miembro = await Miembro.findById(req.params.id)
-      .populate("mensualidad")
-      .populate("membresia")
-      .populate("entrenador")
-      .populate("gym");
+    const { gym_id } = req.usuario;
+    const miembro = await Miembro.findOne({ _id: req.params.id, gym: gym_id })
+      .populate("mensualidad entrenador gym");
 
     if (!miembro) {
       return res.status(404).json({ error: "Miembro no encontrado" });
     }
+    res.json({ miembro });
 
-    res.json(miembro);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// Actualizar miembro
+// Actualizar un miembro
 exports.actualizarMiembro = async (req, res) => {
   try {
-    const { id } = req.params;
-    const {
-      nombreCompleto,
-      telefono,
-      mensualidad,
-      entrenador,
-      metodoPago,
-      estadoPago,
-      debe,
-    } = req.body;
+    const { id: miembroId } = req.params;
+    const { gym_id } = req.usuario;
 
-    const miembroActualizado = await Miembro.findByIdAndUpdate(
-      id,
-      {
-        nombreCompleto,
-        telefono,
-        mensualidad,
-        entrenador,
-        metodoPago,
-        estadoPago,
-        ...(debe !== undefined && { debe }),
-      },
-      { new: true }
-    );
-
-    if (!miembroActualizado) {
-      return res.status(404).json({ error: "Miembro no encontrado" });
+    const miembro = await Miembro.findOne({ _id: miembroId, gym: gym_id });
+    if (!miembro) {
+        return res.status(404).json({ error: "Miembro no encontrado" });
     }
 
-    res.json(miembroActualizado);
+    const miembroActualizado = await Miembro.findByIdAndUpdate(miembroId, req.body, { new: true });
+    res.json({ miembro: miembroActualizado, mensaje: "Miembro actualizado" });
+
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -170,57 +154,50 @@ exports.actualizarMiembro = async (req, res) => {
 // Renovar membresía de un miembro
 exports.renovarMiembro = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id: miembroId } = req.params;
+    const { gym_id } = req.usuario;
     const { meses, debe } = req.body;
 
-    const miembro = await Miembro.findById(id);
-    if (!miembro)
-      return res.status(404).json({ error: "Miembro no encontrado" });
+    const miembro = await Miembro.findOne({ _id: miembroId, gym: gym_id });
+    if (!miembro) {
+        return res.status(404).json({ error: "Miembro no encontrado" });
+    }
 
-    const mesesNum = Number(meses || 0);
-    if (!mesesNum || mesesNum < 1)
-      return res.status(400).json({ error: "Meses inválidos" });
-
+    const mesesNum = Number(meses || 1);
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
-    const base =
-      miembro.vencimiento && new Date(miembro.vencimiento) > hoy
-        ? new Date(miembro.vencimiento)
-        : hoy;
-
+    const base = miembro.vencimiento && new Date(miembro.vencimiento) > hoy ? new Date(miembro.vencimiento) : hoy;
     const nuevoVenc = calcularVencimiento(base, mesesNum);
 
     miembro.vencimiento = nuevoVenc;
     miembro.estado = calcularEstado(nuevoVenc);
-    miembro.ultimaRenovacion = new Date(); // Guardar la fecha de esta renovación
-
-    if (debe !== undefined) {
-      miembro.debe = Number(debe);
-    }
+    miembro.ultimaRenovacion = new Date();
+    if (debe !== undefined) miembro.debe = Number(debe);
 
     await miembro.save();
+    res.json({ message: "Renovación exitosa", miembro });
 
-    res.json({ message: "Renovación realizada correctamente", miembro });
   } catch (err) {
-    console.error("Error en renovarMiembro:", err);
     res.status(500).json({ error: "Error al renovar" });
   }
 };
 
-// Eliminar miembro
+// Eliminar un miembro
 exports.eliminarMiembro = async (req, res) => {
   try {
-    const { id } = req.params;
-    const miembroEliminado = await Miembro.findByIdAndDelete(id);
+    const { id: miembroId } = req.params;
+    const { gym_id } = req.usuario;
 
-    if (!miembroEliminado) {
-      return res.status(404).json({ error: "Miembro no encontrado" });
+    const result = await Miembro.deleteOne({ _id: miembroId, gym: gym_id });
+
+    if (result.deletedCount === 0) {
+        return res.status(404).json({ error: "Miembro no encontrado" });
     }
 
-    res.json({ mensaje: "Miembro eliminado correctamente" });
+    res.json({ mensaje: "Miembro eliminado" });
+
   } catch (err) {
-    console.error("Error en eliminarMiembro:", err);
-    res.status(500).json({ error: "Error al eliminar el miembro" });
+    res.status(500).json({ error: "Error al eliminar" });
   }
 };

@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const EntrenadorController = require("../Controladores/entrenador");
-const auth = require("../Auth/Auth");
-const upload = require("../Middleware/multerConfig");
+const authAdmin = require('../middleware/authAdmin');
+const upload = require("../middleware/multerConfig");
 
-router.post("/nuevo", auth, upload.single("fotoPerfil"), EntrenadorController.crearEntrenador);
-router.get("/ver", auth, EntrenadorController.verEntrenadores);
+router.post("/nuevo", authAdmin, upload.single("fotoPerfil"), EntrenadorController.crearEntrenador);
+router.get("/ver", authAdmin, EntrenadorController.verEntrenadores);
 router.get("/ver/:id/photo", EntrenadorController.verFotoPerfil);
-router.put("/actualizar/:id", auth, EntrenadorController.actualizarEntrenador);
-router.delete("/eliminar/:id", auth, EntrenadorController.eliminarEntrenador);
+router.put("/actualizar/:id", authAdmin, EntrenadorController.actualizarEntrenador);
+router.delete("/eliminar/:id", authAdmin, EntrenadorController.eliminarEntrenador);
 
 module.exports = router;
