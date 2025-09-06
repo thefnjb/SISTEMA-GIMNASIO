@@ -23,11 +23,29 @@ const ClientesporDia = moogose.Schema({
         default: 'Efectivo'
     },
     gym:{
-            type: moogose.Schema.Types.ObjectId,
-            ref: 'gym',
-            required: true
-        }
-        },{
-        timestamps: true
+        type: moogose.Schema.Types.ObjectId,
+        ref: 'gym',
+        required: true
+    },
+    // CAMPOS NUEVOS PARA SEPARACIÓN DE DATOS:
+    creadoPor:{
+        type: String,
+        enum: ['admin', 'trabajador'],
+        required: true
+    },
+    creadorId:{
+        type: moogose.Schema.Types.ObjectId,
+        required: true,
+        refPath: 'creadoPor' 
+    }
+},{
+    timestamps: true
 });
+
+// Índice compuesto para optimizar consultas por gym, creador y creadorId
+ClientesporDia.index({ gym: 1, creadoPor: 1, creadorId: 1 });
+
+// Índice para consultas por fecha
+ClientesporDia.index({ fecha: 1 });
+
 module.exports = moogose.model("ClientesporDia", ClientesporDia);

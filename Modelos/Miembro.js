@@ -32,6 +32,16 @@ const MiembroSchema = new mongoose.Schema(
     mesesRenovacion: { type: String },
     fechaInicioRenovacion: { type: Date },
     gym: { type: mongoose.Schema.Types.ObjectId, ref: "gym" },
+    creadoPor: {
+      type: String,
+      enum: ['admin', 'trabajador'],
+      required: true
+    },
+    creadorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      refPath: 'creadoPor' // Referencia dinámica
+    }
   },
   { timestamps: true }
 );

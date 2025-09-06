@@ -1,11 +1,11 @@
 const express = require ("express");
 const router = express.Router();
 const MembresiaController = require("../Controladores/membresia");
-const auth = require("../Auth/Auth");
+const authAdmin = require('../middleware/authAdmin');
 
-router.post("/nuevamembresia", auth, MembresiaController.crearMembresia);
-router.get("/vermembresia", auth, MembresiaController.verMembresia);
-router.put("/actualizarmembresia/:id", auth, MembresiaController.actualizarMembresia);
-router.delete("/eliminarmembresia/:id", auth, MembresiaController.eliminarMembresia);
+router.post("/nuevamembresia", authAdmin, MembresiaController.crearMembresia);
+router.get("/vermembresia", authAdmin, MembresiaController.verMembresia);
+router.put("/actualizarmembresia/:id", authAdmin, MembresiaController.actualizarMembresia);
+router.delete("/eliminarmembresia/:id", authAdmin, MembresiaController.eliminarMembresia);
 
 module.exports = router;

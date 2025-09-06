@@ -8,7 +8,7 @@ exports.crearEntrenador = async (req, res) => {
       nombre,
       edad,
       telefono,
-      gym: req.gym._id
+      gym: req.usuario.gym_id
     });
     // si se sube foto, guardamos en Mongo
     if (req.file) {
@@ -25,7 +25,7 @@ exports.crearEntrenador = async (req, res) => {
 };
 exports.verEntrenadores = async (req, res) => {
   try {
-    const entrenadores = await Entrenador.find({ gym: req.gym._id });
+    const entrenadores = await Entrenador.find({ gym: req.usuario.gym_id });
 
     const entrenadoresConImagen = entrenadores.map((ent) => ({
       _id: ent._id,
@@ -49,7 +49,7 @@ exports.actualizarEntrenador = async (req, res) => {
     const { nombre, edad, telefono } = req.body;
 
     const entrenadorActualizado = await Entrenador.findOneAndUpdate(
-      { _id: id, gym: req.gym._id },
+      { _id: id, gym: req.usuario.gym_id },
       { nombre, edad, telefono },
       { new: true }
     );
@@ -77,7 +77,7 @@ exports.actualizarEntrenador = async (req, res) => {
 exports.eliminarEntrenador = async (req, res) => {
   try {
     const { id } = req.params;
-    await Entrenador.findOneAndDelete({ _id: id, gym: req.gym._id });
+    await Entrenador.findOneAndDelete({ _id: id, gym: req.usuario.gym_id });
     res.status(200).json({ message: "Entrenador eliminado correctamente" });
   } catch (err) {
     console.error("Error al eliminar entrenador:", err);
