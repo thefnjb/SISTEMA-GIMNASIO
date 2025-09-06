@@ -6,10 +6,11 @@ const {
     getReporteAnual,
     getReporteComparativoClientes
 } = require('../Controladores/reportes');
+const authUnificado = require('../Middleware/AuthUnificado');
 
-router.get('/mensual', getReporteMensual);
-router.get('/semanal', getReporteSemanal);
-router.get('/anual', getReporteAnual);
-router.get('/comparativo', getReporteComparativoClientes);
+router.get('/mensual', authUnificado, getReporteMensual);
+router.get('/semanal', authUnificado, getReporteSemanal);
+router.get('/anual', authUnificado, getReporteAnual);
+router.get('/comparativo', authUnificado, getReporteComparativoClientes);
 
 module.exports = router;

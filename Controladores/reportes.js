@@ -27,7 +27,7 @@ async function getReporteMensual(req, res) {
                 $group: {
                     _id: { year: { $year: '$fecha' }, month: { $month: '$fecha' } },
                     visitas: { $sum: 1 },
-                    totalMonto: { $sum: { $ifNull: ['$precio', 7] } } // Usar 'precio' o un default
+                    totalMonto: { $sum: { $ifNull: ['$precio', 7] } }
                 }
             },
             {
@@ -103,14 +103,20 @@ async function getReporteComparativoClientes(req, res) {
     try {
         const { gym_id } = req.usuario;
         const year = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
+
+        const startOfYear = new Date(year, 0, 1);
+        const endOfYear = new Date(year, 11, 31, 23, 59, 59);
+
+        // Filtro para inscripciones (miembros)
         const matchFilter = {
             gym: new mongoose.Types.ObjectId(gym_id),
-            $expr: { $eq: [{ $year: "$fechaIngreso" }, year] }
+            fechaIngreso: { $gte: startOfYear, $lte: endOfYear }
         };
 
+        // Filtro para visitas diarias
         const dailyMatchFilter = {
             gym: new mongoose.Types.ObjectId(gym_id),
-            $expr: { $eq: [{ $year: "$fecha" }, year] }
+            fecha: { $gte: startOfYear, $lte: endOfYear }
         };
 
         const dailyResults = await ClientesPorDia.aggregate([
@@ -124,12 +130,15 @@ async function getReporteComparativoClientes(req, res) {
         ]);
 
         const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
         const mergedData = monthNames.map((monthName, index) => {
             const month = index + 1;
             const daily = dailyResults.find(item => item._id.month === month);
             const monthly = monthlyResults.find(item => item._id.month === month);
             return {
                 month: monthName,
+                month_num: month,
+                year: year,
                 clientesPorDia: daily ? daily.count : 0,
                 clientesPorMensualidad: monthly ? monthly.count : 0
             };

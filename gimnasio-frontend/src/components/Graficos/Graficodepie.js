@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
+import api from "../../utils/axiosInstance"; // Importar la instancia de axios
 
 const meses = [
   { value: 1, label: "Enero" },
@@ -37,16 +38,11 @@ function ChartPieInteractive() {
   const fetchData = async (month, year) => {
     try {
       setLoading(true);
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
-      const response = await fetch(`${baseUrl}/members/miembros`, {
-        credentials: "include",
-      });
+      const response = await api.get("/members/miembros"); // Usar api.get
 
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const apiData = await response.json();
-      const miembros = apiData.miembros || apiData;
+      const apiData = response.data.miembros || response.data; // Axios devuelve la data en .data
 
-      const clientesFiltrados = miembros.filter((m) => {
+      const clientesFiltrados = apiData.filter((m) => {
         if (!m.fechaIngreso) return false;
         const fecha = new Date(m.fechaIngreso);
         return fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
