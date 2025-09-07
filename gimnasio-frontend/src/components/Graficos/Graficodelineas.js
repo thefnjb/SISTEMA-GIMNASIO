@@ -20,7 +20,7 @@ const AreaChartComponent = ({ data }) => {
 
   const formatXAxisLabel = (tickItem) => {
     const date = new Date(tickItem)
-    return date.toLocaleDateString("es-ES", { month: "short" })
+    return date.toLocaleDateString("es-ES", { month: "short", timeZone: "UTC" })
   }
 
   return (
@@ -56,7 +56,7 @@ const AreaChartComponent = ({ data }) => {
         <Tooltip
           labelFormatter={(value) => {
             const date = new Date(value)
-            return date.toLocaleDateString("es-ES", { month: "long", year: "numeric" })
+            return date.toLocaleDateString("es-ES", { month: "long", year: "numeric", timeZone: "UTC" })
           }}
           formatter={(value, name) => {
             const label = chartConfig[name]?.label || name
@@ -84,7 +84,7 @@ const AreaChartComponent = ({ data }) => {
                   }}
                 >
                   <p style={{ color: "#000000", fontWeight: "500", margin: "0 0 8px 0" }}>
-                    {new Date(label).toLocaleDateString("es-ES", { month: "long", year: "numeric" })}
+                    {new Date(label).toLocaleDateString("es-ES", { month: "long", year: "numeric", timeZone: "UTC" })}
                   </p>
                   {payload.map((entry, index) => (
                     <p
@@ -183,12 +183,15 @@ export function ChartAreaInteractive() {
         })
       })
 
-      const chartData = comparativoData.map((item) => ({
-        date: `${item.year}-${item.month_num.toString().padStart(2, "0")}-01`,
-        month: item.month,
-        clientesPorDia: Number(item.clientesPorDia) || 0,
-        clientesPorMensualidad: Number(item.clientesPorMensualidad) || 0,
-      }))
+      const chartData = comparativoData.map((item) => {
+        const date = new Date(Date.UTC(item.year, item.month_num - 1, 2))
+        return {
+          date: date.toISOString().split("T")[0],
+          month: item.month,
+          clientesPorDia: Number(item.clientesPorDia) || 0,
+          clientesPorMensualidad: Number(item.clientesPorMensualidad) || 0,
+        }
+      })
 
       console.log("[v0] Transformed data:", JSON.stringify(chartData, null, 2))
 
