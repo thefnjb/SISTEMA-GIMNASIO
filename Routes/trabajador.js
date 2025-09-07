@@ -1,11 +1,14 @@
 
 const express = require('express');
 const router = express.Router();
-const authAdmin = require('../middleware/authAdmin'); // Tu middleware renombrado
+const authUnificado = require('../Middleware/AuthUnificado');
+const soloAdmin = require('../Middleware/soloAdmin');
 const TrabajadorController = require('../Controladores/trabajador');
 
-router.post("/crear-trabajador", authAdmin, TrabajadorController.crearTrabajador);
-router.get("/trabajadores", authAdmin, TrabajadorController.obtenerTrabajadores);
-router.put("/desactivar-trabajador/:id", authAdmin, TrabajadorController.desactivarTrabajador);
+// Ejemplo de rutas protegidas solo para Administradores
+router.post("/crear-trabajador", [authUnificado, soloAdmin], TrabajadorController.crearTrabajador);
+router.get("/trabajadores", [authUnificado, soloAdmin], TrabajadorController.obtenerTrabajadores);
+router.put("/desactivar-trabajador/:id", [authUnificado, soloAdmin], TrabajadorController.desactivarTrabajador);
 
 module.exports = router;
+
