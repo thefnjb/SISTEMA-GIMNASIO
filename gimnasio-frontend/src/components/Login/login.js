@@ -24,20 +24,28 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:4000/auth/loginadmin", {
+      const response = await fetch("http://localhost:4000/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ Usuario: usuario, Contraseña: password }),
-        credentials: "include" // 🔑 ahora sí guarda y envía la cookie
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data.token) {
+        if (data.token && data.rol) {
           localStorage.setItem('token', data.token);
-          navigate("/panel");
+          localStorage.setItem('rol', data.rol);
+
+          if (data.rol === 'admin') {
+            navigate("/panel");
+          } else if (data.rol === 'trabajador') {
+            navigate("/paneltrabajador");
+          } else {
+            // Fallback por si el rol no es ninguno de los esperados
+            setErrorCredenciales(true);
+          }
         } else {
           setErrorCredenciales(true);
         }

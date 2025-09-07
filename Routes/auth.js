@@ -3,13 +3,10 @@ const router = express.Router();
 const AuthController = require('../Controladores/authController');
 const GymController = require('../Controladores/gym'); // Importamos el controlador que faltaba
 
-// Ruta para el login unificado (trabajadores y admins)
-router.post('/login', AuthController.login);
+// RUTA DE LOGIN UNIFICADO PARA ADMIN Y TRABAJADOR
+router.post('/login', AuthController.loginUnificado);
 
-// Ruta específica para el login de admin que usa tu frontend
-router.post('/loginadmin', GymController.login);
-
-// Ruta para registrar un nuevo admin
+// Ruta para registrar un nuevo admin (se mantiene si es necesaria)
 router.post('/registraradmin', GymController.registrar);
 
 module.exports = router;
