@@ -243,7 +243,7 @@ export default function ActualizarSuscripciones({
             {modo === "renovar" ? (
               <div className="w-full text-center">
                 <div className="text-2xl font-bold text-red-400">Renovar membresía</div>
-                <p className="mt-1 text-sm text-gray-200">Agrega meses, deuda y confirma el nuevo vencimiento</p>
+                <p className="mt-1 text-sm text-gray-200">Agrega meses, confirma el nuevo vencimiento</p>
               </div>
             ) : (
               <div className="flex flex-col gap-1">

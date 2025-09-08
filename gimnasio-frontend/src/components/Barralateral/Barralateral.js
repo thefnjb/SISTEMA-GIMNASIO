@@ -5,6 +5,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import AddchartIcon from '@mui/icons-material/Addchart';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import Grow from '@mui/material/Grow';
@@ -43,6 +44,12 @@ const Barralateral = ({ active, setActive }) => {
             label="CLIENTES"
             active={active === 'CLIENTES'}
             onClick={() => setActive('CLIENTES')}
+          />
+          <SidebarItem
+            icon={<EngineeringOutlinedIcon />}
+            label="TRABAJADORES"
+            active={active === 'TRABAJADORES'}
+            onClick={() => setActive('TRABAJADORES')}
           />
           <SidebarItem
             icon={<AddchartIcon />}

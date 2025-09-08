@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Barralateral from "../../components/Barralateral/Barralateral";
 import { CustomCard } from "../../components/Card/spacer";
 import Ingresos from "./Ingresos";
+import IncribirTrabajador from "../../components/Trabajadores/incribirTrabajador";
 import TablaClientes from "../../components/Tabla/TablaCldia/TablaClientes";
 import ModalSuscripcion from "../../components/Modal/ModalSuscripcion";
 import ModalDia from "../../components/Modal/ModalDia";
@@ -59,7 +60,7 @@ function Panel() {
                 >
                   <RemoveRedEyeRoundedIcon/>
                 </span>
-                Membresías
+                MEMBRESÍAS
               </Button>
             </div>
 
@@ -113,6 +114,9 @@ function Panel() {
 
       case "INGRESOS":
         return <Ingresos />;
+
+      case "TRABAJADORES":
+        return <IncribirTrabajador />;
 
       case "CLIENTES":
         return (
