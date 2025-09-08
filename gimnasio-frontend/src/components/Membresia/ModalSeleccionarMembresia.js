@@ -18,19 +18,40 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
   useEffect(() => {
     const fetchMembresias = async () => {
       if (!isOpen) return;
+      
+      console.log("🔍 Iniciando petición de membresías...");
+      console.log("🔍 URL base de API:", api.defaults.baseURL);
+      
       setLoading(true);
       setError(null);
+      
       try {
+        console.log("🔍 Haciendo petición a /plans/vermembresia");
+        
         const response = await api.get("/plans/vermembresia", {
           withCredentials: true,
         });
+        
+        console.log("✅ Respuesta recibida:", response);
+        console.log("✅ Status:", response.status);
+        console.log("✅ Datos:", response.data);
+        console.log("✅ Cantidad de membresías:", response.data.length);
+        
         setData(response.data);
+        
       } catch (err) {
-        setError("Error al cargar las membresías.");
+        console.error("❌ Error completo:", err);
+        console.error("❌ Error response:", err.response);
+        console.error("❌ Error status:", err.response?.status);
+        console.error("❌ Error data:", err.response?.data);
+        console.error("❌ Error message:", err.message);
+        
+        setError(`Error al cargar las membresías: ${err.response?.status || err.message}`);
       } finally {
         setLoading(false);
       }
     };
+    
     fetchMembresias();
   }, [isOpen]);
 

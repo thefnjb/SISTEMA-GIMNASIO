@@ -25,7 +25,15 @@ exports.crearEntrenador = async (req, res) => {
 };
 exports.verEntrenadores = async (req, res) => {
   try {
-    const entrenadores = await Entrenador.find({ gym: req.usuario.gym_id });
+    let entrenadores;
+         
+    // ✅ Si es trabajador, buscar TODOS los entrenadores
+    if (req.usuario.rol === 'trabajador') {
+      entrenadores = await Entrenador.find({});
+    } else {
+      // Si es admin, solo sus entrenadores
+      entrenadores = await Entrenador.find({ gym: req.usuario.gym_id });
+    }
 
     const entrenadoresConImagen = entrenadores.map((ent) => ({
       _id: ent._id,
@@ -42,8 +50,8 @@ exports.verEntrenadores = async (req, res) => {
     console.error("Error al obtener entrenadores:", err);
     res.status(500).json({ error: "Error al obtener los entrenadores" });
   }
-};
-exports.actualizarEntrenador = async (req, res) => {
+
+};exports.actualizarEntrenador = async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, edad, telefono } = req.body;

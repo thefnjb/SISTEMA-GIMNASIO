@@ -22,7 +22,7 @@ import BotonRenovar from "../../Iconos/BotonRenovar";
 import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
 import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
 
-export default function TablaMiembros({ refresh }) {
+export default function TablaMiembros({ refresh, rolActual }) {
   const [miembros, setMiembros] = useState([]);
   const [filtro, setFiltro] = useState("");
   const [cargando, setCargando] = useState(true);
@@ -82,16 +82,8 @@ export default function TablaMiembros({ refresh }) {
     const day = base.getDate();
 
     const tmp = new Date(year, month + m, 1);
-    const ultimoDiaMesObjetivo = new Date(
-      tmp.getFullYear(),
-      tmp.getMonth() + 1,
-      0
-    ).getDate();
-    const result = new Date(
-      tmp.getFullYear(),
-      tmp.getMonth(),
-      Math.min(day, ultimoDiaMesObjetivo)
-    );
+    const ultimoDiaMesObjetivo = new Date(tmp.getFullYear(), tmp.getMonth() + 1, 0).getDate();
+    const result = new Date(tmp.getFullYear(), tmp.getMonth(), Math.min(day, ultimoDiaMesObjetivo));
     result.setHours(0, 0, 0, 0);
     return result;
   }, [parseDateLocal]);
@@ -99,21 +91,17 @@ export default function TablaMiembros({ refresh }) {
   const obtenerMesesMiembro = useCallback((miembro) => {
     return Number(
       miembro?.mensualidad?.duracion ??
-        miembro?.mensualidad?.numero ??
-        miembro?.membresia?.duracion ??
-        miembro?.membresia?.numero ??
-        0
+      miembro?.mensualidad?.numero ??
+      miembro?.membresia?.duracion ??
+      miembro?.membresia?.numero ??
+      0
     );
   }, []);
 
   const calcularVencimientoMiembro = useCallback((miembro) => {
     if (miembro?.vencimiento) return parseDateLocal(miembro.vencimiento);
-
     const meses = obtenerMesesMiembro(miembro);
-    const inicio =
-      miembro?.fechaInicioMembresia ??
-      miembro?.ultimaRenovacion ??
-      miembro?.fechaIngreso;
+    const inicio = miembro?.fechaInicioMembresia ?? miembro?.ultimaRenovacion ?? miembro?.fechaIngreso;
     if (!meses || !inicio) return null;
     return addMonthsExact(inicio, meses);
   }, [parseDateLocal, obtenerMesesMiembro, addMonthsExact]);
@@ -128,12 +116,9 @@ export default function TablaMiembros({ refresh }) {
     if (!v) return { etiqueta: "vencido", color: "danger" };
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
-    const diffDias = Math.ceil(
-      (v.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const diffDias = Math.ceil((v.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDias < 0) return { etiqueta: "vencido", color: "danger" };
-    if (diffDias <= 7)
-      return { etiqueta: "a punto de vencer", color: "warning" };
+    if (diffDias <= 7) return { etiqueta: "a punto de vencer", color: "warning" };
     return { etiqueta: "activo", color: "success" };
   }, [calcularVencimientoMiembro]);
 
@@ -144,55 +129,53 @@ export default function TablaMiembros({ refresh }) {
   };
 
   // ---------- Backend ----------
-  const obtenerMiembros = useCallback(
-    async (searchTerm) => {
-      setCargando(true);
-      try {
-        const res = await api.get("/members/miembros", {
-          params: { search: searchTerm },
-          withCredentials: true,
-        });
+  const obtenerMiembros = useCallback(async (searchTerm) => {
+    setCargando(true);
+    try {
+      const res = await api.get("/members/miembros", {
+        params: { search: searchTerm },
+        withCredentials: true,
+      });
 
-        // Orden por fechaIngreso descendente al cargar
-        const miembrosOrdenados = (res.data.miembros || res.data)
-          .slice()
-          .sort((a, b) => {
-            const fechaA = new Date(a.fechaIngreso);
-            const fechaB = new Date(b.fechaIngreso);
-            return fechaB - fechaA;
-          });
+      const miembrosOrdenados = (res.data.miembros || res.data).slice().sort((a, b) => {
+        return new Date(b.fechaIngreso) - new Date(a.fechaIngreso);
+      });
 
-        setMiembros(miembrosOrdenados);
-        setCargando(false);
-      } catch (error) {
-        console.error("Error al obtener miembros:", error);
-        setCargando(false);
-        showAlert("danger", "Error al obtener los miembros.");
-      }
-    },
-    [showAlert]
-  );
+      setMiembros(miembrosOrdenados);
+    } catch (error) {
+      console.error("Error al obtener miembros:", error);
+      showAlert("danger", "Error al obtener los miembros.");
+    } finally {
+      setCargando(false);
+    }
+  }, [showAlert]);
 
-  const eliminarMiembro = useCallback(
-    async (memberId) => {
-      if (!memberId) return;
+  const eliminarMiembro = useCallback(async (memberId) => {
+    if (!memberId) return;
+    try {
+      await api.delete(`/members/miembros/${memberId}`, { withCredentials: true });
+      obtenerMiembros(filtro);
+      showAlert("success", "Miembro eliminado exitosamente.");
+    } catch (error) {
+      console.error("Error al eliminar miembro:", error.response?.data || error.message);
+      showAlert("danger", "Error al eliminar el miembro.");
+    }
+  }, [obtenerMiembros, filtro, showAlert]);
 
-      try {
-        await api.delete(`/members/miembros/${memberId}`, {
-          withCredentials: true,
-        });
+  const agregarMiembro = async (nuevoMiembro) => {
+    try {
+      await api.post("/members/miembros", nuevoMiembro, { withCredentials: true });
+      showAlert("success", "Miembro agregado correctamente");
+
+      // Re-fetch si es admin
+      if (rolActual === "admin") {
         obtenerMiembros(filtro);
-        showAlert("success", "Miembro eliminado exitosamente.");
-      } catch (error) {
-        console.error(
-          "Error al eliminar miembro:",
-          error.response?.data || error.message
-        );
-        showAlert("danger", "Error al eliminar el miembro.");
       }
-    },
-    [obtenerMiembros, filtro, showAlert]
-  );
+    } catch (err) {
+      console.error("Error al agregar miembro:", err.response?.data || err.message);
+      showAlert("danger", "Error al agregar miembro");
+    }
+  };
 
   const abrirModalActualizar = (miembro, modo = "editar") => {
     setMiembroSeleccionado(miembro);
@@ -205,23 +188,17 @@ export default function TablaMiembros({ refresh }) {
     const delayDebounceFn = setTimeout(() => {
       obtenerMiembros(filtro);
     }, 400);
-
     return () => {
       clearTimeout(delayDebounceFn);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [filtro, obtenerMiembros, refresh]);
 
-  const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(miembros.length / rowsPerPage)),
-    [miembros.length]
-  );
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(miembros.length / rowsPerPage)), [miembros.length]);
   const paginaSegura = Math.min(page, totalPages);
 
-  // ---------- Ordenamiento en columnas ----------
   const miembrosOrdenados = useMemo(() => {
     let lista = [...miembros];
-
     if (sortDescriptor.column === "estado") {
       lista.sort((a, b) => {
         const estadoA = calcularEstado(a).etiqueta;
@@ -230,27 +207,20 @@ export default function TablaMiembros({ refresh }) {
         return sortDescriptor.direction === "descending" ? -cmp : cmp;
       });
     }
-
     if (sortDescriptor.column === "debe") {
       lista.sort((a, b) => {
         const deudaA = Number(a?.debe || 0);
         const deudaB = Number(b?.debe || 0);
-        if (deudaA < deudaB) return sortDescriptor.direction === "descending" ? 1 : -1;
-        if (deudaA > deudaB) return sortDescriptor.direction === "descending" ? -1 : 1;
-        return 0;
+        return sortDescriptor.direction === "descending" ? deudaB - deudaA : deudaA - deudaB;
       });
     }
-
     if (sortDescriptor.column === "ingreso") {
       lista.sort((a, b) => {
-        const fechaA = new Date(a.fechaIngreso);
-        const fechaB = new Date(b.fechaIngreso);
-        if (fechaA < fechaB) return sortDescriptor.direction === "descending" ? 1 : -1;
-        if (fechaA > fechaB) return sortDescriptor.direction === "descending" ? -1 : 1;
-        return 0;
+        return sortDescriptor.direction === "descending"
+          ? new Date(b.fechaIngreso) - new Date(a.fechaIngreso)
+          : new Date(a.fechaIngreso) - new Date(b.fechaIngreso);
       });
     }
-
     const start = (paginaSegura - 1) * rowsPerPage;
     return lista.slice(start, start + rowsPerPage);
   }, [miembros, paginaSegura, sortDescriptor, calcularEstado]);
@@ -261,6 +231,7 @@ export default function TablaMiembros({ refresh }) {
 
   return (
     <div className="max-w-full p-3 sm:p-4 md:p-6">
+      {/* Buscador y resultados */}
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <Input
           type="text"
@@ -270,9 +241,7 @@ export default function TablaMiembros({ refresh }) {
           className="w-full sm:max-w-md"
           startContent={<SearchIcon className="text-gray-500" />}
         />
-        <div className="px-1 text-sm text-gray-600">
-          {miembros.length} resultados
-        </div>
+        <div className="px-1 text-sm text-gray-600">{miembros.length} resultados</div>
       </div>
 
       {cargando ? (
@@ -312,92 +281,43 @@ export default function TablaMiembros({ refresh }) {
                 <TableRow key={miembro._id} className="align-middle">
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <AccountCircleRoundedIcon
-                        sx={{ color: "#555", fontSize: 28 }}
-                      />
+                      <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} />
                       <span>{miembro.nombreCompleto}</span>
                     </div>
                   </TableCell>
-
                   <TableCell>{miembro.telefono}</TableCell>
-
-                  <TableCell className="hidden md:table-cell">
-                    {formatearFecha(miembro.fechaIngreso)}
-                  </TableCell>
-
+                  <TableCell className="hidden md:table-cell">{formatearFecha(miembro.fechaIngreso)}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <div className="flex flex-col">
-                      <span className="font-medium">
-                        {formatearMensualidadNumero(miembro)}
-                      </span>
+                      <span className="font-medium">{formatearMensualidadNumero(miembro)}</span>
                       <span className="text-xs text-gray-500">
-                        Turno: S/{" "}
-                        {Number(
-                          miembro?.mensualidad?.precio ??
-                            miembro?.membresia?.precio ??
-                            0
-                        ).toFixed(2)}
+                        Turno: S/ {Number(miembro?.mensualidad?.precio ?? miembro?.membresia?.precio ?? 0).toFixed(2)}
                       </span>
                     </div>
                   </TableCell>
-
-                  <TableCell className="hidden lg:table-cell">
-                    {miembro?.entrenador?.nombre || "-"}
-                  </TableCell>
-
-                  <TableCell className="hidden capitalize md:table-cell">
-                    {miembro.metodoPago}
-                  </TableCell>
-
+                  <TableCell className="hidden lg:table-cell">{miembro?.entrenador?.nombre || "-"}</TableCell>
+                  <TableCell className="hidden capitalize md:table-cell">{miembro.metodoPago}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-2">
-                      {(() => {
-                        const deuda = Number(miembro?.debe || 0);
-                        if (deuda <= 0) {
-                          return (
-                            <Chip color="success" variant="flat">
-                              S/ 0.00
-                            </Chip>
-                          );
-                        }
-                        return (
-                          <Chip color="warning" variant="flat">
-                            S/ {deuda.toFixed(2)}
-                          </Chip>
-                        );
-                      })()}
-                      <BotonEditarDeuda
-                        onClick={() =>
-                          abrirModalActualizar(miembro, "editarDeuda")
-                        }
-                      />
+                      {Number(miembro?.debe || 0) <= 0 ? (
+                        <Chip color="success" variant="flat">S/ 0.00</Chip>
+                      ) : (
+                        <Chip color="warning" variant="flat">S/ {Number(miembro.debe).toFixed(2)}</Chip>
+                      )}
+                      <BotonEditarDeuda onClick={() => abrirModalActualizar(miembro, "editarDeuda")} />
                     </div>
                   </TableCell>
-
                   <TableCell>{mostrarVencimiento(miembro)}</TableCell>
-
                   <TableCell>
-                    {(() => {
-                      const est = calcularEstado(miembro);
-                      return (
-                        <Chip color={est.color} variant="flat">
-                          {est.etiqueta}
-                        </Chip>
-                      );
-                    })()}
+                    <Chip color={calcularEstado(miembro).color} variant="flat">
+                      {calcularEstado(miembro).etiqueta}
+                    </Chip>
                   </TableCell>
-
                   <TableCell>
                     <div className="flex items-center gap-1 sm:gap-2 h-[45px] justify-end">
-                      <BotonEditar
-                        onClick={() => abrirModalActualizar(miembro)}
-                      />
-                      <BotonRenovar
-                        onClick={() => abrirModalActualizar(miembro, "renovar")}
-                      />
-                      <BotonEliminar
-                        onClick={() => eliminarMiembro(miembro._id)}
-                      />
+                      <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
+                      <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
+                      <BotonEliminar onClick={() => eliminarMiembro(miembro._id)} />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -407,27 +327,14 @@ export default function TablaMiembros({ refresh }) {
 
           {/* Paginación */}
           <div className="flex items-center justify-between mt-4">
-            <Button
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-            >
-              Anterior
-            </Button>
-            <span className="text-sm text-gray-600">
-              Página {paginaSegura} de {totalPages}
-            </span>
-            <Button
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            >
-              Siguiente
-            </Button>
+            <Button size="sm" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Anterior</Button>
+            <span className="text-sm text-gray-600">Página {paginaSegura} de {totalPages}</span>
+            <Button size="sm" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Siguiente</Button>
           </div>
         </div>
       )}
 
+      {/* Modales */}
       {mostrarModal && modoModal !== "editarDeuda" && (
         <ActualizarSuscripcion
           miembro={miembroSeleccionado}
@@ -436,12 +343,7 @@ export default function TablaMiembros({ refresh }) {
           onUpdated={() => {
             obtenerMiembros(filtro);
             setMostrarModal(false);
-            showAlert(
-              "success",
-              modoModal === "editar"
-                ? "Miembro modificado exitosamente"
-                : "Membresía renovada exitosamente"
-            );
+            showAlert("success", modoModal === "editar" ? "Miembro modificado exitosamente" : "Membresía renovada exitosamente");
           }}
         />
       )}

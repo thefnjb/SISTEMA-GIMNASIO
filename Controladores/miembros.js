@@ -19,6 +19,7 @@ const calcularVencimiento = (fechaBase, meses) => {
 // --- Controladores Refactorizados ---
 
 // Obtener todos los miembros del gimnasio (con filtros y paginación)
+// --- Controlador ---
 exports.getAllMiembros = async (req, res) => {
   try {
     const { id: userId, rol, gym_id } = req.usuario;
@@ -27,15 +28,11 @@ exports.getAllMiembros = async (req, res) => {
     const search = req.query.search || "";
     const skip = (page - 1) * limit;
 
-    // El filtro base siempre es por gimnasio
     let filter = { gym: gym_id };
 
-    // Si es trabajador, se añade filtro por creador
-    if (rol === "trabajador") {
-      filter.creadorId = userId;
-    }
+    // Trabajador solo ve sus miembros, admin ve todos
+    if (rol === "trabajador") filter.creadorId = userId;
 
-    // Añadir filtro de búsqueda de texto
     if (search) {
       filter.$or = [
         { nombreCompleto: { $regex: search, $options: "i" } },
@@ -45,7 +42,7 @@ exports.getAllMiembros = async (req, res) => {
 
     const miembros = await Miembro.find(filter)
       .populate("mensualidad")
-      .populate("entrenador", "nombre telefono") // <- agregado
+      .populate("entrenador", "nombre telefono")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit);
@@ -62,6 +59,7 @@ exports.getAllMiembros = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 // Registrar un nuevo miembro
 exports.registroMiembros = async (req, res) => {
@@ -98,16 +96,22 @@ exports.registroMiembros = async (req, res) => {
     }
 
     // Validar entrenador (si se envía)
-    let entrenadorValido = null;
-    if (entrenador) {
-      entrenadorValido = await Entrenador.findOne({
-        _id: entrenador,
-        gym: gym_id,
-      });
-      if (!entrenadorValido) {
-        return res.status(404).json({ error: "Entrenador no encontrado" });
-      }
-    }
+   // Validar entrenador (si se envía)
+let entrenadorValido = null;
+if (entrenador) {
+  if (req.usuario.rol === "trabajador") {
+    // Trabajador puede buscar en todos los gimnasios
+    entrenadorValido = await Entrenador.findById(entrenador);
+  } else {
+    // Admin solo en su gimnasio
+    entrenadorValido = await Entrenador.findOne({ _id: entrenador, gym: gym_id });
+  }
+
+  if (!entrenadorValido) {
+    return res.status(404).json({ error: "Entrenador no encontrado" });
+  }
+}
+
 
     const fechaInicio = fechaIngreso
       ? new Date(fechaIngreso + "T00:00:00")

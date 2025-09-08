@@ -1,11 +1,15 @@
-const express = require ("express");
+const express = require("express");
 const router = express.Router();
 const MembresiaController = require("../Controladores/membresia");
 const authAdmin = require('../middleware/authAdmin');
+const authUnificado = require('../middleware/authUnificado'); // ✅ Importar authUnificado
 
+// ✅ SOLO ADMIN puede crear, actualizar y eliminar membresías
 router.post("/nuevamembresia", authAdmin, MembresiaController.crearMembresia);
-router.get("/vermembresia", authAdmin, MembresiaController.verMembresia);
 router.put("/actualizarmembresia/:id", authAdmin, MembresiaController.actualizarMembresia);
 router.delete("/eliminarmembresia/:id", authAdmin, MembresiaController.eliminarMembresia);
+
+// ✅ ADMIN Y TRABAJADOR pueden VER las membresías (usando authUnificado)
+router.get("/vermembresia", authUnificado, MembresiaController.verMembresia);
 
 module.exports = router;

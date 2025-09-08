@@ -4,6 +4,10 @@ exports.crearMembresia = async (req, res) => {
     try {
         const { duracion, precio, turno } = req.body;
 
+        // 🔍 DEBUG: Ver qué gym_id usa el admin
+        console.log("🔴 ADMIN creando membresía - gym_id:", req.usuario.gym_id);
+        console.log("🔴 ADMIN - Usuario completo:", req.usuario);
+
         // Buscar membresía con la misma duración y mismo turno
         const membresiaExistente = await Membresia.findOne({
             gym: req.usuario.gym_id,
@@ -27,7 +31,16 @@ exports.crearMembresia = async (req, res) => {
 }
 exports.verMembresia = async (req, res) => {
     try {
-        const membresias = await Membresia.find({ gym: req.usuario.gym_id });
+        let membresias;
+        
+        // Si es trabajador, buscar TODAS las membresías (sin filtro de gym)
+        if (req.usuario.rol === 'trabajador') {
+            membresias = await Membresia.find({});
+        } else {
+            // Si es admin, solo sus membresías
+            membresias = await Membresia.find({ gym: req.usuario.gym_id });
+        }
+        
         res.status(200).json(membresias);
     } catch (err) {
         console.log(err);
@@ -36,15 +49,14 @@ exports.verMembresia = async (req, res) => {
         });
     }
 }
-
 exports.actualizarMembresia = async (req, res) => {
     try {
         const { id } = req.params;
-        const { duracion, precio } = req.body; // Cambiado de titulo a duracion
+        const { duracion, precio } = req.body;
 
         const membresiaActualizada = await Membresia.findOneAndUpdate(
             { _id: id, gym: req.usuario.gym_id },
-            { duracion, precio }, // Cambiado de titulo a duracion
+            { duracion, precio },
             { new: true }
         );
 
@@ -64,16 +76,16 @@ exports.actualizarMembresia = async (req, res) => {
 
 exports.eliminarMembresia = async (req, res) => {
     try {
-    const { id } = req.params;
-    const membresia = await Membresia.findOneAndDelete({ _id: id, gym: req.usuario.gym_id });
+        const { id } = req.params;
+        const membresia = await Membresia.findOneAndDelete({ _id: id, gym: req.usuario.gym_id });
 
-    if (!membresia) {
-      return res.status(404).json({ error: "Membresía no encontrada" });
+        if (!membresia) {
+            return res.status(404).json({ error: "Membresía no encontrada" });
+        }
+
+        res.status(200).json({ message: "Membresía eliminada correctamente" });
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Error al eliminar la membresía" });
     }
-
-    res.status(200).json({ message: "Membresía eliminada correctamente" });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ error: "Error al eliminar la membresía" });
-  }
-  };
+};
