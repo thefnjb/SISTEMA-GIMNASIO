@@ -21,7 +21,7 @@ const Admin = () =>{
       <span className="flex items-center gap-2 text-base font-medium text-white">
         <AdminPanelSettingsIcon sx={{ fontSize: 25 }} />
         <ShinyText 
-          text="Nombre Admin" 
+          text="Nombre ADMIN" 
           disabled={false} 
           speed={3} 
           className='custom-class' 
@@ -31,5 +31,28 @@ const Admin = () =>{
   );
 }
 
+const AdminTrabajador = () =>{
+  return (
+   <div className="flex  flex-col items-center justify-center  min-h-[200px]  rounded-xl p-4 shadow-sm">
+      <div className="w-[100px] h-[100px] rounded-lg  overflow-hidden mb-4">
+        <img 
+          className="object-cover w-full h-full border-2 border-white rounded-full" 
+          src="/images/logo.jpg" 
+          alt="logo"
+        />
+      </div>
+      <span className="flex items-center gap-2 text-base font-medium text-white">
+        <AdminPanelSettingsIcon sx={{ fontSize: 25 }} />
+        <ShinyText 
+          text="TRABJADOR" 
+          disabled={false} 
+          speed={3} 
+          className='custom-class' 
+          />
+      </span>
+    </div>
+  );
+}
 export default AvatarGroup;
 export { Admin };
+export { AdminTrabajador };

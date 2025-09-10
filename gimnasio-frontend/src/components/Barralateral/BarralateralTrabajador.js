@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Admin } from '../Avatar/avatar';
+import { AdminTrabajador } from '../Avatar/avatar';
 import HomeIcon from '@mui/icons-material/Home';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
@@ -29,7 +29,7 @@ const BarralateralTrabajador = ({ active, setActive }) => {
             Gimnasio Terrones
           </h1>
         </div>
-        <Admin />
+        <AdminTrabajador />
         <nav className="flex flex-col flex-1 w-full gap-4 mt-8">
           <SidebarItem
             icon={<HomeIcon />}
