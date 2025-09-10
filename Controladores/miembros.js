@@ -30,9 +30,6 @@ exports.getAllMiembros = async (req, res) => {
 
     let filter = { gym: gym_id };
 
-    // Trabajador solo ve sus miembros, admin ve todos
-    if (rol === "trabajador") filter.creadorId = userId;
-
     if (search) {
       filter.$or = [
         { nombreCompleto: { $regex: search, $options: "i" } },

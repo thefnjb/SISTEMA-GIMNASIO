@@ -16,6 +16,10 @@ const trabajadorSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    passwordPlano: {
+        type: String,
+        required: true
+    },
     rol: {
         type: String,
         default: 'trabajador'

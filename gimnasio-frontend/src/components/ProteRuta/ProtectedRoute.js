@@ -12,10 +12,6 @@ const ProtectedRoute = ({ children, rolRequerido }) => {
   }
 
   if (rolRequerido && rol !== rolRequerido) {
-    // Si se requiere un rol específico y el usuario no lo tiene,
-    // podrías redirigir a una página de "acceso denegado" o de vuelta
-    // a su panel principal si tienes uno genérico.
-    // Por ahora, lo redirigimos al login por simplicidad.
     return <Navigate to="/" />;
   }
 

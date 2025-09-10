@@ -17,6 +17,10 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [entrenadores, setEntrenadores] = useState([]);
 
+  // Estado para el modal de la imagen
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+
   // Estado para alertas tipo toast
   const [alerta, setAlerta] = useState({
     show: false,
@@ -25,12 +29,25 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
     message: "",
   });
 
+  // Funciones para el modal de la imagen
+  const openImageModal = (imageUrl) => {
+    if (imageUrl) {
+      setSelectedImage(imageUrl);
+      setIsImageModalOpen(true);
+    }
+  };
+
+  const closeImageModal = () => {
+    setSelectedImage(null);
+    setIsImageModalOpen(false);
+  };
+
   // Función para mostrar toast
   const mostrarAlerta = useCallback((type, title, message) => {
     setAlerta({ show: true, type, title, message });
     setTimeout(() => {
       setAlerta({ show: false, type: "default", title: "", message: "" });
-    }, 3000); 
+    }, 3000);
   }, []);
 
   const fetchEntrenadores = useCallback(async () => {
@@ -41,7 +58,6 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
       setEntrenadores(res.data);
     } catch (err) {
       console.error("Error al cargar entrenadores:", err);
-
     }
   }, []);
 
@@ -101,11 +117,16 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
                   className="flex items-center justify-between p-4 transition border rounded-xl bg-white/10 border-white/20"
                 >
                   <div className="flex items-center gap-4">
-                    <img
-                      src={`/trainers/ver/${entrenador._id}/photo`}
-                      alt={entrenador.nombre}
-                      className="object-cover w-16 h-16 rounded-full"
-                    />
+                    <div
+                      className="w-16 h-16 rounded-full overflow-hidden flex-shrink-0 cursor-pointer"
+                      onClick={() => openImageModal(entrenador.fotoPerfil)}
+                    >
+                      <img
+                        src={entrenador.fotoPerfil}
+                        alt={entrenador.nombre}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                     <div>
                       <h3 className="text-lg font-semibold text-white">
                         {entrenador.nombre}
@@ -132,6 +153,41 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
               color="danger"
               variant="light"
               onPress={() => onOpenChange(false)}
+              className="text-white border-white"
+            >
+              Cerrar
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      {/* Modal para ver la imagen en grande */}
+      <Modal
+        isOpen={isImageModalOpen}
+        onOpenChange={closeImageModal}
+        size="xl"
+        backdrop="blur"
+      >
+        <ModalContent className="bg-black text-white">
+          <ModalHeader>
+            <div className="w-full text-2xl font-bold text-center text-red-500">
+              Foto del Entrenador
+            </div>
+          </ModalHeader>
+          <ModalBody>
+            {selectedImage && (
+              <img
+                src={selectedImage}
+                alt="Entrenador"
+                className="w-full h-auto max-h-[70vh] object-contain rounded-lg"
+              />
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              color="danger"
+              variant="light"
+              onPress={closeImageModal}
               className="text-white border-white"
             >
               Cerrar

@@ -162,21 +162,6 @@ export default function TablaMiembros({ refresh, rolActual }) {
     }
   }, [obtenerMiembros, filtro, showAlert]);
 
-  const agregarMiembro = async (nuevoMiembro) => {
-    try {
-      await api.post("/members/miembros", nuevoMiembro, { withCredentials: true });
-      showAlert("success", "Miembro agregado correctamente");
-
-      // Re-fetch si es admin
-      if (rolActual === "admin") {
-        obtenerMiembros(filtro);
-      }
-    } catch (err) {
-      console.error("Error al agregar miembro:", err.response?.data || err.message);
-      showAlert("danger", "Error al agregar miembro");
-    }
-  };
-
   const abrirModalActualizar = (miembro, modo = "editar") => {
     setMiembroSeleccionado(miembro);
     setModoModal(modo);
