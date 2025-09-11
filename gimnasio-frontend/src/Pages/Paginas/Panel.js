@@ -3,7 +3,7 @@ import Barralateral from "../../components/Barralateral/Barralateral";
 import { CustomCard } from "../../components/Card/spacer";
 import Ingresos from "./Ingresos";
 import IncribirTrabajador from "../../components/Trabajadores/incribirTrabajador";
-import TablaClientes from "../../components/Tabla/TablaCldia/TablaClientes";
+import TablaClientesAdmin from "../../components/Tabla/TablaCldia/TablaClientesAdmin";
 import ModalSuscripcion from "../../components/Modal/ModalSuscripcion";
 import ModalDia from "../../components/Modal/ModalDia";
 import ModalEntrenadores from "../../components/Modal/ModalEntrenadores";
@@ -121,7 +121,7 @@ function Panel() {
       case "CLIENTES":
         return (
           <div className="w-full p-4 overflow-x-auto">
-            <TablaClientes refresh={refreshClientes} />
+            <TablaClientesAdmin refresh={refreshClientes} />
           </div>
         );
 

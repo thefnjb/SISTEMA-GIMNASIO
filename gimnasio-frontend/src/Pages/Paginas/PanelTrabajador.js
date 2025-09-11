@@ -20,16 +20,17 @@ const PanelTrabajador = () => {
       case "INICIO":
         return (
           <div className="p-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <CustomCard imageUrl="/images/suscripcion.png">
+            {/* Contenedor centrado para las 2 cards con más separación */}
+            <div className="flex flex-wrap justify-center gap-28">
+              <CustomCard imageUrl="/images/suscripcion.png" className="w-72">
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCard>
 
-              <CustomCard imageUrl="/images/clientespordiaa.png">
-                <div className="flex gap-10">
+              <CustomCard imageUrl="/images/clientespordiaa.png" className="w-72">
+                <div className="flex justify-center">
                   <ModalDia
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
                     title="Clientes por Día"
@@ -39,7 +40,8 @@ const PanelTrabajador = () => {
               </CustomCard>
             </div>
 
-            <div className="mt-4 sm:mt-6 md:mt-8 lg:mt-10 xl:mt-12">
+            {/* Tabla debajo */}
+            <div className="mt-8">
               <TablaClientesDia refresh={refreshClientes} />
             </div>
           </div>
@@ -77,6 +79,7 @@ const PanelTrabajador = () => {
           <BarralateralTrabajador active={active} setActive={setActive} />
         </div>
 
+        {/* Contenido principal */}
         <div className="flex-1 overflow-x-auto">
           <div className="min-w-[900px]">{renderContent()}</div>
         </div>

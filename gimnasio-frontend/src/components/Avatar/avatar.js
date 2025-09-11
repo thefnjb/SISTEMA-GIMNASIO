@@ -44,7 +44,7 @@ const AdminTrabajador = () =>{
       <span className="flex items-center gap-2 text-base font-medium text-white">
         <AdminPanelSettingsIcon sx={{ fontSize: 25 }} />
         <ShinyText 
-          text="TRABJADOR" 
+          text="TRABAJADOR" 
           disabled={false} 
           speed={3} 
           className='custom-class' 
