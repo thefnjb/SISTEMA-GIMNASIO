@@ -242,15 +242,15 @@ export default function TablaClientesAdmin({ refresh, rolActual }) {
             sortDescriptor={sortDescriptor}
             onSortChange={setSortDescriptor}
             classNames={{
-              table: "bg-white min-w-full",
-              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[11px] sm:text-xs md:text-sm font-semibold whitespace-normal break-words text-center px-3 py-2",
-              td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] sm:text-xs md:text-sm px-3 py-2",
-              tr: "hover:bg-gray-50 transition-colors",
+              table: "bg-white w-full table-auto",
+              td: "text-gray-800 border-b border-gray-200 align-middle text-[10px] sm:text-xs px-2 py-1",
+              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] sm:text-xs font-semibold px-2 py-1 text-center",
+              tr: "hover:bg-gray-50 transition-colors text-xs",
             }}
           >
             <TableHeader>
-              <TableColumn>NOMBRE Y APELLIDO</TableColumn>
-              <TableColumn>TELÉFONO</TableColumn>
+              <TableColumn className="min-w-[140px]">NOMBRE Y APELLIDO</TableColumn>
+              <TableColumn className="w-[100px]">TELÉFONO</TableColumn>
               <TableColumn key="ingreso" allowsSorting className="min-w-[120px] text-center hidden md:table-cell">INGRESO</TableColumn>
               <TableColumn className="hidden md:table-cell">MENSUALIDAD</TableColumn>
               <TableColumn className="hidden lg:table-cell">ENTRENADOR</TableColumn>
@@ -267,7 +267,7 @@ export default function TablaClientesAdmin({ refresh, rolActual }) {
                 <TableRow key={miembro._id} className="align-middle">
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} />
+                      <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 22 }} />
                       <span>{miembro.nombreCompleto}</span>
                     </div>
                   </TableCell>
@@ -302,9 +302,9 @@ export default function TablaClientesAdmin({ refresh, rolActual }) {
 
                   {/* NUEVA COLUMNA CAMBIOS */}
                 <TableCell>
-                    <span className="text-gray-600 text-xs">
-                        {miembro?.creadoPor
-                        ? `por ${miembro.creadoPor}`
+                    <span className="text-xs text-gray-600">
+                        {miembro?.creadorNombre
+                        ? `por ${miembro.creadorNombre}`
                         : "Desconocido"}
                     </span>
                     </TableCell>

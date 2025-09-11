@@ -224,6 +224,7 @@ export default function TablaTrabajadores({ refresh }) {
       )}
 
       <ModalEditarTrabajador
+        key={editingTrabajador?._id}
         trabajador={editingTrabajador}
         onClose={() => setEditingTrabajador(null)}
         onUpdate={actualizarTrabajador}

@@ -122,8 +122,11 @@ const TrabajadorController = {
     actualizarTrabajador: async (req, res) => {
         try {
             const { id } = req.params;
-            const { nombreUsuario, password } = req.body;
+            const { nombre, nombreUsuario, password } = req.body;
 
+            if (!nombre) {
+                return res.status(400).json({ error: "El nombre es requerido." });
+            }
             if (!nombreUsuario) {
                 return res.status(400).json({ error: "El nombre de usuario es requerido." });
             }
@@ -132,6 +135,8 @@ const TrabajadorController = {
             if (!trabajador) {
                 return res.status(404).json({ error: "Trabajador no encontrado." });
             }
+
+            trabajador.nombre = nombre;
 
             if (nombreUsuario !== trabajador.nombreUsuario) {
                 const existe = await Trabajador.findOne({ nombreUsuario });

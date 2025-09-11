@@ -17,7 +17,6 @@ import ActualizarSuscripcion from "../../Actualizarmodal/ActualizarSuscripciones
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import BotonEditar from "../../Iconos/BotonEditar";
-import BotonEliminar from "../../Iconos/BotonEliminar";
 import BotonRenovar from "../../Iconos/BotonRenovar";
 import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
 import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
@@ -150,18 +149,6 @@ export default function TablaMiembros({ refresh, rolActual }) {
     }
   }, [showAlert]);
 
-  const eliminarMiembro = useCallback(async (memberId) => {
-    if (!memberId) return;
-    try {
-      await api.delete(`/members/miembros/${memberId}`, { withCredentials: true });
-      obtenerMiembros(filtro);
-      showAlert("success", "Miembro eliminado exitosamente.");
-    } catch (error) {
-      console.error("Error al eliminar miembro:", error.response?.data || error.message);
-      showAlert("danger", "Error al eliminar el miembro.");
-    }
-  }, [obtenerMiembros, filtro, showAlert]);
-
   const abrirModalActualizar = (miembro, modo = "editar") => {
     setMiembroSeleccionado(miembro);
     setModoModal(modo);
@@ -242,10 +229,10 @@ export default function TablaMiembros({ refresh, rolActual }) {
             sortDescriptor={sortDescriptor}
             onSortChange={setSortDescriptor}
             classNames={{
-              table: "bg-white min-w-full",
-              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[11px] sm:text-xs md:text-sm font-semibold whitespace-normal break-words text-center px-3 py-2",
-              td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] sm:text-xs md:text-sm px-3 py-2",
-              tr: "hover:bg-gray-50 transition-colors",
+              table: "bg-white w-full table-auto",
+              td: "text-gray-800 border-b border-gray-200 align-middle text-[10px] sm:text-xs px-2 py-1",
+              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] sm:text-xs font-semibold px-2 py-1 text-center",
+              tr: "hover:bg-gray-50 transition-colors text-xs",
             }}
           >
             <TableHeader>
@@ -302,7 +289,6 @@ export default function TablaMiembros({ refresh, rolActual }) {
                     <div className="flex items-center gap-1 sm:gap-2 h-[45px] justify-end">
                       <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
                       <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
-                      <BotonEliminar onClick={() => eliminarMiembro(miembro._id)} />
                     </div>
                   </TableCell>
                 </TableRow>
