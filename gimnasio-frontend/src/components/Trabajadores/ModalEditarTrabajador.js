@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import {
   Modal,
   ModalContent,
@@ -13,20 +13,12 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate }) {
-  const [nombreUsuario, setNombreUsuario] = useState("");
+  const [nombre, setNombre] = useState(trabajador?.nombre || "");
+  const [nombreUsuario, setNombreUsuario] = useState(trabajador?.nombreUsuario || "");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [alerta, setAlerta] = useState({ show: false, color: "default", message: "" });
   const [showPassword, setShowPassword] = useState(false); 
-
-  useEffect(() => {
-    if (trabajador) {
-      setNombreUsuario(trabajador.nombreUsuario);
-      setPassword("");
-      setAlerta({ show: false, color: "default", message: "" });
-      setShowPassword(false); 
-    }
-  }, [trabajador]);
 
   if (!trabajador) return null;
 
@@ -38,6 +30,7 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
   };
 
   const handleClose = () => {
+    setNombre("");
     setNombreUsuario("");
     setPassword("");
     setAlerta({ show: false, color: "default", message: "" });
@@ -46,6 +39,10 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
   };
 
   const handleGuardar = async () => {
+    if (!nombre.trim()) {
+      mostrarAlerta("warning", "El nombre no puede estar vacío.");
+      return;
+    }
     if (!nombreUsuario.trim()) {
       mostrarAlerta("warning", "El nombre de usuario no puede estar vacío.");
       return;
@@ -54,6 +51,7 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
     setIsLoading(true);
     try {
       await onUpdate(trabajador._id, {
+        nombre,
         nombreUsuario,
         ...(password && { password }),
       });
@@ -91,6 +89,13 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
           <ModalBody className="py-6 space-y-4">
             {alerta.show && <Alert color={alerta.color} title={alerta.message} />}
 
+            <Input
+              label="Nombre Completo"
+              placeholder="Escribe el nombre completo"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              disabled={isLoading}
+            />
             <Input
               label="Nombre de usuario"
               placeholder="Escribe el nombre de usuario"

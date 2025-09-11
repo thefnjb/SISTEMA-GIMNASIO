@@ -1,6 +1,8 @@
 const Miembro = require("../Modelos/Miembro");
 const Membresia = require("../Modelos/Membresia");
 const Entrenador = require("../Modelos/Entrenador");
+const Gym = require("../Modelos/Gimnasio");
+const Trabajador = require("../Modelos/Trabajador");
 
 // --- Funciones de Ayuda ---
 const calcularEstado = (fechaVencimiento) => {
@@ -37,12 +39,31 @@ exports.getAllMiembros = async (req, res) => {
       ];
     }
 
-    const miembros = await Miembro.find(filter)
+    const miembrosDocs = await Miembro.find(filter)
       .populate("mensualidad")
       .populate("entrenador", "nombre telefono")
       .sort({ createdAt: -1 })
       .skip(skip)
-      .limit(limit);
+      .limit(limit)
+      .lean();
+
+    const miembros = await Promise.all(
+      miembrosDocs.map(async (miembro) => {
+        if (miembro.creadorId) {
+          if (miembro.creadoPor === "admin") {
+            miembro.creadorNombre = "Administrador";
+          } else if (miembro.creadoPor === "trabajador") {
+            const creador = await Trabajador.findById(miembro.creadorId)
+              .select("nombre")
+              .lean();
+            if (creador) {
+              miembro.creadorNombre = creador.nombre;
+            }
+          }
+        }
+        return miembro;
+      })
+    );
 
     const total = await Miembro.countDocuments(filter);
 
@@ -170,16 +191,22 @@ exports.verMiembro = async (req, res) => {
 exports.actualizarMiembro = async (req, res) => {
   try {
     const { id: miembroId } = req.params;
-    const { gym_id } = req.usuario;
+    const { id: creadorId, rol: creadoPor, gym_id } = req.usuario;
 
     const miembro = await Miembro.findOne({ _id: miembroId, gym: gym_id });
     if (!miembro) {
       return res.status(404).json({ error: "Miembro no encontrado" });
     }
 
+    const updateData = {
+      ...req.body,
+      creadorId: creadorId,
+      creadoPor: creadoPor,
+    };
+
     const miembroActualizado = await Miembro.findByIdAndUpdate(
       miembroId,
-      req.body,
+      updateData,
       { new: true }
     );
     res.json({ miembro: miembroActualizado, mensaje: "Miembro actualizado" });
@@ -192,7 +219,7 @@ exports.actualizarMiembro = async (req, res) => {
 exports.renovarMiembro = async (req, res) => {
   try {
     const { id: miembroId } = req.params;
-    const { gym_id } = req.usuario;
+    const { id: creadorId, rol: creadoPor, gym_id } = req.usuario;
     const { meses, debe } = req.body;
 
     const miembro = await Miembro.findOne({ _id: miembroId, gym: gym_id });
@@ -214,6 +241,9 @@ exports.renovarMiembro = async (req, res) => {
     miembro.estado = calcularEstado(nuevoVenc);
     miembro.ultimaRenovacion = new Date();
     if (debe !== undefined) miembro.debe = Number(debe);
+
+    miembro.creadorId = creadorId;
+    miembro.creadoPor = creadoPor;
 
     await miembro.save();
     res.json({ message: "Renovación exitosa", miembro });
