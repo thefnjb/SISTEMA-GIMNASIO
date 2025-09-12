@@ -22,6 +22,12 @@ const ClientesporDia = moogose.Schema({
         enum: ['Yape', 'Plin', 'Efectivo'],
         default: 'Efectivo'
     },
+    monto: {
+        type: Number,
+        required: true,
+        default: 7,
+        min: 0
+    },
     gym:{
         type: moogose.Schema.Types.ObjectId,
         ref: 'gym',

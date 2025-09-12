@@ -28,6 +28,8 @@
     "mongoose": "^8.16.4",
     "multer": "^2.0.2",
     "node-fetch": "^3.3.2",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "pdfkit": "^0.17.2",
+    "pdfkit-table": "^0.1.99"
   }
 }
