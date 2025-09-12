@@ -1,6 +1,20 @@
 const mongoose = require('mongoose');
 const ClientesPorDia = require("../Modelos/ClientesporDia");
 
+// --- Función de ayuda para calcular rango semanal ---
+function getWeekRange(date = new Date()) {
+    const today = new Date(date);
+  const day = today.getDay(); // 0 = domingo, 1 = lunes, ...
+  const diffToMonday = today.getDate() - day + (day === 0 ? -6 : 1); // mover al lunes
+    const monday = new Date(today.setDate(diffToMonday));
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 7);
+
+    return { monday, sunday };
+}
+
 // Obtener todos los clientes del día para el gimnasio del usuario logueado
 exports.getAllClientes = async (req, res) => {
     try {
@@ -9,7 +23,7 @@ exports.getAllClientes = async (req, res) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setDate(tomorrow.getDate() + 1);   
 
         // --- CORRECCIÓN: Usar 'new' para todos los ObjectId ---
         const gymObjectId = new mongoose.Types.ObjectId(gym_id);
