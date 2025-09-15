@@ -2,12 +2,13 @@
 
 import { ChartAreaInteractive } from "../../components/Graficos/Graficodelineas"
 import { ChartPieInteractive } from "../../components/Graficos/Graficodepie"
-import ChartPieInteractive2 from "../../components/Graficos/Graficodepie2" // 👈 ahora default import
+import ChartPieInteractive2 from "../../components/Graficos/Graficodepie2" 
+import Añosselector from "../../components/Pdf/BotonpdfMensual"
 
 function Ingresos() {
   return (
     <div
-      className="p-6 min-h-screen"
+      className="min-h-screen p-6"
       style={{
         backgroundColor: "#ffffff", // blanco
         backgroundImage: `
@@ -17,7 +18,10 @@ function Ingresos() {
         backgroundSize: "40px 40px", // tamaño de los cuadritos
       }}
     >
-      <h1 className="text-2xl font-bold mb-6">Dashboard de Ingresos</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Dashboard de Ingresos</h1>
+        <Añosselector />
+      </div>
 
       {/* Gráfico de líneas arriba */}
       <div className="mb-8">
@@ -25,7 +29,7 @@ function Ingresos() {
       </div>
 
       {/* Gráficos de pie lado a lado */}
-      <div className="flex flex-col md:flex-row justify-center gap-20">
+      <div className="flex flex-col justify-center gap-20 md:flex-row">
         {/* Izquierda */}
         <div className="w-full md:w-1/3">
           <ChartPieInteractive />
