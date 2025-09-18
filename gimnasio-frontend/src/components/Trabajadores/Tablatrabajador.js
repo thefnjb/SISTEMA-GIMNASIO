@@ -169,7 +169,7 @@ export default function TablaTrabajadores({ refresh }) {
                   </TableCell>
                   <TableCell className="text-center">{trab.nombreUsuario}</TableCell>
                   <TableCell className="text-center">
-                    <span>{trab.passwordPlano || "No disponible"}</span>
+                    <span>{"********"}</span>
                   </TableCell>
                   <TableCell className="text-center">{trab.rol}</TableCell>
                   <TableCell className="text-center">
