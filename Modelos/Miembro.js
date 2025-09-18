@@ -12,12 +12,8 @@ const MiembroSchema = new mongoose.Schema(
       trim: true,
       match: [/^\d{9}$/, "El teléfono debe tener exactamente 9 dígitos numéricos"],
     },
-
-    celular: { type: String }, 
     fechaIngreso: { type: Date, default: Date.now },
-
     mensualidad: { type: mongoose.Schema.Types.ObjectId, ref: "membresias", required: true },
-    membresia: { type: mongoose.Schema.Types.ObjectId, ref: "membresias" }, // legado
     entrenador: { type: mongoose.Schema.Types.ObjectId, ref: "Entrenador" },
     metodoPago: {
       type: String,
