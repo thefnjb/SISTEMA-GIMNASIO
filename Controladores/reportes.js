@@ -6,8 +6,7 @@ const ClientesPorDia = require('../Modelos/ClientesporDia');
 
 // Función de ayuda para construir el filtro base de forma segura
 function buildBaseMatch(req) {
-    const { gym_id } = req.usuario; // ID del gym obtenido del token verificado
-    const match = { gym: new mongoose.Types.ObjectId(gym_id) };
+    const match = {};
 
     if (req.query.start || req.query.end) {
         match.fecha = {};
@@ -101,7 +100,6 @@ async function getReporteAnual(req, res) {
 // Reporte Comparativo (Clientes por Día vs. Miembros Nuevos)
 async function getReporteComparativoClientes(req, res) {
     try {
-        const { gym_id } = req.usuario;
         const year = req.query.year ? parseInt(req.query.year) : new Date().getFullYear();
 
         const startOfYear = new Date(year, 0, 1);
@@ -109,13 +107,11 @@ async function getReporteComparativoClientes(req, res) {
 
         // Filtro para inscripciones (miembros)
         const matchFilter = {
-            gym: new mongoose.Types.ObjectId(gym_id),
             fechaIngreso: { $gte: startOfYear, $lte: endOfYear }
         };
 
         // Filtro para visitas diarias
         const dailyMatchFilter = {
-            gym: new mongoose.Types.ObjectId(gym_id),
             fecha: { $gte: startOfYear, $lte: endOfYear }
         };
 

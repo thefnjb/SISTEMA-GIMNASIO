@@ -27,7 +27,6 @@ const MiembroSchema = new mongoose.Schema(
     renovacion: { type: Date },
     mesesRenovacion: { type: String },
     fechaInicioRenovacion: { type: Date },
-    gym: { type: mongoose.Schema.Types.ObjectId, ref: "gym" },
     creadoPor: {
       type: String,
       enum: ['admin', 'trabajador'],

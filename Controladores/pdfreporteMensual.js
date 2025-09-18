@@ -7,16 +7,12 @@ const path = require("path");
 
 exports.generarReporteMensual = async (req, res) => {
   try {
-    const { gym_id } = req.usuario;
-    const gymObjectId = new mongoose.Types.ObjectId(gym_id);
-
     const añoActual = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
 
     // === Clientes por día ===
     const ingresosPorDia = await ClientesPorDia.aggregate([
       {
         $match: {
-          gym: gymObjectId,
           fecha: {
             $gte: new Date(`${añoActual}-01-01`),
             $lte: new Date(`${añoActual}-12-31`),
@@ -36,7 +32,6 @@ exports.generarReporteMensual = async (req, res) => {
     const ingresosPorMembresia = await Miembro.aggregate([
       {
         $match: {
-          gym: gymObjectId,
           fechaIngreso: {
             $gte: new Date(`${añoActual}-01-01`),
             $lte: new Date(`${añoActual}-12-31`),
