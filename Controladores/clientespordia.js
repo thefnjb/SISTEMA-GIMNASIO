@@ -18,18 +18,14 @@ function getWeekRange(date = new Date()) {
 // Obtener todos los clientes del día para el gimnasio del usuario logueado
 exports.getAllClientes = async (req, res) => {
     try {
-        const { id: userId, rol, gym_id } = req.usuario;
+        const { id: userId, rol } = req.usuario;
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);   
-
-        // --- CORRECCIÓN: Usar 'new' para todos los ObjectId ---
-        const gymObjectId = new mongoose.Types.ObjectId(gym_id);
+        tomorrow.setDate(tomorrow.getDate() + 1);
 
         let filtro = {
-            gym: gymObjectId,
             fecha: { $gte: today, $lt: tomorrow }
         };
 
@@ -40,7 +36,7 @@ exports.getAllClientes = async (req, res) => {
         const clientes = await ClientesPorDia.find(filtro).sort({ createdAt: -1 });
 
         const conteoPagos = await ClientesPorDia.aggregate([
-            { $match: { gym: gymObjectId, fecha: { $gte: today, $lt: tomorrow } } },
+            { $match: { fecha: { $gte: today, $lt: tomorrow } } },
             { $group: { _id: "$metododePago", count: { $sum: 1 } } }
         ]);
 
@@ -64,7 +60,7 @@ exports.getAllClientes = async (req, res) => {
 exports.registrarCliente = async (req, res) => {
     try {
         const { nombre, fecha, metododePago } = req.body;
-        const { id, rol, gym_id } = req.usuario;
+        const { id, rol } = req.usuario;
 
         if (!nombre || !nombre.trim()) {
             return res.status(400).json({ error: "El nombre es requerido" });
@@ -78,7 +74,6 @@ exports.registrarCliente = async (req, res) => {
             fecha: fecha || new Date(),
             horaInicio,
             metododePago: metododePago || 'Efectivo',
-            gym: gym_id,
             creadoPor: rol,
             creadorId: id
         });
@@ -97,13 +92,13 @@ exports.actualizarCliente = async (req, res) => {
     try {
         const { id: clienteId } = req.params;
         const { nombre, metododePago } = req.body;
-        const { id: userId, rol, gym_id } = req.usuario;
+        const { id: userId, rol } = req.usuario;
 
         if (!nombre || !nombre.trim()) {
             return res.status(400).json({ error: "El nombre es requerido" });
         }
 
-        const cliente = await ClientesPorDia.findOne({ _id: clienteId, gym: gym_id });
+        const cliente = await ClientesPorDia.findOne({ _id: clienteId });
 
         if (!cliente) {
             return res.status(404).json({ error: "Cliente no encontrado." });
@@ -131,9 +126,9 @@ exports.actualizarCliente = async (req, res) => {
 exports.eliminarCliente = async (req, res) => {
     try {
         const { id: clienteId } = req.params;
-        const { id: userId, rol, gym_id } = req.usuario;
+        const { id: userId, rol } = req.usuario;
 
-        const cliente = await ClientesPorDia.findOne({ _id: clienteId, gym: gym_id });
+        const cliente = await ClientesPorDia.findOne({ _id: clienteId });
 
         if (!cliente) {
             return res.status(404).json({ error: "Cliente no encontrado." });

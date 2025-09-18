@@ -97,11 +97,10 @@ function drawTable(doc, x, y, headers, data, columnWidths, options = {}) {
 
 exports.generarReporteClientesPorDia = async (req, res) => {
   try {
-    const { gym_id, rol, id } = req.usuario;
-    const gymObjectId = new mongoose.Types.ObjectId(gym_id);
+    const { rol, id } = req.usuario;
 
     // --- Datos ---
-    const matchQuery = { gym: gymObjectId };
+    const matchQuery = {};
     if (rol === "trabajador") {
       matchQuery.creadorId = new mongoose.Types.ObjectId(id);
     }

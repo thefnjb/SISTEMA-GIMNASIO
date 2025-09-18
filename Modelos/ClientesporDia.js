@@ -28,11 +28,6 @@ const ClientesporDia = moogose.Schema({
         default: 7,
         min: 0
     },
-    gym:{
-        type: moogose.Schema.Types.ObjectId,
-        ref: 'gym',
-        required: true
-    },
     // CAMPOS NUEVOS PARA SEPARACIÓN DE DATOS:
     creadoPor:{
         type: String,
@@ -48,10 +43,8 @@ const ClientesporDia = moogose.Schema({
     timestamps: true
 });
 
-// Índice compuesto para optimizar consultas por gym, creador y creadorId
 ClientesporDia.index({ gym: 1, creadoPor: 1, creadorId: 1 });
 
-// Índice para consultas por fecha
 ClientesporDia.index({ fecha: 1 });
 
 module.exports = moogose.model("ClientesporDia", ClientesporDia);

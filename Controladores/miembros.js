@@ -24,13 +24,13 @@ const calcularVencimiento = (fechaBase, meses) => {
 // --- Controlador ---
 exports.getAllMiembros = async (req, res) => {
   try {
-    const { id: userId, rol, gym_id } = req.usuario;
+    const { id: userId, rol } = req.usuario;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || "";
     const skip = (page - 1) * limit;
 
-    let filter = { gym: gym_id };
+    let filter = {};
 
     if (search) {
       filter.$or = [
@@ -92,7 +92,7 @@ exports.registroMiembros = async (req, res) => {
       debe,
       fechaIngreso,
     } = req.body;
-    const { id: creadorId, rol: creadoPor, gym_id } = req.usuario;
+    const { id: creadorId, rol: creadoPor } = req.usuario;
 
     if (!nombreCompleto || !telefono || !mensualidad) {
       return res
@@ -105,30 +105,23 @@ exports.registroMiembros = async (req, res) => {
       return res.status(404).json({ error: "Membresía no encontrada" });
     }
 
-    // Validar que no exista miembro con el mismo teléfono en el gym
-    const miembroExiste = await Miembro.findOne({ telefono, gym: gym_id });
+    // Validar que no exista miembro con el mismo teléfono
+    const miembroExiste = await Miembro.findOne({ telefono });
     if (miembroExiste) {
       return res.status(409).json({
-        error: "Ya existe un miembro con este teléfono en este gimnasio",
+        error: "Ya existe un miembro con este teléfono",
       });
     }
 
     // Validar entrenador (si se envía)
-   // Validar entrenador (si se envía)
-let entrenadorValido = null;
-if (entrenador) {
-  if (req.usuario.rol === "trabajador") {
-    // Trabajador puede buscar en todos los gimnasios
-    entrenadorValido = await Entrenador.findById(entrenador);
-  } else {
-    // Admin solo en su gimnasio
-    entrenadorValido = await Entrenador.findOne({ _id: entrenador, gym: gym_id });
-  }
+   let entrenadorValido = null;
+   if (entrenador) {
+     entrenadorValido = await Entrenador.findById(entrenador);
 
-  if (!entrenadorValido) {
-    return res.status(404).json({ error: "Entrenador no encontrado" });
-  }
-}
+     if (!entrenadorValido) {
+       return res.status(404).json({ error: "Entrenador no encontrado" });
+     }
+   }
 
 
     const fechaInicio = fechaIngreso
@@ -150,7 +143,6 @@ if (entrenador) {
       fechaIngreso: fechaInicio,
       vencimiento,
       estado: "activo",
-      gym: gym_id,
       creadoPor,
       creadorId,
     });
@@ -172,11 +164,9 @@ if (entrenador) {
 // Ver un miembro específico
 exports.verMiembro = async (req, res) => {
   try {
-    const { gym_id } = req.usuario;
     const miembro = await Miembro.findOne({
       _id: req.params.id,
-      gym: gym_id,
-    }).populate("mensualidad entrenador gym");
+    }).populate("mensualidad entrenador");
 
     if (!miembro) {
       return res.status(404).json({ error: "Miembro no encontrado" });
@@ -191,9 +181,9 @@ exports.verMiembro = async (req, res) => {
 exports.actualizarMiembro = async (req, res) => {
   try {
     const { id: miembroId } = req.params;
-    const { id: creadorId, rol: creadoPor, gym_id } = req.usuario;
+    const { id: creadorId, rol: creadoPor } = req.usuario;
 
-    const miembro = await Miembro.findOne({ _id: miembroId, gym: gym_id });
+    const miembro = await Miembro.findOne({ _id: miembroId });
     if (!miembro) {
       return res.status(404).json({ error: "Miembro no encontrado" });
     }
@@ -219,10 +209,10 @@ exports.actualizarMiembro = async (req, res) => {
 exports.renovarMiembro = async (req, res) => {
   try {
     const { id: miembroId } = req.params;
-    const { id: creadorId, rol: creadoPor, gym_id } = req.usuario;
+    const { id: creadorId, rol: creadoPor } = req.usuario;
     const { meses, debe } = req.body;
 
-    const miembro = await Miembro.findOne({ _id: miembroId, gym: gym_id });
+    const miembro = await Miembro.findOne({ _id: miembroId });
     if (!miembro) {
       return res.status(404).json({ error: "Miembro no encontrado" });
     }
@@ -256,9 +246,8 @@ exports.renovarMiembro = async (req, res) => {
 exports.eliminarMiembro = async (req, res) => {
   try {
     const { id: miembroId } = req.params;
-    const { gym_id } = req.usuario;
 
-    const result = await Miembro.deleteOne({ _id: miembroId, gym: gym_id });
+    const result = await Miembro.deleteOne({ _id: miembroId });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Miembro no encontrado" });

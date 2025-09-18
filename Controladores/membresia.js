@@ -4,10 +4,6 @@ exports.crearMembresia = async (req, res) => {
     try {
         const { duracion, precio, turno } = req.body;
 
-        // 🔍 DEBUG: Ver qué gym_id usa el admin
-        console.log("🔴 ADMIN creando membresía - gym_id:", req.usuario.gym_id);
-        console.log("🔴 ADMIN - Usuario completo:", req.usuario);
-
         // Buscar membresía con la misma duración y mismo turno
         const membresiaExistente = await Membresia.findOne({
             gym: req.usuario.gym_id,
