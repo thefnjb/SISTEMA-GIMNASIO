@@ -66,7 +66,6 @@ const AreaChartComponent = ({ data }) => {
             color: "#000000",
           }}
           itemSorter={(a, b) => {
-            // Mostrar primero Clientes Mensualidad, luego Clientes por Día
             if (a.dataKey === "clientesPorMensualidad") return -1
             if (b.dataKey === "clientesPorMensualidad") return 1
             return 0
@@ -127,7 +126,7 @@ const AreaChartComponent = ({ data }) => {
 
 export function ChartAreaInteractive() {
   const [timeRange, setTimeRange] = useState("12m")
-  const [selectedYear, setSelectedYear] = useState(2025)
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()) // siempre inicia en el año actual
   const [data, setData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -141,7 +140,6 @@ export function ChartAreaInteractive() {
       const response = await api.get(`/report/comparativo?year=${selectedYear}`)
 
       console.log("[v0] Response status:", response.status)
-      console.log("[v0] Response ok:", response.status === 200)
 
       if (response.status !== 200) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -166,23 +164,6 @@ export function ChartAreaInteractive() {
 
       const comparativoData = await checkApiConnection()
 
-      console.log("[v0] Raw API Response:", JSON.stringify(comparativoData, null, 2))
-      console.log("[v0] Number of records:", comparativoData.length)
-
-      comparativoData.forEach((item, index) => {
-        console.log(`[v0] Record ${index}:`, {
-          month: item.month,
-          month_num: item.month_num,
-          year: item.year,
-          clientesPorDia: item.clientesPorDia,
-          clientesPorMensualidad: item.clientesPorMensualidad,
-          dataTypes: {
-            clientesPorDia: typeof item.clientesPorDia,
-            clientesPorMensualidad: typeof item.clientesPorMensualidad,
-          },
-        })
-      })
-
       const chartData = comparativoData.map((item) => {
         const date = new Date(Date.UTC(item.year, item.month_num - 1, 2))
         return {
@@ -192,14 +173,6 @@ export function ChartAreaInteractive() {
           clientesPorMensualidad: Number(item.clientesPorMensualidad) || 0,
         }
       })
-
-      console.log("[v0] Transformed data:", JSON.stringify(chartData, null, 2))
-
-      const agostoData = chartData.find((item) => item.date === "2025-08-01")
-      if (agostoData) {
-        console.log("[v0] Agosto 2025 data:", agostoData)
-        console.log("[v0] ¿Por qué clientesPorDia es 0 si hay 4 clientes hoy?")
-      }
 
       setData(chartData)
     } catch (err) {
@@ -226,9 +199,7 @@ export function ChartAreaInteractive() {
     if (timeRange === "6m") monthsToShow = 6
     else if (timeRange === "3m") monthsToShow = 3
 
-    const filtered = data.slice(-monthsToShow)
-    console.log("[v0] Filtered data:", filtered)
-    return filtered
+    return data.slice(-monthsToShow)
   }, [data, timeRange])
 
   const handleYearChange = (value) => {
@@ -236,14 +207,15 @@ export function ChartAreaInteractive() {
     setSelectedYear(year)
   }
 
-  return (
-    <div
-      className="p-6 rounded-lg shadow"
-      style={{
-  backgroundColor: "#ffffff",
-}}
+  // 🔥 Generar dinámicamente los años
+  const currentYear = new Date().getFullYear()
+  const years = []
+  for (let y = currentYear; y >= 2022; y--) {
+    years.push(y)
+  }
 
-    >
+  return (
+    <div className="p-6 rounded-lg shadow" style={{ backgroundColor: "#ffffff" }}>
       {error && (
         <div className="p-4 mb-4 border border-yellow-200 rounded-lg bg-yellow-50">
           <div className="flex items-center">
@@ -277,7 +249,9 @@ export function ChartAreaInteractive() {
       <div className="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">Ingresos de Clientes</h3>
-          <p className="text-sm text-gray-600">Comparación entre clientes por día vs clientes con mensualidad (POR MES)</p>
+          <p className="text-sm text-gray-600">
+            Comparación entre clientes por día vs clientes con mensualidad (POR MES)
+          </p>
         </div>
         <div className="flex gap-2">
           <select
@@ -295,10 +269,11 @@ export function ChartAreaInteractive() {
             onChange={(e) => handleYearChange(e.target.value)}
             className="px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg"
           >
-            <option value="2025">2025</option>
-            <option value="2024">2024</option>
-            <option value="2023">2023</option>
-            <option value="2022">2022</option>
+            {years.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -317,7 +292,9 @@ export function ChartAreaInteractive() {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <p className="text-gray-600">No hay datos disponibles para mostrar</p>
-              <p className="mt-2 text-sm text-gray-500">Verifica que tu API esté funcionando correctamente</p>
+              <p className="mt-2 text-sm text-gray-500">
+                Verifica que tu API esté funcionando correctamente
+              </p>
             </div>
           </div>
         )}

@@ -35,12 +35,16 @@ function ChartPieInteractive() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeIndex, setActiveIndex] = useState(-1);
 
+  // 🔥 Generar dinámicamente años (desde 2020 hasta el actual)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: currentYear - 2019 }, (_, i) => 2020 + i);
+
   const fetchData = async (month, year) => {
     try {
       setLoading(true);
       const response = await api.get("/members/miembros"); // Usar api.get
 
-      const apiData = response.data.miembros || response.data; // Axios devuelve la data en .data
+      const apiData = response.data.miembros || response.data;
 
       const clientesFiltrados = apiData.filter((m) => {
         if (!m.fechaIngreso) return false;
@@ -80,36 +84,34 @@ function ChartPieInteractive() {
           <h3 className="text-lg font-semibold text-gray-900">
             Clientes Proporción
           </h3>
-          <p className="text-sm text-gray-600">
-            Clientes con Mensualidad
-          </p>
+          <p className="text-sm text-gray-600">Clientes con Mensualidad</p>
         </div>
         <div className="flex gap-2">
           {/* Select Mes */}
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(Number(e.target.value))}
-          className="px-3 py-2 bg-black text-white border border-gray-700 rounded-lg"
-        >
-          {meses.map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="px-3 py-2 bg-black text-white border border-gray-700 rounded-lg"
+          >
+            {meses.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
 
-        {/* Select Año */}
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-          className="px-3 py-2 bg-black text-white border border-gray-700 rounded-lg"
-        >
-          <option value={2025}>2025</option>
-          <option value={2024}>2024</option>
-          <option value={2023}>2023</option>
-          <option value={2022}>2022</option>
-        </select>
-
+          {/* Select Año (dinámico) */}
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="px-3 py-2 bg-black text-white border border-gray-700 rounded-lg"
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
@@ -136,9 +138,7 @@ function ChartPieInteractive() {
           ) : error ? (
             <p className="text-red-500">Error: {error}</p>
           ) : data.length === 0 ? (
-            <p className="text-gray-500 text-center">
-              No hay datos para este mes
-            </p>
+            <p className="text-gray-500 text-center">No hay datos para este mes</p>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
