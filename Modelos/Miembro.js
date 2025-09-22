@@ -3,8 +3,6 @@ const mongoose = require("mongoose");
 const MiembroSchema = new mongoose.Schema(
   {
     nombreCompleto: { type: String, required: true, trim: true },
-    nombre: { type: String }, // legado
-
     telefono: {
       type: String,
       required: true,
