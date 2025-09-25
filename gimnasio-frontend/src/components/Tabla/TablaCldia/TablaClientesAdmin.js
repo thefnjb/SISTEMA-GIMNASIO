@@ -16,13 +16,14 @@ import { Alert } from "@heroui/react";
 import ActualizarSuscripcion from "../../Actualizarmodal/ActualizarSuscripciones";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
+import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import BotonEditar from "../../Iconos/BotonEditar";
 import BotonEliminar from "../../Iconos/BotonEliminar";
 import BotonRenovar from "../../Iconos/BotonRenovar";
 import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
 import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
 
-export default function TablaClientesAdmin({ refresh, rolActual }) {
+export default function TablaClientesAdmin({ refresh }) {
   const [miembros, setMiembros] = useState([]);
   const [filtro, setFiltro] = useState("");
   const [cargando, setCargando] = useState(true);
@@ -126,6 +127,34 @@ export default function TablaClientesAdmin({ refresh, rolActual }) {
     const numero = obtenerMesesMiembro(miembro);
     if (!numero) return "-";
     return `${numero} MES${numero > 1 ? "ES" : ""}`;
+  };
+
+  // ---------- Descargar Voucher ----------
+  const descargarVoucher = async (miembro) => {
+    try {
+      const response = await api.get(`/pdfvoucher/miembro/${miembro._id}`, {
+        responseType: "blob",
+        withCredentials: true,
+        headers: {
+          Accept: "application/pdf",
+        },
+      });
+
+      const nombreLimpio = miembro.nombreCompleto
+        .replace(/\s+/g, "_")
+
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `voucher_${nombreLimpio}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error al descargar el voucher:", error);
+      showAlert("danger", "No se pudo generar el voucher.");
+    }
   };
 
   // ---------- Backend ----------
@@ -301,17 +330,20 @@ export default function TablaClientesAdmin({ refresh, rolActual }) {
                   </TableCell>
 
                   {/* NUEVA COLUMNA CAMBIOS */}
-                <TableCell>
+                  <TableCell>
                     <span className="text-xs text-gray-600">
                         {miembro?.creadorNombre
                         ? `por ${miembro.creadorNombre}`
                         : "Desconocido"}
                     </span>
-                    </TableCell>
-
+                  </TableCell>
 
                   <TableCell>
                     <div className="flex items-center gap-1 sm:gap-2 h-[45px] justify-end">
+                      <AdfScannerRoundedIcon
+                        onClick={() => descargarVoucher(miembro)}
+                        sx={{ color: "#555555", fontSize: 26, cursor: "pointer" }}
+                      />
                       <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
                       <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
                       <BotonEliminar onClick={() => eliminarMiembro(miembro._id)} />

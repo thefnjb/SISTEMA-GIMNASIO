@@ -23,6 +23,8 @@ const ClientesPorDia = require('./Routes/clientespordia');
 const Trabajador = require('./Routes/trabajador');
 const ReporteRoutes = require('./Routes/reportes');
 const Reportepdf = require('./Routes/Reportepdf');
+const Voucherpdf = require('./Routes/voucherpdf');
+
 
 
 
@@ -35,6 +37,7 @@ app.use('/visits', ClientesPorDia);
 app.use('/report', ReporteRoutes);
 app.use('/workers', Trabajador);
 app.use('/pdfdia', Reportepdf);
+app.use('/pdfvoucher', Voucherpdf);
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

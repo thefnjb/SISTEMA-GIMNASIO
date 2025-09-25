@@ -16,12 +16,13 @@ import { Alert } from "@heroui/react";
 import ActualizarSuscripcion from "../../Actualizarmodal/ActualizarSuscripciones";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
+import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import BotonEditar from "../../Iconos/BotonEditar";
 import BotonRenovar from "../../Iconos/BotonRenovar";
 import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
 import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
 
-export default function TablaMiembros({ refresh, rolActual }) {
+export default function TablaClientesAdmin({ refresh }) {
   const [miembros, setMiembros] = useState([]);
   const [filtro, setFiltro] = useState("");
   const [cargando, setCargando] = useState(true);
@@ -127,6 +128,34 @@ export default function TablaMiembros({ refresh, rolActual }) {
     return `${numero} MES${numero > 1 ? "ES" : ""}`;
   };
 
+  // ---------- Descargar Voucher ----------
+  const descargarVoucher = async (miembro) => {
+    try {
+      const response = await api.get(`/pdfvoucher/miembro/${miembro._id}`, {
+        responseType: "blob",
+        withCredentials: true,
+        headers: {
+          Accept: "application/pdf",
+        },
+      });
+
+      const nombreLimpio = miembro.nombreCompleto
+        .replace(/\s+/g, "_")
+
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `voucher_${nombreLimpio}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      console.error("Error al descargar el voucher:", error);
+      showAlert("danger", "No se pudo generar el voucher.");
+    }
+  };
+
   // ---------- Backend ----------
   const obtenerMiembros = useCallback(async (searchTerm) => {
     setCargando(true);
@@ -148,7 +177,6 @@ export default function TablaMiembros({ refresh, rolActual }) {
       setCargando(false);
     }
   }, [showAlert]);
-
   const abrirModalActualizar = (miembro, modo = "editar") => {
     setMiembroSeleccionado(miembro);
     setModoModal(modo);
@@ -236,8 +264,8 @@ export default function TablaMiembros({ refresh, rolActual }) {
             }}
           >
             <TableHeader>
-              <TableColumn>NOMBRE Y APELLIDO</TableColumn>
-              <TableColumn>TELÉFONO</TableColumn>
+              <TableColumn className="min-w-[140px]">NOMBRE Y APELLIDO</TableColumn>
+              <TableColumn className="w-[100px]">TELÉFONO</TableColumn>
               <TableColumn key="ingreso" allowsSorting className="min-w-[120px] text-center hidden md:table-cell">INGRESO</TableColumn>
               <TableColumn className="hidden md:table-cell">MENSUALIDAD</TableColumn>
               <TableColumn className="hidden lg:table-cell">ENTRENADOR</TableColumn>
@@ -253,7 +281,7 @@ export default function TablaMiembros({ refresh, rolActual }) {
                 <TableRow key={miembro._id} className="align-middle">
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} />
+                      <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 22 }} />
                       <span>{miembro.nombreCompleto}</span>
                     </div>
                   </TableCell>
@@ -287,6 +315,10 @@ export default function TablaMiembros({ refresh, rolActual }) {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 sm:gap-2 h-[45px] justify-end">
+                      <AdfScannerRoundedIcon
+                        onClick={() => descargarVoucher(miembro)}
+                        sx={{ color: "#555555", fontSize: 26, cursor: "pointer" }}
+                      />
                       <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
                       <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
                     </div>

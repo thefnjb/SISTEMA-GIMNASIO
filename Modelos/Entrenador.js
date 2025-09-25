@@ -10,10 +10,13 @@ const EntrenadorSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  telefono: {
-    type: String,
-    required: true,
-  },
+    telefono: {
+      type: String,
+      required: true,
+      unique: true, 
+      trim: true,
+      match: [/^\d{9}$/, "El teléfono debe tener exactamente 9 dígitos numéricos"],
+    },
   fotoPerfil: {
     data: Buffer, 
     contentType: String, 

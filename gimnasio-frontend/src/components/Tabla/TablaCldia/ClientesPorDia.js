@@ -18,7 +18,8 @@ import {
 } from "@heroui/react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
-import ReporteClientesDia from "../../../components/Pdf/BotonpdfClientesdia"; // Botón de PDF
+import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
+import ReporteClientesDia from "../../../components/Pdf/BotonpdfClientesdia"; 
 import api from "../../../utils/axiosInstance";
 
 // 🔹 Función para formatear hora
@@ -80,6 +81,47 @@ export default function TablaClientesHoy({ refresh }) {
 
   const rowsPerPage = 4;
 
+  // 🔹 Descargar voucher
+  const descargarVoucher = async (cliente) => {
+    try {
+      // Extraer id y nombre del objeto cliente
+      const miembroId = cliente?._id || cliente?.id;
+      const nombreCliente = cliente?.nombre || "cliente";
+
+      if (!miembroId) {
+        showAlert("danger", "ID de cliente inválido para descargar el voucher.");
+        return;
+      }
+
+      const response = await api.get(`/pdfvoucher/dia/${miembroId}`, {
+        responseType: "blob",
+        withCredentials: true,
+        headers: { Accept: "application/pdf" },
+      });
+
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const nombreLimpio = nombreCliente.replace(/\s+/g, "_").replace(/[^\w-]/g, "");
+      link.href = url;
+      link.setAttribute("download", `voucher_${nombreLimpio}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      // Liberar URL
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error al descargar voucher:", error);
+      if (error.response && error.response.status === 401) {
+        showAlert("danger", "No autorizado. Por favor inicia sesión.");
+      } else if (error.response && error.response.status === 404) {
+        showAlert("danger", "Voucher no encontrado (404).");
+      } else {
+        showAlert("danger", "No se pudo generar el voucher.");
+      }
+    }
+  };
+
   // 🔹 Fetch de clientes
   const fetchClientes = useCallback(async () => {
     try {
@@ -88,7 +130,6 @@ export default function TablaClientesHoy({ refresh }) {
       const apiCallPromise = api.get("/visits/clientesdia");
 
       const [res] = await Promise.all([apiCallPromise, delayPromise]);
-
       setClientes(res.data.clientes);
     } catch (err) {
       console.error("Error al obtener clientes:", err);
@@ -156,9 +197,9 @@ export default function TablaClientesHoy({ refresh }) {
   const cancelDelete = () =>
     setConfirmModal({ show: false, clienteId: null, clienteNombre: "" });
 
-  // Calcular total del día
+  // Calcular total del día (usar campo 'monto' del modelo)
   const totalMontoHoy = useMemo(
-    () => clientes.reduce((acc, cliente) => acc + (cliente.precio || 7), 0),
+    () => clientes.reduce((acc, cliente) => acc + (cliente.monto != null ? cliente.monto : 7), 0),
     [clientes]
   );
 
@@ -173,13 +214,7 @@ export default function TablaClientesHoy({ refresh }) {
         <div className="mb-4">
           <Alert
             color={alert.type}
-            title={
-              alert.type === "success"
-                ? "Éxito"
-                : alert.type === "danger"
-                ? "Error"
-                : "Información"
-            }
+            title={alert.type === "success" ? "Éxito" : alert.type === "danger" ? "Error" : "Información"}
             description={alert.message}
             variant="faded"
             isClosable
@@ -214,24 +249,13 @@ export default function TablaClientesHoy({ refresh }) {
         }}
       >
         <TableHeader>
-          <TableColumn key="nombre" allowsSorting>
-            Nombre
-          </TableColumn>
-          <TableColumn key="fecha" allowsSorting>
-            Fecha
-          </TableColumn>
-          <TableColumn key="horaInicio" allowsSorting>
-            Hora de Inicio
-          </TableColumn>
-          <TableColumn key="metododePago" allowsSorting>
-            Método de Pago
-          </TableColumn>
-          <TableColumn key="precio" className="text-right" allowsSorting>
-            Monto (S/)
-          </TableColumn>
-          <TableColumn key="eliminar" className="text-center">
-            Eliminar
-          </TableColumn>
+          <TableColumn key="nombre" allowsSorting>Nombre</TableColumn>
+          <TableColumn key="fecha" allowsSorting>Fecha</TableColumn>
+          <TableColumn key="horaInicio" allowsSorting>Hora de Inicio</TableColumn>
+          <TableColumn key="metododePago" allowsSorting>Método de Pago</TableColumn>
+          <TableColumn key="precio" className="text-right" allowsSorting>Monto (S/)</TableColumn>
+          <TableColumn key="voucher" className="text-center">Voucher</TableColumn>
+          <TableColumn key="eliminar" className="text-center">Eliminar</TableColumn>
         </TableHeader>
 
         <TableBody
@@ -247,16 +271,20 @@ export default function TablaClientesHoy({ refresh }) {
           {(cliente) => (
             <TableRow key={cliente._id || cliente.nombre}>
               <TableCell>{cliente.nombre || "Sin nombre"}</TableCell>
-              <TableCell>
-                {cliente.fecha
-                  ? new Date(cliente.fecha).toLocaleDateString()
-                  : "Sin fecha"}
-              </TableCell>
+              <TableCell>{cliente.fecha ? new Date(cliente.fecha).toLocaleDateString() : "Sin fecha"}</TableCell>
               <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
               <TableCell>{cliente.metododePago || "No definido"}</TableCell>
-              <TableCell className="text-right">
-                {cliente.precio || 7}
+              <TableCell className="text-right">{cliente.monto != null ? cliente.monto : 7}</TableCell>
+
+              {/* 🔹 Botón Voucher */}
+              <TableCell className="text-center">
+                <AdfScannerRoundedIcon
+                  onClick={() => descargarVoucher(cliente)}
+                  sx={{ color: "#d32f2f", fontSize: 26, cursor: "pointer" }}
+                />
               </TableCell>
+
+              {/* 🔹 Botón Eliminar */}
               <TableCell className="text-center">
                 <IconButton
                   aria-label="Eliminar cliente"
@@ -274,12 +302,10 @@ export default function TablaClientesHoy({ refresh }) {
       {/* Resumen y botones */}
       <div className="flex items-center justify-between mt-4">
         <div className="text-lg font-bold text-black">
-          Total Recaudado Hoy:{" "}
-          <span className="text-red-600">S/ {totalMontoHoy.toFixed(2)}</span>
+          Total Recaudado Hoy: <span className="text-red-600">S/ {totalMontoHoy.toFixed(2)}</span>
         </div>
 
         <div className="flex gap-3">
-          {/* 🔹 Botón de descarga PDF */}
           <ReporteClientesDia />
         </div>
       </div>
@@ -287,30 +313,15 @@ export default function TablaClientesHoy({ refresh }) {
       {/* Modal confirmación eliminar */}
       <Modal isOpen={confirmModal.show} onClose={cancelDelete} placement="center">
         <ModalContent>
-          <ModalHeader className="flex flex-col gap-1">
-            Confirmar Eliminación
-          </ModalHeader>
+          <ModalHeader className="flex flex-col gap-1">Confirmar Eliminación</ModalHeader>
           <ModalBody>
-            <p>
-              ¿Deseas borrar al cliente{" "}
-              <strong>{confirmModal.clienteNombre}</strong>?
-            </p>
+            <p>¿Deseas borrar al cliente <strong>{confirmModal.clienteNombre}</strong>?</p>
           </ModalBody>
           <ModalFooter>
-            <Button
-              color="default"
-              style={{ backgroundColor: "#e5e7eb" }}
-              variant="light"
-              onPress={cancelDelete}
-            >
+            <Button color="default" style={{ backgroundColor: "#e5e7eb" }} variant="light" onPress={cancelDelete}>
               Cancelar
             </Button>
-            <Button
-              color="danger"
-              style={{ backgroundColor: "#7a0f16" }}
-              variant="solid"
-              onPress={handleDelete}
-            >
+            <Button color="danger" style={{ backgroundColor: "#7a0f16" }} variant="solid" onPress={handleDelete}>
               <DeleteIcon />
             </Button>
           </ModalFooter>

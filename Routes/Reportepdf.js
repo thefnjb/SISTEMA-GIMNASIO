@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { generarReporteClientesPorDia } = require("../Controladores/pdfreportedia");
 const { generarReporteMensual } = require("../Controladores/pdfreporteMensual");
-const authUnificado = require("../Middleware/AuthUnificado");
+const authUnificado = require("../middleware/authUnificado");
 const soloAdmin = require("../Middleware/soloAdmin");
 
 
