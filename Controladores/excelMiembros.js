@@ -37,16 +37,16 @@ const generarExcelMiembros = async (req, res) => {
 
     // 🔹 Encabezados con estilo parecido a tu tabla
     worksheet.columns = [
-        { header: "NOMBRE Y APELLIDO", key: "nombreCompleto", width: 25 },
-        { header: "TELÉFONO", key: "telefono", width: 15 },
+        { header: "NOMBRE Y APELLIDO", key: "nombreCompleto", width: 40 },
+        { header: "TELÉFONO", key: "telefono", width: 20 },
         { header: "INGRESO", key: "fechaIngreso", width: 15 },
-        { header: "MENSUALIDAD", key: "mensualidad", width: 15 },
-        { header: "ENTRENADOR", key: "entrenador", width: 20 },
-        { header: "PAGO", key: "metodoPago", width: 12 },
+        { header: "MENSUALIDAD", key: "mensualidad", width: 35 },
+        { header: "ENTRENADOR", key: "entrenador", width: 40 },
+        { header: "PAGO", key: "metodoPago", width: 15 },
         { header: "DEBE", key: "debe", width: 10 },
         { header: "VENCE", key: "vencimiento", width: 15 },
         { header: "ESTADO", key: "estado", width: 15 },
-        { header: "CAMBIOS", key: "creadorNombre", width: 18 },
+        { header: "CAMBIOS", key: "creadorNombre", width: 40 },
     ];
 
     // 🔹 Estilo encabezado (rojo → negro → blanco)
@@ -57,8 +57,8 @@ const generarExcelMiembros = async (req, res) => {
         gradient: "angle",
         degree: 0,
         stops: [
-          { position: 0, color: { argb: "FF1A1A1A" } }, // negro
-          { position: 1, color: { argb: "FF7A0F16" } }, // rojo oscuro
+          { position: 0, color: { argb: "FF1A1A1A" } }, 
+          { position: 1, color: { argb: "FF7A0F16" } }, 
         ],
       };
       cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 };
@@ -71,6 +71,12 @@ const generarExcelMiembros = async (req, res) => {
       };
     });
 
+    // Habilitar filtro para toda la fila de encabezados
+    worksheet.autoFilter = {
+      from: { row: 1, column: 1 },
+      to: { row: 1, column: worksheet.columns.length },
+    };
+    
     // 🔹 Filas con estilo alternado (gris/blanco)
     miembros.forEach((m, index) => {
       const row = worksheet.addRow({
