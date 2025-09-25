@@ -33,6 +33,42 @@ const generadoVoucherDIA = async (req, res) => {
         hour12: true
     });
 
+    // Normalizar y convertir la hora de ingreso a formato 12h con AM/PM (ej: 19.24 -> 7:24 PM)
+    function formatTimeTo12Hour(time) {
+        if (!time && time !== 0) return "";
+        let str = String(time).trim();
+        // Aceptar separadores comunes
+        str = str.replace(',', '.');
+
+        let parts = [];
+        if (str.includes(':')) parts = str.split(':');
+        else if (str.includes('.')) parts = str.split('.');
+        else {
+            // Por si viene como número 1930 -> 19:30
+            const num = parseInt(str, 10);
+            if (isNaN(num)) return str;
+            const hours = Math.floor(num / 100);
+            const minutes = num % 100;
+            parts = [String(hours), String(minutes)];
+        }
+
+        let hours = parseInt(parts[0], 10);
+        let minutes = parts[1] ? parseInt(parts[1].slice(0, 2), 10) : 0;
+        if (isNaN(hours)) return str;
+        if (isNaN(minutes)) minutes = 0;
+
+        // Determinar periodo AM/PM
+        const period = hours >= 12 ? 'PM' : 'AM';
+
+        // Convertir a 12 horas (1-12)
+        const hour12 = ((hours + 11) % 12) + 1;
+
+        // Devolver con ':' como separador y sufijo AM/PM (ej. 7:35 PM)
+        return `${hour12}:${String(minutes).padStart(2, '0')} ${period}`;
+    }
+
+    const horaIngresoFormateada = formatTimeTo12Hour(cliente.horaInicio);
+
     const html = `
         <html>
         <head>
@@ -72,7 +108,7 @@ const generadoVoucherDIA = async (req, res) => {
 
             <div class="box"><span class="label">Cliente:</span> ${cliente.nombre}</div>
             <div class="box"><span class="label">Fecha:</span> ${new Date(cliente.fecha).toLocaleDateString("es-ES")}</div>
-            <div class="box"><span class="label">Hora Ingreso:</span> ${cliente.horaInicio}</div>
+            <div class="box"><span class="label">Hora Ingreso:</span> ${horaIngresoFormateada}</div>
             <div class="box"><span class="label">Método de pago:</span> ${cliente.metododePago}</div>
             <div class="box"><span class="label">Monto:</span> S/ ${cliente.monto.toFixed(2)}</div>
 
