@@ -22,6 +22,7 @@ import BotonEliminar from "../../Iconos/BotonEliminar";
 import BotonRenovar from "../../Iconos/BotonRenovar";
 import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
 import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
+import BotonExcel from "../../Excel/BotonExcel"; 
 
 export default function TablaClientesAdmin({ refresh }) {
   const [miembros, setMiembros] = useState([]);
@@ -255,9 +256,11 @@ export default function TablaClientesAdmin({ refresh }) {
           className="w-full sm:max-w-md"
           startContent={<SearchIcon className="text-gray-500" />}
         />
-        <div className="px-1 text-sm text-gray-600">{miembros.length} resultados</div>
-      </div>
-
+          <div className="flex items-center gap-3">
+            <div className="px-1 text-sm text-gray-600">{miembros.length} resultados</div>
+            <BotonExcel />  {/* Aquí aparece el botón de Excel */}
+          </div>
+        </div>
       {cargando ? (
         <div className="flex items-center justify-center h-64">
           <Spinner label="Cargando miembros..." color="primary" />
