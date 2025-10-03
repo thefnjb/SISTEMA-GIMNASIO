@@ -111,16 +111,23 @@ export default function TablaClientesAdmin({ refresh }) {
     return formatearFecha(fecha);
   };
 
-  const calcularEstado = useCallback((miembro) => {
-    const v = calcularVencimientoMiembro(miembro);
-    if (!v) return { etiqueta: "vencido", color: "danger" };
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const diffDias = Math.ceil((v.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDias < 0) return { etiqueta: "vencido", color: "danger" };
-    if (diffDias <= 7) return { etiqueta: "a punto de vencer", color: "warning" };
-    return { etiqueta: "activo", color: "success" };
-  }, [calcularVencimientoMiembro]);
+const calcularEstado = useCallback((miembro) => {
+  // Si en DB está como congelado, priorizar eso
+  if (miembro?.estado === "congelado") {
+    return { etiqueta: "congelado", color: "secondary" };
+  }
+
+  // Si está activo, seguimos con la lógica normal
+  const v = calcularVencimientoMiembro(miembro);
+  if (!v) return { etiqueta: "vencido", color: "danger" };
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const diffDias = Math.ceil((v.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDias < 0) return { etiqueta: "vencido", color: "danger" };
+  if (diffDias <= 7) return { etiqueta: "a punto de vencer", color: "warning" };
+  return { etiqueta: "activo", color: "success" };
+}, [calcularVencimientoMiembro]);
+
 
   const formatearMensualidadNumero = (miembro) => {
     const numero = obtenerMesesMiembro(miembro);

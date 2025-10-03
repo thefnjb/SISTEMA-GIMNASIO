@@ -56,7 +56,8 @@ export default function ActualizarSuscripciones({
     nombreCompleto: "",
     telefono: "",
     metodoPago: "efectivo",
-    entrenador: ""
+    entrenador: "",
+    estado: "activo" // 👈 nuevo campo
   });
 
   const [errors, setErrors] = useState({ nombreCompleto: "", telefono: "", general: "" });
@@ -91,7 +92,8 @@ export default function ActualizarSuscripciones({
       nombreCompleto: miembro?.nombreCompleto || "",
       telefono: miembro?.telefono || "",
       metodoPago: (miembro?.metodoPago || "efectivo").toLowerCase(),
-      entrenador: miembro?.entrenador?._id || miembro?.entrenador || ""
+      entrenador: miembro?.entrenador?._id || miembro?.entrenador || "",
+      estado: miembro?.estado || "activo" // 👈 cargar estado
     });
     setMesesAgregar(0);
     setDeuda(miembro?.debe || 0);
@@ -120,7 +122,6 @@ export default function ActualizarSuscripciones({
       setPlanError(null);
       try {
         const res = await api.get("/plans/vermembresia");
-        // res.data puede ser un arreglo
         setPlanes(Array.isArray(res.data) ? res.data : (res.data?.plans || []));
       } catch (err) {
         console.error("Error cargando planes", err);
@@ -153,15 +154,18 @@ export default function ActualizarSuscripciones({
     if (!validarCampos()) return;
     setIsSaving(true);
     try {
-      await api.put(`/members/miembros/${miembro._id}`,
-        {
-          nombreCompleto: datos.nombreCompleto.trim(),
-          telefono: datos.telefono,
-          metodoPago: datos.metodoPago,
-          entrenador: datos.entrenador || undefined
-        },
-        { withCredentials: true }
-      );
+     await api.put(`/members/miembros/${miembro._id}`,
+  {
+    nombreCompleto: datos.nombreCompleto.trim(),
+    telefono: datos.telefono,
+    metodoPago: datos.metodoPago,
+    entrenador: datos.entrenador || undefined,
+    estado: datos.estado,
+    congelacionSemanas: datos.estado === "congelado" ? Number(datos.congelacionSemanas || 0) : 0
+  },
+  { withCredentials: true }
+);
+
 
       setToastMessage("¡Éxito! Miembro actualizado correctamente");
       setToastVisible(true);
@@ -317,31 +321,67 @@ export default function ActualizarSuscripciones({
                   </div>
                 </div>
               )}
-                {/* Entrenador */}
-                {modo !== "renovar" && (
-                  <div className="p-3 bg-gray-800 border rounded-md md:col-span-2 border-neutral-700">
-                    <p className="mb-2 text-sm font-medium text-gray-200">Entrenador</p>
-                    <select
-                      className="w-full px-3 py-2 text-white border rounded-md bg-neutral-900 border-neutral-700"
-                      value={datos.entrenador}
-                      onChange={(e) => setDatos({ ...datos, entrenador: e.target.value })}
-                    >
-                      <option value="" className="text-white bg-neutral-900">Sin entrenador</option>
-                      {Array.isArray(entrenadores) &&
-                        entrenadores.map((t) => (
-                          <option key={t._id} value={t._id} className="text-white bg-neutral-900">
-                            {t.nombre}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                )}
 
+              {/* Estado */}
+<div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+  <p className="mb-2 text-sm font-medium text-gray-200">Estado</p>
+  <div className="flex gap-2">
+    {["activo", "congelado"].map((estado) => (
+      <Button
+        key={estado}
+        size="sm"
+        variant={datos.estado === estado ? "solid" : "bordered"}
+        className={`${datos.estado === estado ? btnPrimaryClass : btnDefaultClass} capitalize`}
+        onClick={() => setDatos({ ...datos, estado })}
+      >
+        {estado}
+      </Button>
+    ))}
+  </div>
+
+  {/* Si congela → mostrar semanas */}
+  {datos.estado === "congelado" && (
+    <div className="mt-3">
+      <label className="text-sm text-gray-300">Semanas de congelación</label>
+      <Input
+        type="number"
+        min={1}
+        max={12}
+        placeholder="Ej: 1"
+        value={datos.congelacionSemanas || ""}
+        onChange={(e) =>
+          setDatos({ ...datos, congelacionSemanas: e.target.value })
+        }
+        className={`w-full mt-2 ${inputClass}`}
+      />
+    </div>
+  )}
+</div>
+
+
+              {/* Entrenador */}
+              {modo !== "renovar" && (
+                <div className="p-3 bg-gray-800 border rounded-md md:col-span-2 border-neutral-700">
+                  <p className="mb-2 text-sm font-medium text-gray-200">Entrenador</p>
+                  <select
+                    className="w-full px-3 py-2 text-white border rounded-md bg-neutral-900 border-neutral-700"
+                    value={datos.entrenador}
+                    onChange={(e) => setDatos({ ...datos, entrenador: e.target.value })}
+                  >
+                    <option value="" className="text-white bg-neutral-900">Sin entrenador</option>
+                    {Array.isArray(entrenadores) &&
+                      entrenadores.map((t) => (
+                        <option key={t._id} value={t._id} className="text-white bg-neutral-900">
+                          {t.nombre}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
 
               {/* Renovación */}
               {modo === "renovar" && (
                 <div className="pt-4 border-t md:col-span-2 border-neutral-700">
-                  {/* Sección estilo "selección" similar a ModalSeleccionarMembresia */}
                   <div className="space-y-3">
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                       {loadingPlanes ? (
@@ -380,7 +420,6 @@ export default function ActualizarSuscripciones({
                     </div>
 
                     <div className="flex flex-col gap-3">
-                      {/* Contenedor mejorado para input de meses y info de deuda actual */}
                       <div className="flex flex-col gap-3">
                         <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
                           <div className="text-sm text-gray-400">Deuda actual</div>
@@ -388,7 +427,6 @@ export default function ActualizarSuscripciones({
                         </div>
                       </div>
 
-                      {/* Fechas ordenadas y claras */}
                       <div className="grid grid-cols-1 gap-3 mt-2 text-sm sm:grid-cols-2">
                         <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
                           <div className="text-gray-400">Vence actualmente</div>
@@ -396,8 +434,8 @@ export default function ActualizarSuscripciones({
                         </div>
 
                         <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
-                          <div className="text-gray-400">Vencimiento estimado</div>
-                          <div className="font-semibold text-white">{formatearFecha(vencimientoEstimado)}</div>
+                          <div className="text-gray-400">Nuevo vencimiento</div>
+                          <div className="font-semibold text-white">{vencimientoEstimado ? formatearFecha(vencimientoEstimado) : "-"}</div>
                         </div>
                       </div>
                     </div>
@@ -407,40 +445,29 @@ export default function ActualizarSuscripciones({
             </div>
           </ModalBody>
 
-          <ModalFooter className="flex justify-end gap-2 p-4 rounded-b-lg bg-black/80">
-            {modo === "editar" && (
+          <ModalFooter className="flex gap-2 border-t border-neutral-800">
+            <Button onPress={onClose} className={btnDefaultClass}>Cancelar</Button>
+            {modo === "renovar" ? (
               <Button
-                color="primary"
+                onPress={handleRenovar}
+                isLoading={isRenewing}
+                className={btnPrimaryClass}
+              >
+                Renovar
+              </Button>
+            ) : (
+              <Button
                 onPress={handleGuardar}
                 isLoading={isSaving}
                 className={btnPrimaryClass}
               >
-                {isSaving ? "Guardando..." : "Guardar Cambios"}
+                Guardar cambios
               </Button>
             )}
-
-            {modo === "renovar" && (
-              <Button
-                className={`${btnPrimaryClass}`}
-                onPress={handleRenovar}
-                isLoading={isRenewing}
-              >
-                {isRenewing ? "Renovando..." : "Confirmar Renovación"}
-              </Button>
-            )}
-
-            <Button
-              variant="bordered"
-              onPress={onClose}
-              className="text-white bg-transparent border-neutral-700"
-            >
-              Cancelar
-            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
 
-      {/* Alerta personalizada */}
       <CustomAlert
         visible={toastVisible}
         message={toastMessage}

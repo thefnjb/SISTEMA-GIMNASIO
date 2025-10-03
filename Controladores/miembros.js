@@ -182,23 +182,34 @@ exports.actualizarMiembro = async (req, res) => {
   try {
     const { id: miembroId } = req.params;
     const { id: creadorId, rol: creadoPor } = req.usuario;
+    const { estado, congelacionSemanas } = req.body;
 
-    const miembro = await Miembro.findOne({ _id: miembroId });
+    const miembro = await Miembro.findById(miembroId);
     if (!miembro) {
       return res.status(404).json({ error: "Miembro no encontrado" });
     }
 
-    const updateData = {
+    let updateData = {
       ...req.body,
-      creadorId: creadorId,
-      creadoPor: creadoPor,
+      creadorId,
+      creadoPor,
     };
+
+    // si se congela y se especifican semanas
+    if (estado === "congelado" && congelacionSemanas > 0) {
+      const nuevasemanas = Number(congelacionSemanas);
+      const vencimiento = new Date(miembro.vencimiento);
+      vencimiento.setDate(vencimiento.getDate() + nuevasemanas * 7); // sumar semanas
+      updateData.vencimiento = vencimiento;
+      updateData.congelacionSemanas = nuevasemanas;
+    }
 
     const miembroActualizado = await Miembro.findByIdAndUpdate(
       miembroId,
       updateData,
       { new: true }
     );
+
     res.json({ miembro: miembroActualizado, mensaje: "Miembro actualizado" });
   } catch (error) {
     res.status(500).json({ error: error.message });

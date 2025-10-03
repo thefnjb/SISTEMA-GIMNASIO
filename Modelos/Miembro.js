@@ -20,7 +20,12 @@ const MiembroSchema = new mongoose.Schema(
     },
     estadoPago: { type: String, enum: ["Pagado", "Pendiente"], default: "Pendiente" },
     debe: { type: Number, default: 0 },
-    estado: { type: String, enum: ["activo", "a_punto_de_vencer", "vencido"], default: "activo" },
+    estado: { 
+  type: String, 
+  enum: ["activo", "a_punto_de_vencer", "vencido", "congelado"], 
+  default: "activo" 
+},
+congelacionSemanas: { type: Number, default: 0 },
     vencimiento: { type: Date },
     renovacion: { type: Date },
     mesesRenovacion: { type: String },
