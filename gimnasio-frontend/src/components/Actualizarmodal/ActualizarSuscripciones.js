@@ -322,41 +322,44 @@ export default function ActualizarSuscripciones({
                 </div>
               )}
 
-              {/* Estado */}
-<div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
-  <p className="mb-2 text-sm font-medium text-gray-200">Estado</p>
-  <div className="flex gap-2">
-    {["activo", "congelado"].map((estado) => (
-      <Button
-        key={estado}
-        size="sm"
-        variant={datos.estado === estado ? "solid" : "bordered"}
-        className={`${datos.estado === estado ? btnPrimaryClass : btnDefaultClass} capitalize`}
-        onClick={() => setDatos({ ...datos, estado })}
-      >
-        {estado}
-      </Button>
-    ))}
-  </div>
-
-  {/* Si congela → mostrar semanas */}
-  {datos.estado === "congelado" && (
-    <div className="mt-3">
-      <label className="text-sm text-gray-300">Semanas de congelación</label>
-      <Input
-        type="number"
-        min={1}
-        max={12}
-        placeholder="Ej: 1"
-        value={datos.congelacionSemanas || ""}
-        onChange={(e) =>
-          setDatos({ ...datos, congelacionSemanas: e.target.value })
-        }
-        className={`w-full mt-2 ${inputClass}`}
-      />
+          {/* Estado (solo visible si no es modo renovar) */}
+{modo !== "renovar" && (
+  <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+    <p className="mb-2 text-sm font-medium text-gray-200">Estado</p>
+    <div className="flex gap-2">
+      {["activo", "congelado"].map((estado) => (
+        <Button
+          key={estado}
+          size="sm"
+          variant={datos.estado === estado ? "solid" : "bordered"}
+          className={`${datos.estado === estado ? btnPrimaryClass : btnDefaultClass} capitalize`}
+          onClick={() => setDatos({ ...datos, estado })}
+        >
+          {estado}
+        </Button>
+      ))}
     </div>
-  )}
-</div>
+
+    {/* Si congela → mostrar semanas */}
+    {datos.estado === "congelado" && (
+      <div className="mt-3">
+        <label className="text-sm text-gray-300">Semanas de congelación</label>
+        <Input
+          type="number"
+          min={1}
+          max={12}
+          placeholder="Ej: 1"
+          value={datos.congelacionSemanas || ""}
+          onChange={(e) =>
+            setDatos({ ...datos, congelacionSemanas: e.target.value })
+          }
+          className={`w-full mt-2 ${inputClass}`}
+        />
+      </div>
+    )}
+  </div>
+)}
+
 
 
               {/* Entrenador */}
