@@ -1,7 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const authAdmin = require('../Middleware/AuthAdmin');
+const authAdmin = require('../Middleware/authAdmin');
 const TrabajadorController = require('../Controladores/trabajador');
 
 // Rutas protegidas solo para Administradores

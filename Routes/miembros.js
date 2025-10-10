@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const MiembrosController = require("../Controladores/miembros");
-const authUnificado = require("../Middleware/AuthUnificado");
+const authUnificado = require("../Middleware/authUnificado");
 
 // CRUD principal
 router.get("/miembros", authUnificado, MiembrosController.getAllMiembros);

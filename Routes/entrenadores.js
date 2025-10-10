@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const EntrenadorController = require("../Controladores/entrenador");
-const authAdmin = require('../middleware/authAdmin');
-const authUnificado = require('../middleware/authUnificado'); // ✅ Importar authUnificado
+const authAdmin = require('../Middleware/authAdmin');
+const authUnificado = require('../Middleware/authUnificado'); // ✅ Importar authUnificado
 const upload = require("../middleware/multerConfig");
 
 // ✅ SOLO ADMIN puede crear, actualizar y eliminar entrenadores

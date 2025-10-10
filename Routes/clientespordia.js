@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const ClientesController = require("../Controladores/clientespordia");
-const authUnificado = require("../Middleware/AuthUnificado");
+const authUnificado = require("../Middleware/authUnificado");
 
 router.get("/clientesdia", authUnificado, ClientesController.getAllClientes);
 router.post("/registrarcliente", authUnificado, ClientesController.registrarCliente);
