@@ -68,6 +68,7 @@ export default function ActualizarSuscripciones({
   const [selectedPlanId, setSelectedPlanId] = useState(null);
   const [mesesAgregar, setMesesAgregar] = useState(0);
   const [deuda, setDeuda] = useState(0);
+  const [metodoPagoRenovacion, setMetodoPagoRenovacion] = useState((miembro?.metodoPago || 'efectivo').toLowerCase());
   const [isSaving, setIsSaving] = useState(false);
   const [isRenewing, setIsRenewing] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
@@ -98,6 +99,8 @@ export default function ActualizarSuscripciones({
     setMesesAgregar(0);
     setDeuda(miembro?.debe || 0);
     setErrors({ nombreCompleto: "", telefono: "", general: "" });
+    // Inicializar metodo de pago de la renovacion
+    setMetodoPagoRenovacion((miembro?.metodoPago || 'efectivo').toLowerCase());
   }, [miembro]);
 
   useEffect(() => {
@@ -192,7 +195,7 @@ export default function ActualizarSuscripciones({
     try {
       await api.post(
         `/members/miembros/${miembro._id}/renovar`,
-        { meses: Number(mesesAgregar), debe: Number(deuda || 0) },
+        { meses: Number(mesesAgregar), debe: Number(deuda || 0), metodoPago: metodoPagoRenovacion },
         { withCredentials: true }
       );
       setToastMessage("¡Éxito! Suscripción registrada correctamente");
@@ -427,6 +430,24 @@ export default function ActualizarSuscripciones({
                         <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
                           <div className="text-sm text-gray-400">Deuda actual</div>
                           <div className="font-semibold text-white">S/ {Number(deuda || 0).toFixed(2)}</div>
+                        </div>
+                      </div>
+
+                      {/* Método de pago para la renovación */}
+                      <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                        <div className="mb-2 text-sm text-gray-400">Método de pago para la renovación</div>
+                        <div className="flex gap-2">
+                          {['yape', 'plin', 'efectivo'].map((m) => (
+                            <Button
+                              key={m}
+                              size="sm"
+                              variant={metodoPagoRenovacion === m ? 'solid' : 'bordered'}
+                              className={`${metodoPagoRenovacion === m ? btnPrimaryClass : btnDefaultClass} capitalize`}
+                              onClick={() => setMetodoPagoRenovacion(m)}
+                            >
+                              {m}
+                            </Button>
+                          ))}
                         </div>
                       </div>
 

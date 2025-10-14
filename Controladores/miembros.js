@@ -29,6 +29,8 @@ exports.getAllMiembros = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || "";
     const skip = (page - 1) * limit;
+    // Si el cliente solicita `?all=true` devolvemos todos los miembros (sin paginación)
+    const all = req.query.all === 'true';
 
     let filter = {};
 
@@ -39,13 +41,16 @@ exports.getAllMiembros = async (req, res) => {
       ];
     }
 
-    const miembrosDocs = await Miembro.find(filter)
+    let query = Miembro.find(filter)
       .populate("mensualidad")
       .populate("entrenador", "nombre telefono")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .lean();
+      .sort({ createdAt: -1 });
+
+    if (!all) {
+      query = query.skip(skip).limit(limit);
+    }
+
+    const miembrosDocs = await query.lean();
 
     const miembros = await Promise.all(
       miembrosDocs.map(async (miembro) => {
@@ -70,8 +75,8 @@ exports.getAllMiembros = async (req, res) => {
     res.json({
       miembros,
       total,
-      page,
-      totalPages: Math.ceil(total / limit),
+      page: all ? 1 : page,
+      totalPages: all ? 1 : Math.ceil(total / limit),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -221,7 +226,7 @@ exports.renovarMiembro = async (req, res) => {
   try {
     const { id: miembroId } = req.params;
     const { id: creadorId, rol: creadoPor } = req.usuario;
-    const { meses, debe } = req.body;
+  const { meses, debe, metodoPago } = req.body;
 
     const miembro = await Miembro.findOne({ _id: miembroId });
     if (!miembro) {
@@ -242,6 +247,11 @@ exports.renovarMiembro = async (req, res) => {
     miembro.estado = calcularEstado(nuevoVenc);
     miembro.ultimaRenovacion = new Date();
     if (debe !== undefined) miembro.debe = Number(debe);
+
+    // Si el frontend envía metodoPago al renovar, actualizamos el campo
+    if (metodoPago !== undefined) {
+      miembro.metodoPago = metodoPago;
+    }
 
     miembro.creadorId = creadorId;
     miembro.creadoPor = creadoPor;

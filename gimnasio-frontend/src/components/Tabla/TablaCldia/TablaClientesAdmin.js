@@ -43,6 +43,8 @@ export default function TablaClientesAdmin({ refresh }) {
   });
   const timeoutRef = useRef(null);
   const rowsPerPage = 10;
+  const [totalPagesServer, setTotalPagesServer] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
 
   // ---------- Alertas ----------
   const showAlert = useCallback((color, title) => {
@@ -165,19 +167,27 @@ const calcularEstado = useCallback((miembro) => {
   };
 
   // ---------- Backend ----------
-  const obtenerMiembros = useCallback(async (searchTerm) => {
+  const obtenerMiembros = useCallback(async (searchTerm, pageParam = 1) => {
     setCargando(true);
     try {
       const res = await api.get("/members/miembros", {
-        params: { search: searchTerm },
+        params: { search: searchTerm, page: pageParam, limit: rowsPerPage },
         withCredentials: true,
       });
 
-      const miembrosOrdenados = (res.data.miembros || res.data).slice().sort((a, b) => {
-        return new Date(b.fechaIngreso) - new Date(a.fechaIngreso);
-      });
+      const data = res.data || {};
+      // API retorna { miembros, total, page, totalPages }
+      const miembrosData = data.miembros || data;
+
+      // Opcional: mantener orden por fecha ingreso (dentro de la página)
+      const miembrosOrdenados = Array.isArray(miembrosData)
+        ? miembrosData.slice().sort((a, b) => new Date(b.fechaIngreso) - new Date(a.fechaIngreso))
+        : [];
 
       setMiembros(miembrosOrdenados);
+      setTotalItems(typeof data.total === 'number' ? data.total : miembrosOrdenados.length);
+      setTotalPagesServer(typeof data.totalPages === 'number' ? data.totalPages : Math.max(1, Math.ceil((data.total || miembrosOrdenados.length) / rowsPerPage)));
+      setPage(typeof data.page === 'number' ? data.page : pageParam);
     } catch (error) {
       console.error("Error al obtener miembros:", error);
       showAlert("danger", "Error al obtener los miembros.");
@@ -205,19 +215,21 @@ const calcularEstado = useCallback((miembro) => {
   };
 
   // ---------- Effects ----------
+  // cuando filtro o página cambian, solicitamos la página correspondiente (debounced)
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      obtenerMiembros(filtro);
+      obtenerMiembros(filtro, page);
     }, 400);
     return () => {
       clearTimeout(delayDebounceFn);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [filtro, obtenerMiembros, refresh]);
+  }, [filtro, page, obtenerMiembros, refresh]);
 
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(miembros.length / rowsPerPage)), [miembros.length]);
+  const totalPages = totalPagesServer;
   const paginaSegura = Math.min(page, totalPages);
 
+  // miembros ya vienen paginados desde el servidor; aplicamos solo orden dentro de la página
   const miembrosOrdenados = useMemo(() => {
     let lista = [...miembros];
     if (sortDescriptor.column === "estado") {
@@ -242,13 +254,13 @@ const calcularEstado = useCallback((miembro) => {
           : new Date(a.fechaIngreso) - new Date(b.fechaIngreso);
       });
     }
-    const start = (paginaSegura - 1) * rowsPerPage;
-    return lista.slice(start, start + rowsPerPage);
-  }, [miembros, paginaSegura, sortDescriptor, calcularEstado]);
+    return lista;
+  }, [miembros, sortDescriptor, calcularEstado]);
 
+  // Solo resetear la página cuando cambia el filtro (no cuando cambia el tamaño de la lista)
   useEffect(() => {
     setPage(1);
-  }, [filtro, miembros.length]);
+  }, [filtro]);
 
   return (
     <div className="max-w-full p-3 sm:p-4 md:p-6">
@@ -263,7 +275,7 @@ const calcularEstado = useCallback((miembro) => {
           startContent={<SearchIcon className="text-gray-500" />}
         />
           <div className="flex items-center gap-3">
-            <div className="px-1 text-sm text-gray-600">{miembros.length} resultados</div>
+            <div className="px-1 text-sm text-gray-600">{totalItems} resultados</div>
             <BotonExcel />  {/* Aquí aparece el botón de Excel */}
           </div>
         </div>
@@ -379,7 +391,7 @@ const calcularEstado = useCallback((miembro) => {
           modo={modoModal}
           onClose={() => setMostrarModal(false)}
           onUpdated={() => {
-            obtenerMiembros(filtro);
+            obtenerMiembros(filtro, page);
             setMostrarModal(false);
             showAlert("success", modoModal === "editar" ? "Miembro modificado exitosamente" : "Membresía renovada exitosamente");
           }}
@@ -391,7 +403,7 @@ const calcularEstado = useCallback((miembro) => {
           miembro={miembroSeleccionado}
           onClose={() => setMostrarModal(false)}
           onUpdated={() => {
-            obtenerMiembros(filtro);
+            obtenerMiembros(filtro, page);
             setMostrarModal(false);
             showAlert("success", "Deuda modificada exitosamente");
           }}

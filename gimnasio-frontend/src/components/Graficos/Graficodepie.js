@@ -42,13 +42,17 @@ function ChartPieInteractive() {
   const fetchData = async (month, year) => {
     try {
       setLoading(true);
-      const response = await api.get("/members/miembros"); // Usar api.get
+  const response = await api.get("/members/miembros?all=true"); // Usar api.get
 
-      const apiData = response.data.miembros || response.data;
+  const apiData = response.data.miembros || response.data;
 
-      const clientesFiltrados = apiData.filter((m) => {
+      const miembrosArray = Array.isArray(apiData) ? apiData : (apiData.miembros || []);
+
+      const clientesFiltrados = miembrosArray.filter((m) => {
         if (!m.fechaIngreso) return false;
         const fecha = new Date(m.fechaIngreso);
+        // Normalizar fecha (evitar problemas de timezone creando ISO si falta hora)
+        if (isNaN(fecha.getTime())) return false;
         return fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
       });
 
@@ -77,9 +81,9 @@ function ChartPieInteractive() {
   }, [selectedMonth, selectedYear]);
 
   return (
-    <div className="rounded-lg shadow p-6">
+    <div className="p-6 rounded-lg shadow">
       {/* Encabezado con título y selects */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-6">
+      <div className="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
         <div>
           <h3 className="text-lg font-semibold text-gray-900">
             Clientes Proporción
@@ -91,7 +95,7 @@ function ChartPieInteractive() {
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="px-3 py-2 bg-black text-white border border-gray-700 rounded-lg"
+            className="px-3 py-2 text-white bg-black border border-gray-700 rounded-lg"
           >
             {meses.map((m) => (
               <option key={m.value} value={m.value}>
@@ -104,7 +108,7 @@ function ChartPieInteractive() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="px-3 py-2 bg-black text-white border border-gray-700 rounded-lg"
+            className="px-3 py-2 text-white bg-black border border-gray-700 rounded-lg"
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -116,16 +120,16 @@ function ChartPieInteractive() {
       </div>
 
       {/* Cuerpo con leyenda izquierda y gráfico derecha */}
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col gap-6 md:flex-row">
         {/* Leyenda izquierda */}
         <div className="flex flex-col justify-center gap-4 md:w-1/4">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-red-600 rounded-sm" />
-            <span className="text-gray-700 font-medium">Ganancia</span>
+            <span className="font-medium text-gray-700">Ganancia</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-black rounded-sm" />
-            <span className="text-gray-700 font-medium">
+            <span className="font-medium text-gray-700">
               Cantidad de Clientes
             </span>
           </div>
@@ -138,7 +142,7 @@ function ChartPieInteractive() {
           ) : error ? (
             <p className="text-red-500">Error: {error}</p>
           ) : data.length === 0 ? (
-            <p className="text-gray-500 text-center">No hay datos para este mes</p>
+            <p className="text-center text-gray-500">No hay datos para este mes</p>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -179,13 +183,13 @@ function ChartPieInteractive() {
                           y={viewBox.cy}
                           textAnchor="middle"
                           dominantBaseline="middle"
-                          className="fill-gray-900 font-bold text-2xl"
+                          className="text-2xl font-bold fill-gray-900"
                         >
                           S/. {ganancia}
                           <tspan
                             x={viewBox.cx}
                             y={(viewBox.cy || 0) + 25}
-                            className="fill-gray-500 font-normal text-sm"
+                            className="text-sm font-normal fill-gray-500"
                           >
                             Ganancia
                           </tspan>

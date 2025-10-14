@@ -30,6 +30,8 @@ export default function TablaClientesAdmin({ refresh }) {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [modoModal, setModoModal] = useState("editar");
   const [page, setPage] = useState(1);
+  const [totalPagesServer, setTotalPagesServer] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [sortDescriptor, setSortDescriptor] = useState({
     column: "estado",
     direction: "ascending",
@@ -164,19 +166,26 @@ const calcularEstado = useCallback((miembro) => {
   };
 
   // ---------- Backend ----------
-  const obtenerMiembros = useCallback(async (searchTerm) => {
+  const obtenerMiembros = useCallback(async (searchTerm, pageParam = 1) => {
     setCargando(true);
     try {
       const res = await api.get("/members/miembros", {
-        params: { search: searchTerm },
+        params: { search: searchTerm, page: pageParam, limit: rowsPerPage },
         withCredentials: true,
       });
 
-      const miembrosOrdenados = (res.data.miembros || res.data).slice().sort((a, b) => {
+      const data = res.data || {};
+      const items = data.miembros || data;
+
+      // ordenar solo dentro de la página
+      const miembrosOrdenados = (Array.isArray(items) ? items.slice() : []).sort((a, b) => {
         return new Date(b.fechaIngreso) - new Date(a.fechaIngreso);
       });
 
       setMiembros(miembrosOrdenados);
+      setTotalItems(typeof data.total === 'number' ? data.total : (Array.isArray(items) ? items.length : 0));
+      setTotalPagesServer(typeof data.totalPages === 'number' ? data.totalPages : Math.max(1, Math.ceil((data.total || (Array.isArray(items) ? items.length : 0)) / rowsPerPage)));
+      setPage(typeof data.page === 'number' ? data.page : pageParam);
     } catch (error) {
       console.error("Error al obtener miembros:", error);
       showAlert("danger", "Error al obtener los miembros.");
@@ -193,15 +202,15 @@ const calcularEstado = useCallback((miembro) => {
   // ---------- Effects ----------
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      obtenerMiembros(filtro);
+      obtenerMiembros(filtro, page);
     }, 400);
     return () => {
       clearTimeout(delayDebounceFn);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [filtro, obtenerMiembros, refresh]);
+  }, [filtro, obtenerMiembros, refresh, page]);
 
-  const totalPages = useMemo(() => Math.max(1, Math.ceil(miembros.length / rowsPerPage)), [miembros.length]);
+  const totalPages = useMemo(() => Math.max(1, totalPagesServer), [totalPagesServer]);
   const paginaSegura = Math.min(page, totalPages);
 
   const miembrosOrdenados = useMemo(() => {
@@ -228,13 +237,14 @@ const calcularEstado = useCallback((miembro) => {
           : new Date(a.fechaIngreso) - new Date(b.fechaIngreso);
       });
     }
-    const start = (paginaSegura - 1) * rowsPerPage;
-    return lista.slice(start, start + rowsPerPage);
-  }, [miembros, paginaSegura, sortDescriptor, calcularEstado]);
+    // Ya recibimos la página desde el servidor, solo retornamos la lista ordenada de la página
+    return lista;
+  }, [miembros, sortDescriptor, calcularEstado]);
 
+  // Solo resetear la página cuando cambia el filtro (no cuando cambia el tamaño de la lista)
   useEffect(() => {
     setPage(1);
-  }, [filtro, miembros.length]);
+  }, [filtro]);
 
   return (
     <div className="max-w-full p-3 sm:p-4 md:p-6">
@@ -248,7 +258,7 @@ const calcularEstado = useCallback((miembro) => {
           className="w-full sm:max-w-md"
           startContent={<SearchIcon className="text-gray-500" />}
         />
-        <div className="px-1 text-sm text-gray-600">{miembros.length} resultados</div>
+        <div className="px-1 text-sm text-gray-600">{totalItems} resultados</div>
       </div>
 
       {cargando ? (
