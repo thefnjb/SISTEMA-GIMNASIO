@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"; 
+import {Pagination,} from "@heroui/pagination";
 import api from "../../../utils/axiosInstance";
 import {
   Table,
@@ -10,11 +11,16 @@ import {
   Input,
   Chip,
   Spinner,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
   Button,
 } from "@nextui-org/react";
 import { Alert } from "@heroui/react";
 import ActualizarSuscripcion from "../../Actualizarmodal/ActualizarSuscripciones";
 import SearchIcon from "@mui/icons-material/Search";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import BotonEditar from "../../Iconos/BotonEditar";
@@ -27,6 +33,7 @@ import BotonExcel from "../../Excel/BotonExcel";
 export default function TablaClientesAdmin({ refresh }) {
   const [miembros, setMiembros] = useState([]);
   const [filtro, setFiltro] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState(new Set(["todos"]));
   const [cargando, setCargando] = useState(true);
   const [miembroSeleccionado, setMiembroSeleccionado] = useState(null);
   const [mostrarModal, setMostrarModal] = useState(false);
@@ -227,11 +234,20 @@ const calcularEstado = useCallback((miembro) => {
   }, [filtro, page, obtenerMiembros, refresh]);
 
   const totalPages = totalPagesServer;
-  const paginaSegura = Math.min(page, totalPages);
 
   // miembros ya vienen paginados desde el servidor; aplicamos solo orden dentro de la página
   const miembrosOrdenados = useMemo(() => {
     let lista = [...miembros];
+    
+    // Filtrar por estado seleccionado
+    const estadoSeleccionado = Array.from(filtroEstado)[0];
+    if (estadoSeleccionado && estadoSeleccionado !== "todos") {
+      lista = lista.filter((miembro) => {
+        const estado = calcularEstado(miembro).etiqueta;
+        return estado === estadoSeleccionado;
+      });
+    }
+    
     if (sortDescriptor.column === "estado") {
       lista.sort((a, b) => {
         const estadoA = calcularEstado(a).etiqueta;
@@ -255,7 +271,7 @@ const calcularEstado = useCallback((miembro) => {
       });
     }
     return lista;
-  }, [miembros, sortDescriptor, calcularEstado]);
+  }, [miembros, sortDescriptor, calcularEstado, filtroEstado]);
 
   // Solo resetear la página cuando cambia el filtro (no cuando cambia el tamaño de la lista)
   useEffect(() => {
@@ -266,19 +282,59 @@ const calcularEstado = useCallback((miembro) => {
     <div className="max-w-full p-3 sm:p-4 md:p-6">
       {/* Buscador y resultados */}
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          type="text"
-          placeholder="Buscar por nombre o teléfono"
-          value={filtro}
-          onChange={(e) => setFiltro(e.target.value)}
-          className="w-full sm:max-w-md"
-          startContent={<SearchIcon className="text-gray-500" />}
-        />
-          <div className="flex items-center gap-3">
-            <div className="px-1 text-sm text-gray-600">{totalItems} resultados</div>
-            <BotonExcel />  {/* Aquí aparece el botón de Excel */}
-          </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-1">
+          <Input
+            type="text"
+            placeholder="Buscar por nombre o teléfono"
+            value={filtro}
+            onChange={(e) => setFiltro(e.target.value)}
+            className="w-full sm:max-w-md"
+            startContent={<SearchIcon className="text-gray-500" />}
+          />
+          
+          {/* Dropdown de filtro por estado */}
+          <Dropdown>
+            <DropdownTrigger>
+              <Button 
+                endContent={<KeyboardArrowDownIcon className="text-small" />} 
+                variant="flat"
+                className="capitalize"
+              >
+                {Array.from(filtroEstado)[0] === "todos" ? "Todos los estados" : Array.from(filtroEstado)[0]}
+              </Button>
+            </DropdownTrigger>
+            <DropdownMenu
+              disallowEmptySelection
+              aria-label="Filtro de Estado"
+              closeOnSelect={true}
+              selectionMode="single"
+              selectedKeys={filtroEstado}
+              onSelectionChange={setFiltroEstado}
+            >
+              <DropdownItem key="todos" className="capitalize">
+                Todos los estados
+              </DropdownItem>
+              <DropdownItem key="activo" className="capitalize">
+                Activo
+              </DropdownItem>
+              <DropdownItem key="a punto de vencer" className="capitalize">
+                A punto de vencer
+              </DropdownItem>
+              <DropdownItem key="vencido" className="capitalize">
+                Vencido
+              </DropdownItem>
+              <DropdownItem key="congelado" className="capitalize">
+                Congelado
+              </DropdownItem>
+            </DropdownMenu>
+          </Dropdown>
         </div>
+        
+        <div className="flex items-center gap-3">
+          <div className="px-1 text-sm text-gray-600">{totalItems} resultados</div>
+          <BotonExcel />
+        </div>
+      </div>
       {cargando ? (
         <div className="flex items-center justify-center h-64">
           <Spinner label="Cargando miembros..." color="primary" />
@@ -327,7 +383,7 @@ const calcularEstado = useCallback((miembro) => {
                     <div className="flex flex-col">
                       <span className="font-medium">{formatearMensualidadNumero(miembro)}</span>
                       <span className="text-xs text-gray-500">
-                        Turno: S/ {Number(miembro?.mensualidad?.precio ?? miembro?.membresia?.precio ?? 0).toFixed(2)}
+                        S/ {Number(miembro?.mensualidad?.precio ?? miembro?.membresia?.precio ?? 0).toFixed(2)}
                       </span>
                     </div>
                   </TableCell>
@@ -376,10 +432,13 @@ const calcularEstado = useCallback((miembro) => {
           </Table>
 
           {/* Paginación */}
-          <div className="flex items-center justify-between mt-4">
-            <Button size="sm" disabled={page <= 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Anterior</Button>
-            <span className="text-sm text-gray-600">Página {paginaSegura} de {totalPages}</span>
-            <Button size="sm" disabled={page >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Siguiente</Button>
+          <div className="flex items-center justify-center mt-4">
+            <Pagination
+              total={totalPages}
+              initialPage={page}
+              onChange={(page) => setPage(page)}
+              color="red"
+            />
           </div>
         </div>
       )}

@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import api from "../../utils/axiosInstance"; // Importar la instancia de axios
+import api from "../../utils/axiosInstance";
 
 const meses = [
   { value: 1, label: "Enero" },
@@ -35,37 +35,40 @@ function ChartPieInteractive() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeIndex, setActiveIndex] = useState(-1);
 
-  // 🔥 Generar dinámicamente años (desde 2020 hasta el actual)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 2019 }, (_, i) => 2020 + i);
 
   const fetchData = async (month, year) => {
     try {
       setLoading(true);
-  const response = await api.get("/members/miembros?all=true"); // Usar api.get
+      const response = await api.get("/members/miembros?all=true");
 
-  const apiData = response.data.miembros || response.data;
-
-      const miembrosArray = Array.isArray(apiData) ? apiData : (apiData.miembros || []);
+      const apiData = response.data.miembros || response.data;
+      const miembrosArray = Array.isArray(apiData) ? apiData : apiData.miembros || [];
 
       const clientesFiltrados = miembrosArray.filter((m) => {
         if (!m.fechaIngreso) return false;
         const fecha = new Date(m.fechaIngreso);
-        // Normalizar fecha (evitar problemas de timezone creando ISO si falta hora)
         if (isNaN(fecha.getTime())) return false;
-        return fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
+        const esDelMesYAnio = fecha.getMonth() + 1 === month && fecha.getFullYear() === year;
+        return esDelMesYAnio;
       });
 
       const ganancia = clientesFiltrados.reduce((acc, m) => {
-        const precio = Number(m?.mensualidad?.precio ?? m?.membresia?.precio ?? 0);
+        const precio = Number(
+          m?.totalAcumuladoMembresias ??
+            m?.mensualidad?.precio ??
+            m?.membresia?.precio ??
+            0
+        );
         return acc + precio;
       }, 0);
 
       const totalClientes = clientesFiltrados.length;
 
       setData([
-        { name: "Ganancia", value: ganancia, fill: "#dc2626" }, // rojo
-        { name: "Clientes", value: totalClientes, fill: "#000000" }, // negro
+        { name: "Ganancia", value: ganancia, fill: "#dc2626" },
+        { name: "Clientes", value: totalClientes, fill: "#000000" },
       ]);
     } catch (err) {
       console.error(err);
@@ -88,7 +91,7 @@ function ChartPieInteractive() {
           <h3 className="text-lg font-semibold text-gray-900">
             Clientes Proporción
           </h3>
-          <p className="text-sm text-gray-600">Clientes con Mensualidad</p>
+          <p className="text-sm text-gray-600">Clientes por membresía</p>
         </div>
         <div className="flex gap-2">
           {/* Select Mes */}
@@ -104,7 +107,7 @@ function ChartPieInteractive() {
             ))}
           </select>
 
-          {/* Select Año (dinámico) */}
+          {/* Select Año */}
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}

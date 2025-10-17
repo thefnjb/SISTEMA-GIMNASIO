@@ -187,15 +187,15 @@ export default function ActualizarSuscripciones({
   };
 
   const handleRenovar = async () => {
-    if (!mesesAgregar || mesesAgregar < 1) {
-      setErrors(prev => ({ ...prev, general: "Selecciona meses a agregar" }));
+    if (!selectedPlanId) {
+      setErrors(prev => ({ ...prev, general: "Selecciona un plan de membresía" }));
       return;
     }
     setIsRenewing(true);
     try {
       await api.post(
         `/members/miembros/${miembro._id}/renovar`,
-        { meses: Number(mesesAgregar), debe: Number(deuda || 0), metodoPago: metodoPagoRenovacion },
+        { mensualidadId: selectedPlanId, debe: Number(deuda || 0), metodoPago: metodoPagoRenovacion },
         { withCredentials: true }
       );
       setToastMessage("¡Éxito! Suscripción registrada correctamente");
