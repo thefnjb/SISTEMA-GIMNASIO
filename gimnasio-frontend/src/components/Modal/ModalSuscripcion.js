@@ -31,13 +31,19 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
   const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
   const [alertaExterna, setAlertaExterna] = useState({ show: false, type: "", message: "", title: "" });
 
+  // Función para obtener fecha local sin problemas de zona horaria
+  const obtenerFechaLocal = () => {
+    const hoy = new Date();
+    const año = hoy.getFullYear();
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoy.getDate()).padStart(2, '0');
+    return `${año}-${mes}-${dia}`;
+  };
+
   // Estados del formulario
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [telefono, setTelefono] = useState("");
-  const [fechaInicio, setFechaInicio] = useState(() => {
-    const hoy = new Date();
-    return hoy.toISOString().split("T")[0];
-  });
+  const [fechaInicio, setFechaInicio] = useState(obtenerFechaLocal());
 
   const [membresia, setMembresia] = useState(null);
   const [entrenador, setEntrenador] = useState(null);
@@ -68,6 +74,9 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
     }
     if (!/^\d{9}$/.test(telefono)) {
       return mostrarAlertaInterna("warning", "Teléfono inválido", "El teléfono debe tener 9 dígitos");
+    }
+    if (!fechaInicio) {
+      return mostrarAlertaInterna("warning", "Fecha requerida", "Selecciona una fecha de inicio");
     }
     if (!membresia?._id) {
       return mostrarAlertaInterna("warning", "Membresía requerida", "Selecciona una membresía");
@@ -123,7 +132,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
   const limpiarCampos = () => {
     setNombreCompleto("");
     setTelefono("");
-    setFechaInicio("");
+    setFechaInicio(obtenerFechaLocal()); // Restablecer a fecha actual
     setMembresia(null);
     setEntrenador(null);
     setMetodoSeleccionado(null);
@@ -137,11 +146,25 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
     setEntrenadorModalOpen(false);
   };
 
+  // Función para manejar la apertura del modal
+  const handleOpenModal = () => {
+    // Resetear campos al abrir el modal
+    setNombreCompleto("");
+    setTelefono("");
+    setFechaInicio(obtenerFechaLocal());
+    setMembresia(null);
+    setEntrenador(null);
+    setMetodoSeleccionado(null);
+    setDebe("");
+    setAlertaInterna({ show: false, type: "", message: "", title: "" });
+    onOpen();
+  };
+
   return (
     <>
       {/* Botón para abrir modal */}
       <Button
-        onPress={onOpen}
+        onPress={handleOpenModal}
         className="text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
         style={{ backgroundColor: "#7a0f16" }}
       >
@@ -215,6 +238,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                   type="date"
                   value={fechaInicio}
                   onChange={(e) => setFechaInicio(e.target.value)}
+                  min={obtenerFechaLocal()} // No permitir fechas pasadas
+                  className="text-white"
                 />
 
                 {/* Membresía */}
