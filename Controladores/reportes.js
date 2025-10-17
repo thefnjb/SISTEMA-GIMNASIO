@@ -26,7 +26,7 @@ async function getReporteMensual(req, res) {
                 $group: {
                     _id: { year: { $year: '$fecha' }, month: { $month: '$fecha' } },
                     visitas: { $sum: 1 },
-                    totalMonto: { $sum: { $ifNull: ['$precio', 7] } }
+                    totalMonto: { $sum: '$monto' }
                 }
             },
             {
@@ -59,7 +59,7 @@ async function getReporteSemanal(req, res) {
                 $group: {
                     _id: { year: '$year', week: '$week' },
                     visitas: { $sum: 1 },
-                    totalMonto: { $sum: { $ifNull: ['$precio', 7] } }
+                    totalMonto: { $sum: '$monto' }
                 }
             },
             { $project: { _id: 0, year: '$_id.year', week: '$_id.week', visitas: 1, totalMonto: 1 } },
@@ -83,7 +83,7 @@ async function getReporteAnual(req, res) {
                 $group: {
                     _id: { year: { $year: '$fecha' } },
                     visitas: { $sum: 1 },
-                    totalMonto: { $sum: { $ifNull: ['$precio', 7] } }
+                    totalMonto: { $sum: '$monto' }
                 }
             },
             { $project: { _id: 0, year: '$_id.year', visitas: 1, totalMonto: 1 } },
@@ -105,11 +105,6 @@ async function getReporteComparativoClientes(req, res) {
         const startOfYear = new Date(year, 0, 1);
         const endOfYear = new Date(year, 11, 31, 23, 59, 59);
 
-        // Filtro para inscripciones (miembros)
-        const matchFilter = {
-            fechaIngreso: { $gte: startOfYear, $lte: endOfYear }
-        };
-
         // Filtro para visitas diarias
         const dailyMatchFilter = {
             fecha: { $gte: startOfYear, $lte: endOfYear }
@@ -120,10 +115,51 @@ async function getReporteComparativoClientes(req, res) {
             { $group: { _id: { month: { $month: '$fecha' } }, count: { $sum: 1 } } }
         ]);
 
-        const monthlyResults = await Miembro.aggregate([
+        // SOLUCIÓN 2: Si cada miembro está una sola vez, usar fechaIngreso directamente
+        // y asegurarse de contar solo documentos únicos
+        const matchFilter = {
+            fechaIngreso: { $gte: startOfYear, $lte: endOfYear }
+        };
+
+        // Contar inscripciones nuevas por mes (fechaIngreso)
+        const ingresosMensuales = await Miembro.aggregate([
             { $match: matchFilter },
-            { $group: { _id: { month: { $month: '$fechaIngreso' } }, count: { $sum: 1 } } }
+            // Agrupar por miembro y mes para evitar duplicados
+            {
+                $group: {
+                    _id: {
+                        miembroId: '$_id',
+                        month: { $month: '$fechaIngreso' }
+                    }
+                }
+            },
+            // Contar por mes
+            {
+                $group: {
+                    _id: { month: '$_id.month' },
+                    count: { $sum: 1 }
+                }
+            }
         ]);
+
+        // Contar renovaciones por mes usando ultimaRenovacion
+        const renovacionesMensuales = await Miembro.aggregate([
+            { $match: { ultimaRenovacion: { $gte: startOfYear, $lte: endOfYear } } },
+            {
+                $group: {
+                    _id: { month: { $month: '$ultimaRenovacion' } },
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // Merge: sumar ingresos + renovaciones por mes
+        const monthlyResults = [];
+        for (let m = 1; m <= 12; m++) {
+            const inc = ingresosMensuales.find(i => i._id.month === m);
+            const ren = renovacionesMensuales.find(r => r._id.month === m);
+            monthlyResults.push({ _id: { month: m }, count: (inc ? inc.count : 0) + (ren ? ren.count : 0) });
+        }
 
         const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 

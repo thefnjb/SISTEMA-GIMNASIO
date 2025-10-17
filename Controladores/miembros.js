@@ -21,7 +21,6 @@ const calcularVencimiento = (fechaBase, meses) => {
 // --- Controladores Refactorizados ---
 
 // Obtener todos los miembros del gimnasio (con filtros y paginación)
-// --- Controlador ---
 exports.getAllMiembros = async (req, res) => {
   try {
     const { id: userId, rol } = req.usuario;
@@ -29,8 +28,7 @@ exports.getAllMiembros = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || "";
     const skip = (page - 1) * limit;
-    // Si el cliente solicita `?all=true` devolvemos todos los miembros (sin paginación)
-    const all = req.query.all === 'true';
+    const all = req.query.all === "true";
 
     let filter = {};
 
@@ -83,7 +81,6 @@ exports.getAllMiembros = async (req, res) => {
   }
 };
 
-
 // Registrar un nuevo miembro
 exports.registroMiembros = async (req, res) => {
   try {
@@ -110,24 +107,20 @@ exports.registroMiembros = async (req, res) => {
       return res.status(404).json({ error: "Membresía no encontrada" });
     }
 
-    // Validar que no exista miembro con el mismo teléfono
     const miembroExiste = await Miembro.findOne({ telefono });
     if (miembroExiste) {
-      return res.status(409).json({
-        error: "Ya existe un miembro con este teléfono",
-      });
+      return res
+        .status(409)
+        .json({ error: "Ya existe un miembro con este teléfono" });
     }
 
-    // Validar entrenador (si se envía)
-   let entrenadorValido = null;
-   if (entrenador) {
-     entrenadorValido = await Entrenador.findById(entrenador);
-
-     if (!entrenadorValido) {
-       return res.status(404).json({ error: "Entrenador no encontrado" });
-     }
-   }
-
+    let entrenadorValido = null;
+    if (entrenador) {
+      entrenadorValido = await Entrenador.findById(entrenador);
+      if (!entrenadorValido) {
+        return res.status(404).json({ error: "Entrenador no encontrado" });
+      }
+    }
 
     const fechaInicio = fechaIngreso
       ? new Date(fechaIngreso + "T00:00:00")
@@ -150,6 +143,15 @@ exports.registroMiembros = async (req, res) => {
       estado: "activo",
       creadoPor,
       creadorId,
+      historialMembresias: [
+        {
+          membresiaId: mensualidad,
+          precio: membresiaSeleccionada.precio,
+          fechaRenovacion: fechaInicio,
+          mesesAgregados: membresiaSeleccionada.duracion,
+        },
+      ],
+      totalAcumuladoMembresias: membresiaSeleccionada.precio,
     });
 
     await nuevoMiembro.save();
@@ -200,11 +202,10 @@ exports.actualizarMiembro = async (req, res) => {
       creadoPor,
     };
 
-    // si se congela y se especifican semanas
     if (estado === "congelado" && congelacionSemanas > 0) {
       const nuevasemanas = Number(congelacionSemanas);
       const vencimiento = new Date(miembro.vencimiento);
-      vencimiento.setDate(vencimiento.getDate() + nuevasemanas * 7); // sumar semanas
+      vencimiento.setDate(vencimiento.getDate() + nuevasemanas * 7);
       updateData.vencimiento = vencimiento;
       updateData.congelacionSemanas = nuevasemanas;
     }
@@ -221,45 +222,64 @@ exports.actualizarMiembro = async (req, res) => {
   }
 };
 
-// Renovar membresía de un miembro
+// Renovar membresía sin duplicar monto
 exports.renovarMiembro = async (req, res) => {
   try {
     const { id: miembroId } = req.params;
     const { id: creadorId, rol: creadoPor } = req.usuario;
-  const { meses, debe, metodoPago } = req.body;
+    const { mensualidadId, debe, metodoPago } = req.body;
 
-    const miembro = await Miembro.findOne({ _id: miembroId });
+    const miembro = await Miembro.findById(miembroId);
     if (!miembro) {
       return res.status(404).json({ error: "Miembro no encontrado" });
     }
 
-    const mesesNum = Number(meses || 1);
+    const membresiaNueva = await Membresia.findById(mensualidadId);
+    if (!membresiaNueva) {
+      return res.status(404).json({ error: "Membresía no encontrada" });
+    }
+
+    // Agregar solo la nueva membresía al historial
+    miembro.historialMembresias.push({
+      membresiaId: membresiaNueva._id,
+      precio: membresiaNueva.precio,
+      fechaRenovacion: new Date(),
+      mesesAgregados: membresiaNueva.duracion,
+    });
+
+    // Recalcular total sin duplicar
+    miembro.totalAcumuladoMembresias = miembro.historialMembresias.reduce(
+      (total, item) => total + item.precio,
+      0
+    );
+
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
-    const base =
+    const fechaBase =
       miembro.vencimiento && new Date(miembro.vencimiento) > hoy
         ? new Date(miembro.vencimiento)
         : hoy;
-    const nuevoVenc = calcularVencimiento(base, mesesNum);
 
-    miembro.vencimiento = nuevoVenc;
-    miembro.estado = calcularEstado(nuevoVenc);
-    miembro.ultimaRenovacion = new Date();
+    const nuevoVencimiento = calcularVencimiento(
+      fechaBase,
+      membresiaNueva.duracion
+    );
+
+    miembro.mensualidad = membresiaNueva._id;
+    miembro.vencimiento = nuevoVencimiento;
+    miembro.estado = calcularEstado(nuevoVencimiento);
     if (debe !== undefined) miembro.debe = Number(debe);
-
-    // Si el frontend envía metodoPago al renovar, actualizamos el campo
-    if (metodoPago !== undefined) {
-      miembro.metodoPago = metodoPago;
-    }
-
+    if (metodoPago) miembro.metodoPago = metodoPago;
     miembro.creadorId = creadorId;
     miembro.creadoPor = creadoPor;
 
     await miembro.save();
-    res.json({ message: "Renovación exitosa", miembro });
+
+    res.json({ mensaje: "Renovación realizada correctamente", miembro });
   } catch (err) {
-    res.status(500).json({ error: "Error al renovar" });
+    console.error(err);
+    res.status(500).json({ error: "Error al renovar la membresía" });
   }
 };
 

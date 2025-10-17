@@ -52,7 +52,7 @@ exports.generarReporteMensual = async (req, res) => {
       {
         $group: {
           _id: { $month: "$fechaIngreso" },
-          total: { $sum: "$membresiaInfo.precio" },
+          total: { $sum: "$totalAcumuladoMembresias" },
         },
       },
       { $sort: { _id: 1 } },

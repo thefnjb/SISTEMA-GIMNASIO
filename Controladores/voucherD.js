@@ -102,7 +102,6 @@ const generadoVoucherDIA = async (req, res) => {
     doc.moveDown(5);
     doc.fontSize(9).fillColor("#333").text(`Generado por: ${generadoPor}`, { align: "center" });
     doc.text(`${fechaActual} - ${horaActual}`, { align: "center" });
-    doc.text("¡Gracias por tu visita!", { align: "center" });
 
     doc.end(); // finaliza y envia
   } catch (error) {

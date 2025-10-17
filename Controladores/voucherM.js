@@ -7,7 +7,10 @@ const generarVoucherMiembro = async (req, res) => {
     const { rol, id } = req.usuario;
     const { miembroId } = req.params;
 
-    const miembro = await Miembro.findById(miembroId).populate("mensualidad");
+    const miembro = await Miembro.findById(miembroId)
+      .populate("mensualidad")
+      .populate({ path: "historialMembresias.membresiaId" });
+
     if (!miembro) {
       return res.status(404).json({ message: "Cliente no encontrado" });
     }
@@ -20,15 +23,18 @@ const generarVoucherMiembro = async (req, res) => {
     }
 
     const fechaActual = new Date().toLocaleDateString("es-PE", {
-      year: "numeric", month: "long", day: "numeric"
+      year: "numeric",
+      month: "long",
+      day: "numeric"
     });
     const horaActual = new Date().toLocaleTimeString("es-PE", {
-      hour: "numeric", minute: "2-digit", hour12: true
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
     });
 
-    // Crear documento con tamaño de voucher pequeño
     const doc = new PDFDocument({
-      size: [210, 350], // tamaño tipo voucher pequeño
+      size: [210, 350],
       margin: 15
     });
 
@@ -42,20 +48,16 @@ const generarVoucherMiembro = async (req, res) => {
       res.send(pdfData);
     });
 
-    // Fondo blanco y borde
+    // Fondo y borde
     doc.rect(0, 0, doc.page.width, doc.page.height).fill("#ffffff");
     doc.strokeColor("#cccccc").lineWidth(1).rect(10, 10, doc.page.width - 20, doc.page.height - 20).stroke();
 
-    // Encabezado centrado
-    doc.fontSize(14).fillColor("#d32f2f").text("GYM TERRONES", {
-      align: "center"
-    });
-
+    // Encabezado
+    doc.fontSize(14).fillColor("#d32f2f").text("GYM TERRONES", { align: "center" });
     doc.moveDown(0.3);
     doc.strokeColor("#bbbbbb").moveTo(20, doc.y).lineTo(doc.page.width - 20, doc.y).stroke();
     doc.moveDown(0.5);
 
-    // Contenido del voucher
     const infoX = 25;
     const labelColor = "#333333";
     const boxColor = "#f9f9f9";
@@ -69,23 +71,64 @@ const generarVoucherMiembro = async (req, res) => {
       doc.restore();
     };
 
+    // Datos del cliente
     drawBox("Cliente", miembro.nombreCompleto);
     drawBox("Teléfono", miembro.telefono);
-    drawBox("Fecha ingreso", new Date(miembro.fechaIngreso).toLocaleDateString("es-ES"));
-    drawBox("Tipo", miembro.mensualidad ? "Mensualidad" : "Por día");
-    drawBox("Método de pago", miembro.metodoPago);
-    drawBox("Estado de pago", miembro.estadoPago);
-    drawBox("Debe", `S/ ${miembro.debe.toFixed(2)}`);
+    drawBox("Fecha ingreso", miembro.fechaIngreso ? new Date(miembro.fechaIngreso).toLocaleDateString("es-ES") : "-");
+    drawBox("Método de pago", miembro.metodoPago || "-");
+
+    const montoPagado = typeof miembro.pago === "number" ? miembro.pago : (miembro.mensualidad?.precio || 0);
+    if (!montoPagado || montoPagado === 0) {
+      drawBox("Pago", "No registrado");
+    } else {
+      drawBox("Pago", `S/ ${montoPagado.toFixed(2)}`);
+    }
+
+    drawBox("Debe", `S/ ${Number(miembro.debe || 0).toFixed(2)}`);
     drawBox("Vencimiento", miembro.vencimiento ? new Date(miembro.vencimiento).toLocaleDateString("es-ES") : "No aplica");
+
+    // Historial y membresías
+    const historial = Array.isArray(miembro.historialMembresias) ? miembro.historialMembresias.slice() : [];
+    historial.sort((a, b) => new Date(a.fechaRenovacion) - new Date(b.fechaRenovacion));
+
+    const currentMembership = miembro.mensualidad || (historial.length ? historial[historial.length - 1].membresiaId : null);
+
+    const drawMembershipDetails = (title, obj, extra) => {
+      if (!obj) return;
+      doc.moveDown(0.2);
+      doc.fontSize(11).fillColor("#d32f2f").text(title, { align: "left", indent: infoX });
+      doc.moveDown(0.15);
+      doc.fontSize(10).fillColor(labelColor);
+
+      const precio = (obj.precio !== undefined) ? obj.precio : (extra && extra.precio) || 0;
+      const duracion = obj.duracion !== undefined ? obj.duracion : (extra && extra.mesesAgregados) || "-";
+      const turno = obj.turno || "-";
+      const fecha = extra && extra.fechaRenovacion ? new Date(extra.fechaRenovacion).toLocaleDateString("es-ES") : "-";
+
+      doc.text(`Duración: ${duracion} ${duracion === 1 ? "mes" : "meses"}`, infoX);
+      doc.text(`Precio: S/ ${Number(precio || 0).toFixed(2)}`, infoX);
+      doc.text(`Turno: ${turno}`, infoX);
+      if (fecha && fecha !== "-") doc.text(`Fecha renovación: ${fecha}`, infoX);
+      doc.moveDown(0.3);
+    };
+
+    // Mostrar membresía actual
+    if (currentMembership) {
+      drawMembershipDetails("Membresía actual", currentMembership);
+    }
+
+    // Mostrar membresía anterior solo si realmente existe una anterior
+    if (historial.length >= 2) {
+      const prev = historial[historial.length - 2];
+      drawMembershipDetails("Membresía anterior", prev.membresiaId || {}, prev);
+    }
 
     doc.moveDown(0.4);
     doc.strokeColor("#bbbbbb").moveTo(20, doc.y).lineTo(doc.page.width - 20, doc.y).stroke();
 
-    // Pie de página centrado
-    doc.moveDown(5);
+    doc.moveDown(0.2);
     doc.fontSize(9).fillColor("#333").text(`Generado por: ${generadoPor}`, { align: "center" });
     doc.text(`${fechaActual} - ${horaActual}`, { align: "center" });
-    doc.text("¡Gracias por tu preferencia!", { align: "center" });
 
     doc.end();
   } catch (error) {
