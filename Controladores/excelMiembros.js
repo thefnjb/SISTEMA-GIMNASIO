@@ -79,6 +79,17 @@ const generarExcelMiembros = async (req, res) => {
     
     // 🔹 Filas con estilo alternado (gris/blanco)
     miembros.forEach((m, index) => {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0); 
+
+      const vencimiento = m.vencimiento ? new Date(m.vencimiento) : null;
+      if (vencimiento) {
+        vencimiento.setHours(0, 0, 0, 0);
+      }
+
+      // Determinar el estado dinámicamente
+      const estado = vencimiento && vencimiento < hoy ? "Vencido" : m.estado;
+
       const row = worksheet.addRow({
         nombreCompleto: m.nombreCompleto,
         telefono: m.telefono,
@@ -95,7 +106,7 @@ const generarExcelMiembros = async (req, res) => {
         vencimiento: m.vencimiento
           ? new Date(m.vencimiento).toLocaleDateString("es-PE")
           : "N/A",
-        estado: m.estado,
+        estado: estado, // Usar el estado calculado
   creadorNombre: m.creadorNombre || "Desconocido",
       });
 
