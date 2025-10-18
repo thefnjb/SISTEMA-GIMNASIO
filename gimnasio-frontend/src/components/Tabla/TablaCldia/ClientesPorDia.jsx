@@ -19,7 +19,7 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
-import ReporteClientesDia from "../../../components/Pdf/BotonpdfClientesdia"; 
+import ReporteClientesDia from "../../Pdf/BotonpdfClientesdia"; 
 import api from "../../../utils/axiosInstance";
 
 // 🔹 Función para formatear hora

@@ -331,7 +331,7 @@ const calcularEstado = useCallback((miembro) => {
         </div>
         
         <div className="flex items-center gap-3">
-          <div className="px-1 text-sm text-gray-600">{totalItems} resultados</div>
+          <div className="px-1 text-sm text-gray-600">{totalItems} CLIENTES</div>
           <BotonExcel />
         </div>
       </div>
