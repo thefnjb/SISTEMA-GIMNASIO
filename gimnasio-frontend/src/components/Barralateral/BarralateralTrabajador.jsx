@@ -12,7 +12,8 @@ const BarralateralTrabajador = ({ active, setActive }) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('rol');
     navigate('/');
   };
 

@@ -9,7 +9,7 @@ const ReporteClientesDia = () => {
       const response = await api.get("/pdfdia/reporte-dia", {
         responseType: "blob", // importante para archivos
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // si usas JWT
+          Authorization: `Bearer ${sessionStorage.getItem("token")}`, // si usas JWT
         },
       });
 

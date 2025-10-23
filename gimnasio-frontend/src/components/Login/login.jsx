@@ -35,8 +35,8 @@ function Login() {
       if (response.ok) {
         const data = await response.json();
         if (data.token && data.rol) {
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('rol', data.rol);
+          sessionStorage.setItem('token', data.token);
+          sessionStorage.setItem('rol', data.rol);
 
           if (data.rol === 'admin') {
             navigate("/panel");
