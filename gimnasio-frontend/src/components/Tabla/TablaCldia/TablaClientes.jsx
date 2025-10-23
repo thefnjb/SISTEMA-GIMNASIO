@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"; 
-import {Pagination,} from "@heroui/pagination";
+import { Pagination } from "@heroui/pagination";
 import api from "../../../utils/axiosInstance";
 import {
   Table,
@@ -24,6 +24,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import BotonEditar from "../../Iconos/BotonEditar";
+import BotonEliminar from "../../Iconos/BotonEliminar";
 import BotonRenovar from "../../Iconos/BotonRenovar";
 import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
 import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
@@ -57,7 +58,7 @@ export default function TablaClientesAdmin({ refresh }) {
     setAlert({ visible: true, color, title });
     timeoutRef.current = setTimeout(() => {
       setAlert({ visible: false, color: "default", title: "" });
-    }, 4000);
+    }, 5000); // Changed to 5000 for 5 seconds
   }, []);
 
   // ---------- Utilidades de fecha ----------
@@ -120,22 +121,20 @@ export default function TablaClientesAdmin({ refresh }) {
     return formatearFecha(fecha);
   };
 
-const calcularEstado = useCallback((miembro) => {
-  // Si en DB está como congelado, priorizar eso
-  if (miembro?.estado === "congelado") {
-    return { etiqueta: "congelado", color: "secondary" };
-  }
+  const calcularEstado = useCallback((miembro) => {
+    if (miembro?.estado === "congelado") {
+      return { etiqueta: "congelado", color: "secondary" };
+    }
 
-  // Si está activo, seguimos con la lógica normal
-  const v = calcularVencimientoMiembro(miembro);
-  if (!v) return { etiqueta: "vencido", color: "danger" };
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const diffDias = Math.ceil((v.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-  if (diffDias < 0) return { etiqueta: "vencido", color: "danger" };
-  if (diffDias <= 7) return { etiqueta: "a punto de vencer", color: "warning" };
-  return { etiqueta: "activo", color: "success" };
-}, [calcularVencimientoMiembro]);
+    const v = calcularVencimientoMiembro(miembro);
+    if (!v) return { etiqueta: "vencido", color: "danger" };
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    const diffDias = Math.ceil((v.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDias < 0) return { etiqueta: "vencido", color: "danger" };
+    if (diffDias <= 7) return { etiqueta: "a punto de vencer", color: "warning" };
+    return { etiqueta: "activo", color: "success" };
+  }, [calcularVencimientoMiembro]);
 
   const formatearMensualidadNumero = (miembro) => {
     const numero = obtenerMesesMiembro(miembro);
@@ -154,9 +153,7 @@ const calcularEstado = useCallback((miembro) => {
         },
       });
 
-      const nombreLimpio = miembro.nombreCompleto
-        .replace(/\s+/g, "_")
-
+      const nombreLimpio = miembro.nombreCompleto.replace(/\s+/g, "_");
       const blob = response.data;
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
@@ -181,18 +178,25 @@ const calcularEstado = useCallback((miembro) => {
       });
 
       const data = res.data || {};
-      // API retorna { miembros, total, page, totalPages }
       const miembrosData = data.miembros || data;
 
-      // Opcional: mantener orden por fecha ingreso (dentro de la página)
       const miembrosOrdenados = Array.isArray(miembrosData)
         ? miembrosData.slice().sort((a, b) => new Date(b.fechaIngreso) - new Date(a.fechaIngreso))
         : [];
 
       setMiembros(miembrosOrdenados);
       setTotalItems(typeof data.total === 'number' ? data.total : miembrosOrdenados.length);
-      setTotalPagesServer(typeof data.totalPages === 'number' ? data.totalPages : Math.max(1, Math.ceil((data.total || miembrosOrdenados.length) / rowsPerPage)));
-      setPage(typeof data.page === 'number' ? data.page : pageParam);
+      const calculatedTotalPages = typeof data.totalPages === 'number' 
+        ? data.totalPages 
+        : Math.max(1, Math.ceil((data.total || miembrosOrdenados.length) / rowsPerPage));
+      setTotalPagesServer(calculatedTotalPages);
+
+      // Adjust page if current page is empty and not the first page
+      if (miembrosOrdenados.length === 0 && pageParam > 1) {
+        setPage(pageParam - 1);
+      } else {
+        setPage(typeof data.page === 'number' ? data.page : pageParam);
+      }
     } catch (error) {
       console.error("Error al obtener miembros:", error);
       showAlert("danger", "Error al obtener los miembros.");
@@ -200,6 +204,19 @@ const calcularEstado = useCallback((miembro) => {
       setCargando(false);
     }
   }, [showAlert]);
+
+  const eliminarMiembro = useCallback(async (memberId) => {
+    if (!memberId) return;
+    try {
+      await api.delete(`/members/miembros/${memberId}`, { withCredentials: true });
+      obtenerMiembros(filtro, page);
+      showAlert("success", "Miembro eliminado exitosamente.");
+    } catch (error) {
+      console.error("Error al eliminar miembro:", error.response?.data || error.message);
+      showAlert("danger", "Error al eliminar el miembro.");
+    }
+  }, [obtenerMiembros, filtro, page, showAlert]);
+
   const abrirModalActualizar = (miembro, modo = "editar") => {
     setMiembroSeleccionado(miembro);
     setModoModal(modo);
@@ -207,7 +224,6 @@ const calcularEstado = useCallback((miembro) => {
   };
 
   // ---------- Effects ----------
-  // cuando filtro o página cambian, solicitamos la página correspondiente (debounced)
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       obtenerMiembros(filtro, page);
@@ -220,11 +236,9 @@ const calcularEstado = useCallback((miembro) => {
 
   const totalPages = totalPagesServer;
 
-  // miembros ya vienen paginados desde el servidor; aplicamos solo orden dentro de la página
   const miembrosOrdenados = useMemo(() => {
     let lista = [...miembros];
     
-    // Filtrar por estado seleccionado
     const estadoSeleccionado = Array.from(filtroEstado)[0];
     if (estadoSeleccionado && estadoSeleccionado !== "todos") {
       lista = lista.filter((miembro) => {
@@ -258,14 +272,12 @@ const calcularEstado = useCallback((miembro) => {
     return lista;
   }, [miembros, sortDescriptor, calcularEstado, filtroEstado]);
 
-  // Solo resetear la página cuando cambia el filtro (no cuando cambia el tamaño de la lista)
   useEffect(() => {
     setPage(1);
-  }, [filtro]);
+  }, [filtro, refresh]);
 
   return (
     <div className="max-w-full p-3 sm:p-4 md:p-6">
-      {/* Buscador y resultados */}
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-1">
           <Input
@@ -276,8 +288,6 @@ const calcularEstado = useCallback((miembro) => {
             className="w-full sm:max-w-md"
             startContent={<SearchIcon className="text-gray-500" />}
           />
-          
-          {/* Dropdown de filtro por estado */}
           <Dropdown>
             <DropdownTrigger>
               <Button 
@@ -314,7 +324,6 @@ const calcularEstado = useCallback((miembro) => {
             </DropdownMenu>
           </Dropdown>
         </div>
-        
         <div className="flex items-center gap-3">
           <div className="px-1 text-sm text-gray-600">{totalItems} resultados</div>
         </div>
@@ -350,7 +359,6 @@ const calcularEstado = useCallback((miembro) => {
               <TableColumn key="estado" allowsSorting>ESTADO</TableColumn>
               <TableColumn className="hidden md:table-cell">ACCIONES</TableColumn>
             </TableHeader>
-
             <TableBody emptyContent={"No hay miembros encontrados."}>
               {miembrosOrdenados.map((miembro) => (
                 <TableRow key={miembro._id} className="align-middle">
@@ -396,14 +404,13 @@ const calcularEstado = useCallback((miembro) => {
                       />
                       <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
                       <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
+                      <BotonEliminar onClick={() => eliminarMiembro(miembro._id)} />
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-
-          {/* Paginación */}
           <div className="flex items-center justify-center mt-4">
             <Pagination
               total={totalPages}
@@ -414,8 +421,6 @@ const calcularEstado = useCallback((miembro) => {
           </div>
         </div>
       )}
-
-      {/* Modales */}
       {mostrarModal && modoModal !== "editarDeuda" && (
         <ActualizarSuscripcion
           miembro={miembroSeleccionado}
@@ -428,7 +433,6 @@ const calcularEstado = useCallback((miembro) => {
           }}
         />
       )}
-
       {mostrarModal && modoModal === "editarDeuda" && (
         <EditarDeuda
           miembro={miembroSeleccionado}
@@ -440,7 +444,6 @@ const calcularEstado = useCallback((miembro) => {
           }}
         />
       )}
-
       {alert.visible && (
         <div className="fixed z-50 bottom-5 right-5">
           <Alert color={alert.color} title={alert.title} />
