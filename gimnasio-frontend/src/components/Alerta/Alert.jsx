@@ -4,9 +4,22 @@ export function AlertaCredenciales() {
   return (
     <div className="flex items-center justify-center w-full">
       <Alert
-        color="default"
+        color="danger"
         description="Las credenciales son incorrectas."
         title="Credenciales incorrectas"
+        variant="faded"
+      />
+    </div>
+  );
+}
+
+export function AlertaLoginExitoso() {
+  return (
+    <div className="flex items-center justify-center w-full">
+      <Alert
+        color="success"
+        description="¡Bienvenido! Iniciando sesión..."
+        title="Login exitoso"
         variant="faded"
       />
     </div>

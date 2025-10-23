@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AvatarGroup from '../Avatar/avatar';
-import { AlertaCredenciales } from '../Alerta/Alert';
+import { AlertaCredenciales, AlertaLoginExitoso } from '../Alerta/Alert';
 
 const Button = ({ children, className, ...props }) => (
   <button className={`btn ${className}`} {...props}>
@@ -20,9 +20,15 @@ function Login() {
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [errorCredenciales, setErrorCredenciales] = useState(false);
+  const [loginExitoso, setLoginExitoso] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setCargando(true);
+    setErrorCredenciales(false);
+    setLoginExitoso(false);
+    
     try {
       const response = await fetch("http://localhost:4000/auth/login", {
         method: "POST",
@@ -37,23 +43,34 @@ function Login() {
         if (data.token && data.rol) {
           sessionStorage.setItem('token', data.token);
           sessionStorage.setItem('rol', data.rol);
-
-          if (data.rol === 'admin') {
-            navigate("/panel");
-          } else if (data.rol === 'trabajador') {
-            navigate("/paneltrabajador");
-          } else {
-            // Fallback por si el rol no es ninguno de los esperados
-            setErrorCredenciales(true);
-          }
+          
+          // Mostrar notificación de éxito
+          setLoginExitoso(true);
+          setCargando(false);
+          
+          // Esperar 2 segundos antes de navegar para que el usuario vea la notificación
+          setTimeout(() => {
+            if (data.rol === 'admin') {
+              navigate("/panel");
+            } else if (data.rol === 'trabajador') {
+              navigate("/paneltrabajador");
+            } else {
+              // Fallback por si el rol no es ninguno de los esperados
+              setErrorCredenciales(true);
+              setLoginExitoso(false);
+            }
+          }, 2000);
         } else {
           setErrorCredenciales(true);
+          setCargando(false);
         }
       } else {
         setErrorCredenciales(true);
+        setCargando(false);
       }
     } catch (error) {
       alert("Error de conexión con el servidor.");
+      setCargando(false);
     }
   };
 
@@ -76,9 +93,18 @@ function Login() {
             <p className="mt-1 text-sm text-gray-400">Accede con tus credenciales</p>
           </div>
 
-          {errorCredenciales && <AlertaCredenciales />}
+          {errorCredenciales && (
+            <div className="animate-fadeInDown">
+              <AlertaCredenciales />
+            </div>
+          )}
+          {loginExitoso && (
+            <div className="animate-fadeInDown">
+              <AlertaLoginExitoso />
+            </div>
+          )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className={`space-y-5 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
             <div>
               <label htmlFor="usuario" className="block mb-2 text-sm font-semibold">
                 Usuario
@@ -130,9 +156,21 @@ function Login() {
 
             <Button
               type="submit"
-              className="w-full py-3 font-semibold text-white bg-red-600 rounded-lg animate-pulse hover:bg-red-700"
+              disabled={cargando}
+              className={`w-full py-3 font-semibold text-white rounded-lg transition-all duration-300 ${
+                cargando 
+                  ? 'bg-gray-600 cursor-not-allowed opacity-70' 
+                  : 'bg-red-600 hover:bg-red-700 animate-pulse'
+              }`}
             >
-              Iniciar Sesión
+              {cargando ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  Iniciando sesión...
+                </div>
+              ) : (
+                'Iniciar Sesión'
+              )}
             </Button>
           </form>
         </div>
