@@ -85,6 +85,7 @@ const generarVoucherMiembro = async (req, res) => {
     }
 
     drawBox("Debe", `S/ ${Number(miembro.debe || 0).toFixed(2)}`);
+    drawBox("Estado", miembro.estado);
     drawBox("Vencimiento", miembro.vencimiento ? new Date(miembro.vencimiento).toLocaleDateString("es-ES") : "No aplica");
 
     // Historial y membresías

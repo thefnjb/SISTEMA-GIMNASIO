@@ -49,7 +49,7 @@ export default function TablaClientesAdmin({ refresh }) {
     title: "",
   });
   const timeoutRef = useRef(null);
-  const rowsPerPage = 10;
+  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalPagesServer, setTotalPagesServer] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
@@ -197,7 +197,12 @@ export default function TablaClientesAdmin({ refresh }) {
     } finally {
       setCargando(false);
     }
-  }, [showAlert]);
+  }, [showAlert, rowsPerPage]);
+  useEffect(() => {
+    setPage(1);
+    obtenerMiembros(filtro, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rowsPerPage]);
 
   const eliminarMiembro = useCallback(async (memberId) => {
     if (!memberId) return;
@@ -332,6 +337,7 @@ export default function TablaClientesAdmin({ refresh }) {
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
+          {/* Selector rows per page moved below the table */}
         </div>
         
         <div className="flex items-center gap-3">
@@ -432,13 +438,33 @@ export default function TablaClientesAdmin({ refresh }) {
             </TableBody>
           </Table>
 
-          <div className="flex items-center justify-center mt-4">
-            <Pagination
-              total={totalPages}
-              initialPage={page}
-              onChange={(page) => setPage(page)}
-              color="red"
-            />
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center gap-2">
+              <label htmlFor="rowsPerPage" className="mr-2 text-sm text-gray-600">Filas por página</label>
+              <select
+                id="rowsPerPage"
+                value={rowsPerPage}
+                onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
+                className="px-2 py-1 text-sm border rounded"
+                aria-label="Filas por página"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={30}>30</option>
+                <option value={40}>40</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <div className="flex justify-center flex-1">
+              <Pagination
+                total={totalPages}
+                initialPage={page}
+                onChange={(page) => setPage(page)}
+                color="red"
+              />
+            </div>
+            <div className="w-20" />
           </div>
         </div>
       )}

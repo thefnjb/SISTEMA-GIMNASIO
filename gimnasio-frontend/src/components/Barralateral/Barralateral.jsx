@@ -9,6 +9,8 @@ import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import Grow from '@mui/material/Grow';
+import TextType from '../TextAnimation/TextType';
+import ClickSpark from '../ClickSpark/ClickSpark';
 
 const Barralateral = ({ active, setActive }) => {
   const navigate = useNavigate();
@@ -29,7 +31,13 @@ const Barralateral = ({ active, setActive }) => {
       >
         <div className="w-full mb-8 text-center">
           <h1 className="mb-2 text-3xl font-extrabold tracking-wide text-white">
-            Gimnasio Terrones
+            <TextType 
+              text={["Gimnasio Terrones"]}
+              typingSpeed={75}
+              pauseDuration={5000}
+              showCursor={true}
+              cursorCharacter="|"
+            />
           </h1>
         </div>
         <Admin />
@@ -72,28 +80,30 @@ const Barralateral = ({ active, setActive }) => {
 const SidebarItem = ({ icon, label, active, onClick }) => (
   <Grow in={true} timeout={600}>
     <div>
-      <Button
-        onClick={onClick}
-        startIcon={icon}
-        variant="contained"
-        color="default"
-        fullWidth
-        sx={{
-          justifyContent: 'flex-start',
-          fontWeight: active ? 'bold' : 'normal',
-          fontSize: '1.1rem',
-          my: 1,
-          borderRadius: 2,
-          textTransform: 'none',
-          backgroundColor: active ? '#D72838' : 'rgba(255,255,255,0.1)',
-          color: active ? '#fff' : '#f5f5f5',
-          '&:hover': {
-            backgroundColor: active ? '#b71c1c' : 'rgba(255,255,255,0.2)',
-          },
-        }}
-      >
-        {label}
-      </Button>
+      <ClickSpark>
+        <Button
+          onClick={onClick}
+          startIcon={icon}
+          variant="contained"
+          color="default"
+          fullWidth
+          sx={{
+            justifyContent: 'flex-start',
+            fontWeight: active ? 'bold' : 'normal',
+            fontSize: '1.1rem',
+            my: 1,
+            borderRadius: 2,
+            textTransform: 'none',
+            backgroundColor: active ? '#D72838' : 'rgba(255,255,255,0.1)',
+            color: active ? '#fff' : '#f5f5f5',
+            '&:hover': {
+              backgroundColor: active ? '#b71c1c' : 'rgba(255,255,255,0.2)',
+            },
+          }}
+        >
+          {label}
+        </Button>
+      </ClickSpark>
     </div>
   </Grow>
 );

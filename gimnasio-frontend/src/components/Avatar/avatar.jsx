@@ -4,7 +4,7 @@ import ShinyText from './ShinyText';
 const AvatarGroup = () => {
   return (
     <div className="flex justify-center gap-2 mb-4">
-      <img className="w-20 h-20 border-2 border-white rounded-full" src="/images/logo.jpg" alt="logo" />
+      <img className="w-20 h-20 border-2 border-white rounded-full" src="/images/logo.ico" alt="logo" />
     </div>
   );
 }
@@ -13,17 +13,17 @@ const Admin = () =>{
    <div className="flex  flex-col items-center justify-center  min-h-[200px]  rounded-xl p-4 shadow-sm">
       <div className="w-[100px] h-[100px] rounded-lg  overflow-hidden mb-4">
         <img 
-          className="object-cover w-full h-full border-2 border-white rounded-full" 
-          src="/images/logo.jpg" 
+          className="object-cover w-full h-full border-white rounded-full border-1" 
+          src="/images/logo.ico" 
           alt="logo"
         />
       </div>
       <span className="flex items-center gap-2 text-base font-medium text-white">
         <AdminPanelSettingsIcon sx={{ fontSize: 25 }} />
         <ShinyText 
-          text="Nombre ADMIN" 
+          text="ADMIN" 
           disabled={false} 
-          speed={3} 
+          speed={4} 
           className='custom-class' 
           />
       </span>
@@ -36,8 +36,8 @@ const AdminTrabajador = () =>{
    <div className="flex  flex-col items-center justify-center  min-h-[200px]  rounded-xl p-4 shadow-sm">
       <div className="w-[100px] h-[100px] rounded-lg  overflow-hidden mb-4">
         <img 
-          className="object-cover w-full h-full border-2 border-white rounded-full" 
-          src="/images/logo.jpg" 
+          className="object-cover w-full h-full border-white rounded-full border-1" 
+          src="/images/logo.ico" 
           alt="logo"
         />
       </div>
