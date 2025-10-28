@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AvatarGroup from '../Avatar/avatar';
 import { AlertaCredenciales, AlertaLoginExitoso } from '../Alerta/Alert';
+import TextType from '../TextAnimation/TextType';
 
 const Button = ({ children, className, ...props }) => (
   <button className={`btn ${className}`} {...props}>
@@ -89,7 +90,15 @@ function Login() {
         <div className="w-full max-w-md space-y-6 animate-fadeInDown">
           <div className="text-center">
             <AvatarGroup />
-            <h1 className="text-3xl font-extrabold tracking-wide">ADMIN GIMNASIO</h1>
+            <h1 className="text-3xl font-extrabold tracking-wide">
+              <TextType 
+                text={["Gimnasio Terrones"]}
+                typingSpeed={75}
+                pauseDuration={3000}
+                showCursor={true}
+                cursorCharacter="|"
+              />
+            </h1>
             <p className="mt-1 text-sm text-gray-400">Accede con tus credenciales</p>
           </div>
 

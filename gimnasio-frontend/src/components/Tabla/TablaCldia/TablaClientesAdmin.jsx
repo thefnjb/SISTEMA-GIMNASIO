@@ -418,7 +418,7 @@ export default function TablaClientesAdmin({ refresh }) {
                   <TableCell>
                     <span className="text-xs text-gray-600">
                       {miembro?.creadorNombre
-                        ? `por ${miembro.creadorNombre}`
+                        ? `${miembro.creadorNombre}`
                         : "Desconocido"}
                     </span>
                   </TableCell>
