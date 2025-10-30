@@ -24,7 +24,6 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import BotonEditar from "../../Iconos/BotonEditar";
-import BotonEliminar from "../../Iconos/BotonEliminar";
 import BotonRenovar from "../../Iconos/BotonRenovar";
 import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
 import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
@@ -211,19 +210,6 @@ export default function TablaClientesAdmin({ refresh }) {
     obtenerMiembros(filtro, 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowsPerPage]);
-
-  const eliminarMiembro = useCallback(async (memberId) => {
-    if (!memberId) return;
-    try {
-      await api.delete(`/members/miembros/${memberId}`, { withCredentials: true });
-      obtenerMiembros(filtro, page);
-      showAlert("success", "Miembro eliminado exitosamente.");
-    } catch (error) {
-      console.error("Error al eliminar miembro:", error.response?.data || error.message);
-      showAlert("danger", "Error al eliminar el miembro.");
-    }
-  }, [obtenerMiembros, filtro, page, showAlert]);
-
   const abrirModalActualizar = (miembro, modo = "editar") => {
     setMiembroSeleccionado(miembro);
     setModoModal(modo);
@@ -412,7 +398,6 @@ export default function TablaClientesAdmin({ refresh }) {
                       />
                       <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
                       <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
-                      <BotonEliminar onClick={() => eliminarMiembro(miembro._id)} />
                     </div>
                   </TableCell>
                 </TableRow>
