@@ -41,7 +41,9 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
   };
 
   // Estados del formulario
+  const [tipoDocumento, setTipoDocumento] = useState("DNI");
   const [nombreCompleto, setNombreCompleto] = useState("");
+  const [numeroDocumento, setNumeroDocumento] = useState("");
   const [telefono, setTelefono] = useState("");
   const [fechaInicio, setFechaInicio] = useState(obtenerFechaLocal());
 
@@ -72,6 +74,18 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
     if (!nombreCompleto.trim()) {
       return mostrarAlertaInterna("warning", "Campo obligatorio", "El nombre completo es obligatorio");
     }
+    if (!tipoDocumento) {
+      return mostrarAlertaInterna("warning", "Tipo de documento requerido", "Selecciona el tipo de documento");
+    }
+    if (!numeroDocumento.trim()) {
+      return mostrarAlertaInterna("warning", "Número de documento requerido", "Ingresa el número de documento");
+    }
+    if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+      return mostrarAlertaInterna("warning", "DNI inválido", "El DNI debe tener exactamente 8 dígitos");
+    }
+    if (tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDocumento)) {
+      return mostrarAlertaInterna("warning", "CE inválido", "El CE debe tener entre 9 y 12 dígitos");
+    }
     if (!/^\d{9}$/.test(telefono)) {
       return mostrarAlertaInterna("warning", "Teléfono inválido", "El teléfono debe tener 9 dígitos");
     }
@@ -88,6 +102,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
     try {
       const nuevoMiembro = {
         nombreCompleto: nombreCompleto.trim(),
+        tipoDocumento,
+        numeroDocumento: numeroDocumento.trim(),
         telefono,
         fechaIngreso: fechaInicio,
         mensualidad: membresia._id,
@@ -131,6 +147,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
 
   const limpiarCampos = () => {
     setNombreCompleto("");
+    setTipoDocumento("DNI");
+    setNumeroDocumento("");
     setTelefono("");
     setFechaInicio(obtenerFechaLocal()); // Restablecer a fecha actual
     setMembresia(null);
@@ -150,6 +168,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
   const handleOpenModal = () => {
     // Resetear campos al abrir el modal
     setNombreCompleto("");
+    setTipoDocumento("DNI");
+    setNumeroDocumento("");
     setTelefono("");
     setFechaInicio(obtenerFechaLocal());
     setMembresia(null);
@@ -158,6 +178,24 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
     setDebe("");
     setAlertaInterna({ show: false, type: "", message: "", title: "" });
     onOpen();
+  };
+
+  // Función para formatear nombre con primera letra en mayúscula
+  const formatearNombreInput = (value) => {
+    return value
+      .split(" ")
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  // Manejar cambio de número de documento
+  const handleDocumentoChange = (value) => {
+    const soloNumeros = value.replace(/\D/g, "");
+    if (tipoDocumento === "DNI") {
+      setNumeroDocumento(soloNumeros.slice(0, 8));
+    } else {
+      setNumeroDocumento(soloNumeros.slice(0, 12));
+    }
   };
 
   return (
@@ -220,18 +258,74 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                     />
                   </div>
                 )}
+                {/* Tipo de Documento */}
+                <div>
+                  <label className="block mb-2 text-sm">Tipo de Documento</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTipoDocumento("DNI");
+                        setNumeroDocumento("");
+                      }}
+                      className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                        tipoDocumento === "DNI"
+                          ? "bg-red-600 ring-4 ring-red-400"
+                          : "bg-gray-700 hover:bg-gray-600"
+                      }`}
+                    >
+                      DNI
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTipoDocumento("CE");
+                        setNumeroDocumento("");
+                      }}
+                      className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                        tipoDocumento === "CE"
+                          ? "bg-red-600 ring-4 ring-red-400"
+                          : "bg-gray-700 hover:bg-gray-600"
+                      }`}
+                    >
+                      CE (Carné Extranjería)
+                    </button>
+                  </div>
+                </div>
 
+                <Input
+                  label={`Número de ${tipoDocumento}`}
+                  placeholder={tipoDocumento === "DNI" ? "12345678" : "123456789012"}
+                  value={numeroDocumento}
+                  onChange={(e) => handleDocumentoChange(e.target.value)}
+                  maxLength={tipoDocumento === "DNI" ? 8 : 12}
+                  description={
+                    tipoDocumento === "DNI"
+                      ? "Ingresa 8 dígitos"
+                      : "Ingresa entre 9 y 12 dígitos"
+                  }
+                />
                 <Input
                   label="Nombre y Apellido"
                   placeholder="Ingresa el nombre"
                   value={nombreCompleto}
-                  onChange={(e) => setNombreCompleto(e.target.value)}
+                  onChange={(e) => {
+                    const valor = e.target.value;
+                    setNombreCompleto(valor);
+                  }}
+                  onBlur={(e) => {
+                    const valorFormateado = formatearNombreInput(e.target.value);
+                    setNombreCompleto(valorFormateado);
+                  }}
                 />
+                
+                
+                
                 <Input
                   label="Teléfono"
                   placeholder="984225114"
                   value={telefono}
-                  onChange={(e) => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                  onChange={(e) => setTelefono(e.target.value.replace(/\D/g, '').slice(0, 9))}  
                 />
                 <Input
                   label="Fecha de inicio"

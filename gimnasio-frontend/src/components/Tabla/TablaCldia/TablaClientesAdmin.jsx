@@ -172,11 +172,19 @@ export default function TablaClientesAdmin({ refresh }) {
   };
 
   // ---------- Backend ----------
-  const obtenerMiembros = useCallback(async (searchTerm, pageParam = 1) => {
+  const obtenerMiembros = useCallback(async (searchTerm, pageParam = 1, estadoFiltro = null) => {
     setCargando(true);
     try {
+      // Si hay un filtro de estado activo, obtener TODOS los miembros sin paginación
+      const obtenerTodos = estadoFiltro && estadoFiltro !== "todos";
+      
       const res = await api.get("/members/miembros", {
-        params: { search: searchTerm, page: pageParam, limit: rowsPerPage },
+        params: { 
+          search: searchTerm, 
+          page: obtenerTodos ? 1 : pageParam, 
+          limit: obtenerTodos ? 10000 : rowsPerPage, // Límite muy alto para obtener todos
+          all: obtenerTodos ? "true" : undefined
+        },
         withCredentials: true,
       });
 
@@ -187,20 +195,38 @@ export default function TablaClientesAdmin({ refresh }) {
         ? miembrosData.slice().sort((a, b) => new Date(b.fechaIngreso) - new Date(a.fechaIngreso))
         : [];
 
-      setMiembros(miembrosOrdenados);
-      setTotalItems(typeof data.total === 'number' ? data.total : miembrosOrdenados.length);
-      setTotalPagesServer(typeof data.totalPages === 'number' ? data.totalPages : Math.max(1, Math.ceil((data.total || miembrosOrdenados.length) / rowsPerPage)));
-      setPage(typeof data.page === 'number' ? data.page : pageParam);
+      // Si hay filtro de estado, aplicar el filtro aquí
+      let miembrosFiltrados = miembrosOrdenados;
+      if (obtenerTodos && estadoFiltro) {
+        miembrosFiltrados = miembrosOrdenados.filter((miembro) => {
+          const estado = calcularEstado(miembro).etiqueta;
+          return estado === estadoFiltro;
+        });
+      }
+
+      setMiembros(miembrosFiltrados);
+      
+      if (obtenerTodos) {
+        // Cuando hay filtro de estado, mostrar todos sin paginación
+        setTotalItems(miembrosFiltrados.length);
+        setTotalPagesServer(1);
+        setPage(1);
+      } else {
+        setTotalItems(typeof data.total === 'number' ? data.total : miembrosOrdenados.length);
+        setTotalPagesServer(typeof data.totalPages === 'number' ? data.totalPages : Math.max(1, Math.ceil((data.total || miembrosOrdenados.length) / rowsPerPage)));
+        setPage(typeof data.page === 'number' ? data.page : pageParam);
+      }
     } catch (error) {
       console.error("Error al obtener miembros:", error);
       showAlert("danger", "Error al obtener los miembros.");
     } finally {
       setCargando(false);
     }
-  }, [showAlert, rowsPerPage]);
+  }, [showAlert, rowsPerPage, calcularEstado]);
   useEffect(() => {
     setPage(1);
-    obtenerMiembros(filtro, 1);
+    const estadoSeleccionado = Array.from(filtroEstado)[0];
+    obtenerMiembros(filtro, 1, estadoSeleccionado);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rowsPerPage]);
 
@@ -208,27 +234,35 @@ export default function TablaClientesAdmin({ refresh }) {
     if (!memberId) return;
     try {
       await api.delete(`/members/miembros/${memberId}`, { withCredentials: true });
-      // Calculate new page number
-      const newTotalItems = totalItems - 1;
-      const newTotalPages = Math.max(1, Math.ceil(newTotalItems / rowsPerPage));
-      let newPage = page;
-      if (miembros.length === 1 && page > 1) {
-        // If the current page becomes empty, go to the previous page
-        newPage = Math.max(1, page - 1);
-      } else if (page > newTotalPages) {
-        // If the current page is beyond the new total pages, adjust to the last page
-        newPage = newTotalPages;
+      const estadoSeleccionado = Array.from(filtroEstado)[0];
+      const obtenerTodos = estadoSeleccionado && estadoSeleccionado !== "todos";
+      
+      if (obtenerTodos) {
+        // Si hay filtro de estado, recargar todos
+        await obtenerMiembros(filtro, 1, estadoSeleccionado);
+      } else {
+        // Calculate new page number
+        const newTotalItems = totalItems - 1;
+        const newTotalPages = Math.max(1, Math.ceil(newTotalItems / rowsPerPage));
+        let newPage = page;
+        if (miembros.length === 1 && page > 1) {
+          // If the current page becomes empty, go to the previous page
+          newPage = Math.max(1, page - 1);
+        } else if (page > newTotalPages) {
+          // If the current page is beyond the new total pages, adjust to the last page
+          newPage = newTotalPages;
+        }
+        setTotalItems(newTotalItems);
+        setTotalPagesServer(newTotalPages);
+        setPage(newPage);
+        await obtenerMiembros(filtro, newPage, null);
       }
-      setTotalItems(newTotalItems);
-      setTotalPagesServer(newTotalPages);
-      setPage(newPage);
-      await obtenerMiembros(filtro, newPage);
       showAlert("success", "Miembro eliminado exitosamente.");
     } catch (error) {
       console.error("Error al eliminar miembro:", error.response?.data || error.message);
       showAlert("danger", "Error al eliminar el miembro.");
     }
-  }, [obtenerMiembros, filtro, page, totalItems, rowsPerPage, showAlert, miembros.length]);
+  }, [obtenerMiembros, filtro, page, totalItems, rowsPerPage, showAlert, miembros.length, filtroEstado]);
 
   const abrirModalActualizar = (miembro, modo = "editar") => {
     setMiembroSeleccionado(miembro);
@@ -239,21 +273,27 @@ export default function TablaClientesAdmin({ refresh }) {
   // ---------- Effects ----------
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      obtenerMiembros(filtro, page);
+      const estadoSeleccionado = Array.from(filtroEstado)[0];
+      const obtenerTodos = estadoSeleccionado && estadoSeleccionado !== "todos";
+      // Si hay filtro de estado, siempre obtener desde página 1
+      obtenerMiembros(filtro, obtenerTodos ? 1 : page, estadoSeleccionado);
     }, 400);
     return () => {
       clearTimeout(delayDebounceFn);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [filtro, page, obtenerMiembros, refresh]);
+  }, [filtro, page, obtenerMiembros, refresh, filtroEstado]);
 
   const totalPages = totalPagesServer;
 
   const miembrosOrdenados = useMemo(() => {
+    // Los miembros ya vienen filtrados del backend cuando hay filtro de estado
     let lista = [...miembros];
     
+    // Solo aplicar filtro de estado si no se hizo en el backend (para "todos")
     const estadoSeleccionado = Array.from(filtroEstado)[0];
     if (estadoSeleccionado && estadoSeleccionado !== "todos") {
+      // Ya está filtrado en el backend, pero por si acaso aplicamos aquí también
       lista = lista.filter((miembro) => {
         const estado = calcularEstado(miembro).etiqueta;
         return estado === estadoSeleccionado;
@@ -287,7 +327,7 @@ export default function TablaClientesAdmin({ refresh }) {
 
   useEffect(() => {
     setPage(1);
-  }, [filtro]);
+  }, [filtro, filtroEstado]);
 
   return (
     <div className="max-w-full p-3 sm:p-4 md:p-6">
@@ -358,15 +398,16 @@ export default function TablaClientesAdmin({ refresh }) {
             sortDescriptor={sortDescriptor}
             onSortChange={setSortDescriptor}
             classNames={{
-              table: "bg-white w-full table-auto",
-              td: "text-gray-800 border-b border-gray-200 align-middle text-[10px] sm:text-xs px-2 py-1",
-              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] sm:text-xs font-semibold px-2 py-1 text-center",
-              tr: "hover:bg-gray-50 transition-colors text-xs",
+              table: "bg-white w-full table-auto text-[11px]",
+              td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] px-1.5 py-0.5",
+              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] font-semibold px-1.5 py-1 text-center",
+              tr: "hover:bg-gray-50 transition-colors",
             }}
           >
             <TableHeader>
               <TableColumn className="min-w-[140px]">NOMBRE Y APELLIDO</TableColumn>
               <TableColumn className="w-[100px]">TELÉFONO</TableColumn>
+              <TableColumn className="hidden md:table-cell">DOCUMENTO</TableColumn>
               <TableColumn key="ingreso" allowsSorting className="min-w-[120px] text-center hidden md:table-cell">INGRESO</TableColumn>
               <TableColumn className="hidden md:table-cell">MENSUALIDAD</TableColumn>
               <TableColumn className="hidden lg:table-cell">ENTRENADOR</TableColumn>
@@ -382,51 +423,66 @@ export default function TablaClientesAdmin({ refresh }) {
               {miembrosOrdenados.map((miembro) => (
                 <TableRow key={miembro._id} className="align-middle">
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 22 }} />
-                      <span>{miembro.nombreCompleto}</span>
+                    <div className="flex items-center gap-1">
+                      <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 18 }} />
+                      <span className="text-[11px]">{miembro.nombreCompleto}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{miembro.telefono}</TableCell>
-                  <TableCell className="hidden md:table-cell">{formatearFecha(miembro.fechaIngreso)}</TableCell>
+                  <TableCell className="text-[11px]">{miembro.telefono}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{formatearMensualidadNumero(miembro)}</span>
-                      <span className="text-xs text-gray-500">
+                    <div className="flex flex-col gap-0.5">
+                      <Chip 
+                        color={miembro?.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                        variant="flat"
+                        size="sm"
+                        className="text-[10px] h-5"
+                      >
+                        {miembro?.tipoDocumento === "CE" ? "CE" : miembro?.tipoDocumento || "DNI"}
+                      </Chip>
+                      <span className="text-[9px] text-gray-500">
+                        {miembro?.numeroDocumento || "-"}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-[11px]">{formatearFecha(miembro.fechaIngreso)}</TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="font-medium text-[11px]">{formatearMensualidadNumero(miembro)}</span>
+                      <span className="text-[9px] text-gray-500">
                         S/ {Number(miembro?.mensualidad?.precio ?? miembro?.membresia?.precio ?? 0).toFixed(2)}
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell">{miembro?.entrenador?.nombre || "-"}</TableCell>
-                  <TableCell className="hidden capitalize md:table-cell">{miembro.metodoPago}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-[11px]">{miembro?.entrenador?.nombre || "-"}</TableCell>
+                  <TableCell className="hidden capitalize md:table-cell text-[11px]">{miembro.metodoPago}</TableCell>
                   <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                       {Number(miembro?.debe || 0) <= 0 ? (
-                        <Chip color="success" variant="flat">S/ 0.00</Chip>
+                        <Chip color="success" variant="flat" size="sm" className="text-[10px] h-5">S/ 0.00</Chip>
                       ) : (
-                        <Chip color="warning" variant="flat">S/ {Number(miembro.debe).toFixed(2)}</Chip>
+                        <Chip color="warning" variant="flat" size="sm" className="text-[10px] h-5">S/ {Number(miembro.debe).toFixed(2)}</Chip>
                       )}
                       <BotonEditarDeuda onClick={() => abrirModalActualizar(miembro, "editarDeuda")} />
                     </div>
                   </TableCell>
-                  <TableCell>{mostrarVencimiento(miembro)}</TableCell>
+                  <TableCell className="text-[11px]">{mostrarVencimiento(miembro)}</TableCell>
                   <TableCell>
-                    <Chip color={calcularEstado(miembro).color} variant="flat">
+                    <Chip color={calcularEstado(miembro).color} variant="flat" size="sm" className="text-[10px] h-5">
                       {calcularEstado(miembro).etiqueta}
                     </Chip>
                   </TableCell>
                   <TableCell>
-                    <span className="text-xs text-gray-600">
+                    <span className="text-[10px] text-gray-600">
                       {miembro?.creadorNombre
                         ? `${miembro.creadorNombre}`
                         : "Desconocido"}
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1 sm:gap-2 h-[45px] justify-end">
+                    <div className="flex items-center gap-1 h-[35px] justify-end">
                       <AdfScannerRoundedIcon
                         onClick={() => descargarVoucher(miembro)}
-                        sx={{ color: "#555555", fontSize: 26, cursor: "pointer" }}
+                        sx={{ color: "#555555", fontSize: 20, cursor: "pointer" }}
                       />
                       <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
                       <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
@@ -440,30 +496,42 @@ export default function TablaClientesAdmin({ refresh }) {
 
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center gap-2">
-              <label htmlFor="rowsPerPage" className="mr-2 text-sm text-gray-600">Filas por página</label>
-              <select
-                id="rowsPerPage"
-                value={rowsPerPage}
-                onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
-                className="px-2 py-1 text-sm border rounded"
-                aria-label="Filas por página"
-              >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={30}>30</option>
-                <option value={40}>40</option>
-                <option value={50}>50</option>
-              </select>
+              {Array.from(filtroEstado)[0] === "todos" && (
+                <>
+                  <label htmlFor="rowsPerPage" className="mr-2 text-sm text-gray-600">Filas por página</label>
+                  <select
+                    id="rowsPerPage"
+                    value={rowsPerPage}
+                    onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
+                    className="px-2 py-1 text-sm border rounded"
+                    aria-label="Filas por página"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={30}>30</option>
+                    <option value={40}>40</option>
+                    <option value={50}>50</option>
+                  </select>
+                </>
+              )}
+              {Array.from(filtroEstado)[0] !== "todos" && (
+                <div className="text-sm text-gray-600">
+                  Mostrando todos los clientes con estado: <span className="font-semibold">{Array.from(filtroEstado)[0]}</span>
+                </div>
+              )}
             </div>
 
-            <div className="flex justify-center flex-1">
-              <Pagination
-                total={totalPages}
-                initialPage={page}
-                onChange={(page) => setPage(page)}
-                color="red"
-              />
-            </div>
+            {Array.from(filtroEstado)[0] === "todos" && (
+              <div className="flex justify-center flex-1">
+                <Pagination
+                  total={totalPages}
+                  initialPage={page}
+                  onChange={(page) => setPage(page)}
+                  color="red"
+                />
+              </div>
+            )}
+            {Array.from(filtroEstado)[0] !== "todos" && <div className="flex-1" />}
             <div className="w-20" />
           </div>
         </div>

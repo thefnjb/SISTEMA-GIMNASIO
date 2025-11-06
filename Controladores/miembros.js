@@ -18,6 +18,17 @@ const calcularVencimiento = (fechaBase, meses) => {
   return f;
 };
 
+// Formatear nombre con primera letra en mayúscula
+const formatearNombre = (nombre) => {
+  if (!nombre) return "";
+  return nombre
+    .trim()
+    .toLowerCase()
+    .split(" ")
+    .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1))
+    .join(" ");
+};
+
 // --- Controladores Refactorizados ---
 
 // Obtener todos los miembros del gimnasio (con filtros y paginación)
@@ -36,6 +47,7 @@ exports.getAllMiembros = async (req, res) => {
       filter.$or = [
         { nombreCompleto: { $regex: search, $options: "i" } },
         { telefono: { $regex: search, $options: "i" } },
+        { numeroDocumento: { $regex: search, $options: "i" } },
       ];
     }
 
@@ -86,6 +98,8 @@ exports.registroMiembros = async (req, res) => {
   try {
     const {
       nombreCompleto,
+      tipoDocumento,
+      numeroDocumento,
       telefono,
       mensualidad,
       entrenador,
@@ -96,10 +110,26 @@ exports.registroMiembros = async (req, res) => {
     } = req.body;
     const { id: creadorId, rol: creadoPor } = req.usuario;
 
-    if (!nombreCompleto || !telefono || !mensualidad) {
+    if (!nombreCompleto || !telefono || !mensualidad || !tipoDocumento || !numeroDocumento) {
       return res
         .status(400)
-        .json({ error: "Nombre, teléfono y mensualidad son requeridos" });
+        .json({ error: "Nombre, documento, teléfono y mensualidad son requeridos" });
+    }
+
+    // Validar formato de documento
+    if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+      return res.status(400).json({ error: "El DNI debe tener exactamente 8 dígitos" });
+    }
+    if (tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDocumento)) {
+      return res.status(400).json({ error: "El CE debe tener entre 9 y 12 dígitos" });
+    }
+
+    // Verificar si el documento ya existe
+    const documentoExiste = await Miembro.findOne({ numeroDocumento });
+    if (documentoExiste) {
+      return res
+        .status(409)
+        .json({ error: "Ya existe un miembro con este número de documento" });
     }
 
     const membresiaSeleccionada = await Membresia.findById(mensualidad);
@@ -131,7 +161,9 @@ exports.registroMiembros = async (req, res) => {
     );
 
     const nuevoMiembro = new Miembro({
-      nombreCompleto: nombreCompleto.trim(),
+      nombreCompleto: formatearNombre(nombreCompleto),
+      tipoDocumento,
+      numeroDocumento: numeroDocumento.trim(),
       telefono: telefono.trim(),
       mensualidad,
       entrenador: entrenadorValido ? entrenadorValido._id : undefined,
@@ -201,6 +233,32 @@ exports.actualizarMiembro = async (req, res) => {
       creadorId,
       creadoPor,
     };
+
+    // Formatear nombre si está presente
+    if (updateData.nombreCompleto) {
+      updateData.nombreCompleto = formatearNombre(updateData.nombreCompleto);
+    }
+
+    // Validar documento si se está actualizando
+    if (updateData.tipoDocumento && updateData.numeroDocumento) {
+      if (updateData.tipoDocumento === "DNI" && !/^\d{8}$/.test(updateData.numeroDocumento)) {
+        return res.status(400).json({ error: "El DNI debe tener exactamente 8 dígitos" });
+      }
+      if (updateData.tipoDocumento === "CE" && !/^\d{9,12}$/.test(updateData.numeroDocumento)) {
+        return res.status(400).json({ error: "El CE debe tener entre 9 y 12 dígitos" });
+      }
+      
+      // Verificar si el documento ya existe en otro miembro
+      const documentoExiste = await Miembro.findOne({ 
+        numeroDocumento: updateData.numeroDocumento,
+        _id: { $ne: miembroId }
+      });
+      if (documentoExiste) {
+        return res
+          .status(409)
+          .json({ error: "Ya existe otro miembro con este número de documento" });
+      }
+    }
 
     if (estado === "congelado" && congelacionSemanas > 0) {
       const nuevasemanas = Number(congelacionSemanas);

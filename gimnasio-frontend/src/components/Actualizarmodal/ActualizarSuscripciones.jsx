@@ -54,13 +54,15 @@ export default function ActualizarSuscripciones({
 }) {
   const [datos, setDatos] = useState({
     nombreCompleto: "",
+    tipoDocumento: "DNI",
+    numeroDocumento: "",
     telefono: "",
     metodoPago: "efectivo",
     entrenador: "",
     estado: "activo" // 👈 nuevo campo
   });
 
-  const [errors, setErrors] = useState({ nombreCompleto: "", telefono: "", general: "" });
+  const [errors, setErrors] = useState({ nombreCompleto: "", telefono: "", numeroDocumento: "", general: "" });
   const [entrenadores, setEntrenadores] = useState([]);
   const [planes, setPlanes] = useState([]);
   const [loadingPlanes, setLoadingPlanes] = useState(false);
@@ -91,6 +93,8 @@ export default function ActualizarSuscripciones({
   useEffect(() => {
     setDatos({
       nombreCompleto: miembro?.nombreCompleto || "",
+      tipoDocumento: miembro?.tipoDocumento || "DNI",
+      numeroDocumento: miembro?.numeroDocumento || "",
       telefono: miembro?.telefono || "",
       metodoPago: (miembro?.metodoPago || "efectivo").toLowerCase(),
       entrenador: miembro?.entrenador?._id || miembro?.entrenador || "",
@@ -98,7 +102,7 @@ export default function ActualizarSuscripciones({
     });
     setMesesAgregar(0);
     setDeuda(miembro?.debe || 0);
-    setErrors({ nombreCompleto: "", telefono: "", general: "" });
+    setErrors({ nombreCompleto: "", telefono: "", numeroDocumento: "", general: "" });
     // Inicializar metodo de pago de la renovacion
     setMetodoPagoRenovacion((miembro?.metodoPago || 'efectivo').toLowerCase());
   }, [miembro]);
@@ -137,20 +141,28 @@ export default function ActualizarSuscripciones({
   }, [modo]);
 
   const validarCampos = () => {
-    const err = { nombreCompleto: "", telefono: "" };
+    const err = { nombreCompleto: "", telefono: "", numeroDocumento: "" };
     const nombre = (datos.nombreCompleto || "").trim();
     const telefono = (datos.telefono || "").trim();
+    const numeroDoc = (datos.numeroDocumento || "").trim();
 
     if (!nombre) err.nombreCompleto = "El nombre completo es obligatorio.";
     else if (!/^[A-Za-zÀ-ÿ\s'-]{2,60}$/.test(nombre)) {
       err.nombreCompleto = "Nombre inválido. Usa solo letras, espacios, '-' o '´' (2-60 caracteres).";
     }
 
+    if (!numeroDoc) err.numeroDocumento = "El número de documento es obligatorio.";
+    else if (datos.tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDoc)) {
+      err.numeroDocumento = "El DNI debe tener exactamente 8 dígitos.";
+    } else if (datos.tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDoc)) {
+      err.numeroDocumento = "El CE debe tener entre 9 y 12 dígitos.";
+    }
+
     if (!telefono) err.telefono = "El teléfono es obligatorio.";
     else if (!/^\d{9}$/.test(telefono)) err.telefono = "El teléfono debe tener 9 dígitos numéricos.";
 
     setErrors(prev => ({ ...prev, ...err, general: "" }));
-    return !err.nombreCompleto && !err.telefono;
+    return !err.nombreCompleto && !err.telefono && !err.numeroDocumento;
   };
 
   const handleGuardar = async () => {
@@ -160,6 +172,8 @@ export default function ActualizarSuscripciones({
      await api.put(`/members/miembros/${miembro._id}`,
   {
     nombreCompleto: datos.nombreCompleto.trim(),
+    tipoDocumento: datos.tipoDocumento,
+    numeroDocumento: datos.numeroDocumento.trim(),
     telefono: datos.telefono,
     metodoPago: datos.metodoPago,
     entrenador: datos.entrenador || undefined,
@@ -223,6 +237,13 @@ export default function ActualizarSuscripciones({
     return `${dd}/${mm}/${yyyy}`;
   };
 
+  const formatearNombreInput = (value) => {
+    return value
+      .split(" ")
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   const handleNombreChange = (value) => {
     const limpio = value.replace(/[^A-Za-zÀ-ÿ\s'-]/g, "").slice(0, 60);
     setDatos(prev => ({ ...prev, nombreCompleto: limpio }));
@@ -233,6 +254,16 @@ export default function ActualizarSuscripciones({
     const soloNums = value.replace(/\D/g, "").slice(0, 9);
     setDatos(prev => ({ ...prev, telefono: soloNums }));
     setErrors(prev => ({ ...prev, telefono: "" }));
+  };
+
+  const handleDocumentoChange = (value) => {
+    const soloNumeros = value.replace(/\D/g, "");
+    if (datos.tipoDocumento === "DNI") {
+      setDatos(prev => ({ ...prev, numeroDocumento: soloNumeros.slice(0, 8) }));
+    } else {
+      setDatos(prev => ({ ...prev, numeroDocumento: soloNumeros.slice(0, 12) }));
+    }
+    setErrors(prev => ({ ...prev, numeroDocumento: "" }));
   };
 
   const modalBg = modo === "renovar" ? "bg-neutral-900" : "bg-black";
@@ -277,12 +308,60 @@ export default function ActualizarSuscripciones({
                     placeholder="Juan Pérez"
                     value={datos.nombreCompleto}
                     onChange={(e) => handleNombreChange(e.target.value)}
-                    onBlur={() => setDatos(prev => ({ ...prev, nombreCompleto: prev.nombreCompleto.trim() }))}
+                    onBlur={(e) => {
+                      const valorFormateado = formatearNombreInput(e.target.value);
+                      setDatos(prev => ({ ...prev, nombreCompleto: valorFormateado.trim() }));
+                    }}
                     className={`w-full mt-2 ${inputClass}`}
                     clearable
                   />
                   {errors.nombreCompleto && (
                     <p className="mt-1 text-xs text-red-300">{errors.nombreCompleto}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Tipo de Documento */}
+              {modo !== "renovar" && (
+                <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                  <label className={labelClass}>Tipo de Documento</label>
+                  <div className="flex gap-2 mt-2">
+                    {["DNI", "CE"].map((tipo) => (
+                      <Button
+                        key={tipo}
+                        size="sm"
+                        variant={datos.tipoDocumento === tipo ? "solid" : "bordered"}
+                        className={`${datos.tipoDocumento === tipo ? btnPrimaryClass : btnDefaultClass} capitalize`}
+                        onClick={() => {
+                          setDatos({ ...datos, tipoDocumento: tipo, numeroDocumento: "" });
+                          setErrors(prev => ({ ...prev, numeroDocumento: "" }));
+                        }}
+                      >
+                        {tipo}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Número de Documento */}
+              {modo !== "renovar" && (
+                <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
+                  <label className={labelClass}>Número de {datos.tipoDocumento}</label>
+                  <Input
+                    type="tel"
+                    placeholder={datos.tipoDocumento === "DNI" ? "12345678" : "123456789012"}
+                    value={datos.numeroDocumento}
+                    onChange={(e) => handleDocumentoChange(e.target.value)}
+                    inputMode="numeric"
+                    maxLength={datos.tipoDocumento === "DNI" ? 8 : 12}
+                    className={`w-full mt-2 ${inputClass}`}
+                  />
+                  <p className="mt-1 text-xs text-gray-300">
+                    {datos.tipoDocumento === "DNI" ? "Formato: 8 dígitos" : "Formato: 9-12 dígitos"}
+                  </p>
+                  {errors.numeroDocumento && (
+                    <p className="mt-1 text-xs text-red-300">{errors.numeroDocumento}</p>
                   )}
                 </div>
               )}

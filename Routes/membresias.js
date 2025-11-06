@@ -12,4 +12,7 @@ router.delete("/eliminarmembresia/:id", authAdmin, MembresiaController.eliminarM
 // ✅ ADMIN Y TRABAJADOR pueden VER las membresías (usando authUnificado)
 router.get("/vermembresia", authUnificado, MembresiaController.verMembresia);
 
+// ✅ SOLO ADMIN puede verificar clientes de una membresía
+router.get("/verificarclientes/:id", authAdmin, MembresiaController.verificarClientesMembresia);
+
 module.exports = router;

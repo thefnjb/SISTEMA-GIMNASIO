@@ -3,6 +3,28 @@ const mongoose = require("mongoose");
 const MiembroSchema = new mongoose.Schema(
   {
     nombreCompleto: { type: String, required: true, trim: true },
+    tipoDocumento: {
+      type: String,
+      enum: ["DNI", "CE"],
+      required: true,
+    },
+    numeroDocumento: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      validate: {
+        validator: function(v) {
+          if (this.tipoDocumento === "DNI") {
+            return /^\d{8}$/.test(v);
+          } else if (this.tipoDocumento === "CE") {
+            return /^\d{9,12}$/.test(v);
+          }
+          return false;
+        },
+        message: "DNI debe tener 8 dígitos, CE debe tener entre 9 y 12 dígitos"
+      }
+    },
     telefono: {
       type: String,
       required: true,
