@@ -17,14 +17,13 @@ import {
   ModalFooter,
   Input,
 } from "@heroui/react";
-import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import IconButton from "@mui/material/IconButton";
 import ReporteClientesDia from "../../Pdf/BotonpdfClientesdia";
 import api from "../../../utils/axiosInstance";
 
-// 🔹 Función para formatear hora
+// 🔹 Formatear hora en 12 horas
 const formatTime12Hour = (timeString) => {
   if (!timeString || typeof timeString !== "string") return "Sin hora";
   const date = new Date(`1970-01-01T${timeString}`);
@@ -36,7 +35,7 @@ const formatTime12Hour = (timeString) => {
   });
 };
 
-export default function TablaClientesHoy({ refresh }) {
+export default function ClientesDiaTrabajador({ refresh }) {
   const [clientes, setClientes] = useState([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -72,19 +71,11 @@ export default function TablaClientesHoy({ refresh }) {
     setTimeout(() => setAlert({ show: false, type: "", message: "" }), 4000);
   }, []);
 
-  // Confirmación de eliminación
-  const [confirmModal, setConfirmModal] = useState({
-    show: false,
-    clienteId: null,
-    clienteNombre: "",
-  });
-
   // Modal editar cliente
   const [modalEditar, setModalEditar] = useState({
     show: false,
     cliente: null,
   });
-
   const [nombreEdit, setNombreEdit] = useState("");
   const [metodoPagoEdit, setMetodoPagoEdit] = useState("");
   const [guardando, setGuardando] = useState(false);
@@ -113,9 +104,9 @@ export default function TablaClientesHoy({ refresh }) {
     try {
       setGuardando(true);
       await api.put(`/visits/actualizarcliente/${modalEditar.cliente._id}`, {
-  nombre: nombreEdit,
-  metododePago: metodoPagoEdit,
-});
+        nombre: nombreEdit,
+        metododePago: metodoPagoEdit,
+      });
 
       showAlert("success", "Cliente actualizado correctamente");
       closeModalEditar();
@@ -179,30 +170,6 @@ export default function TablaClientesHoy({ refresh }) {
   useEffect(() => {
     fetchClientes();
   }, [refresh, fetchClientes]);
-
-  const handleDeleteConfirm = (cliente) =>
-    setConfirmModal({
-      show: true,
-      clienteId: cliente._id,
-      clienteNombre: cliente.nombre,
-    });
-
-  const handleDelete = async () => {
-    if (!confirmModal.clienteId) return;
-    try {
-      await api.delete(`/visits/eliminarcliente/${confirmModal.clienteId}`);
-      setConfirmModal({ show: false, clienteId: null, clienteNombre: "" });
-      await fetchClientes();
-      showAlert("success", "Cliente eliminado exitosamente");
-    } catch (err) {
-      console.error("Error al eliminar cliente:", err);
-      showAlert("danger", "Error al eliminar el cliente.");
-      setConfirmModal({ show: false, clienteId: null, clienteNombre: "" });
-    }
-  };
-
-  const cancelDelete = () =>
-    setConfirmModal({ show: false, clienteId: null, clienteNombre: "" });
 
   const totalMontoHoy = useMemo(
     () => clientes.reduce((acc, cliente) => acc + (cliente.monto != null ? cliente.monto : 7), 0),
@@ -273,15 +240,13 @@ export default function TablaClientesHoy({ refresh }) {
         }}
       >
         <TableHeader>
-        <TableColumn key="nombre" allowsSorting>Nombre</TableColumn>
-        <TableColumn key="fecha" allowsSorting>Fecha</TableColumn>
-        <TableColumn key="horaInicio" allowsSorting>Hora de Inicio</TableColumn>
-        <TableColumn key="metododePago" allowsSorting className="text-center w-[140px]">Método de Pago</TableColumn>
-        <TableColumn key="precio" className="text-right w-[100px]" allowsSorting>Monto (S/)</TableColumn>
-        <TableColumn key="cambios" className="text-center w-[120px]">Cambios</TableColumn>
-        <TableColumn key="acciones" className="text-center w-[150px]">Acciones</TableColumn>
-      </TableHeader>
-
+          <TableColumn key="nombre" allowsSorting>Nombre</TableColumn>
+          <TableColumn key="fecha" allowsSorting>Fecha</TableColumn>
+          <TableColumn key="horaInicio" allowsSorting>Hora de Inicio</TableColumn>
+          <TableColumn key="metododePago" allowsSorting>Método de Pago</TableColumn>
+          <TableColumn key="precio" className="text-right" allowsSorting>Monto (S/)</TableColumn>
+          <TableColumn key="acciones" className="text-center">Acciones</TableColumn>
+        </TableHeader>
 
         <TableBody
           items={sortedItems}
@@ -293,62 +258,39 @@ export default function TablaClientesHoy({ refresh }) {
           }
           emptyContent={"Inscriba los Clientes de hoy"}
         >
-           {(cliente) => (
-    <TableRow key={cliente._id || cliente.nombre}>
-      <TableCell>{cliente.nombre || "Sin nombre"}</TableCell>
-      <TableCell>
-        {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString() : "Sin fecha"}
-      </TableCell>
-      <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
-      <TableCell>{cliente.metododePago || "No definido"}</TableCell>
-      <TableCell className="text-right">{cliente.monto ?? 7}</TableCell>
+          {(cliente) => (
+            <TableRow key={cliente._id || cliente.nombre}>
+              <TableCell>{cliente.nombre || "Sin nombre"}</TableCell>
+              <TableCell>
+                {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString() : "Sin fecha"}
+              </TableCell>
+              <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
+              <TableCell>{cliente.metododePago || "No definido"}</TableCell>
+              <TableCell className="text-right">{cliente.monto ?? 7}</TableCell>
 
-      <TableCell className="text-center font-semibold">
-  {cliente.creadoPor === "admin" ? (
-    <span className="text-red-600 bg-red-100 px-2 py-1 rounded-lg">
-      Administrador
-    </span>
-  ) : cliente.creadoPor === "trabajador" ? (
-    <span className="text-blue-600 bg-blue-100 px-2 py-1 rounded-lg">
-      {cliente.creadorId?.nombre || "Trabajador"}
-    </span>
-  ) : (
-    <span className="text-gray-500">Desconocido</span>
-  )}
-</TableCell>
+              {/* 🔹 Acciones (sin eliminar) */}
+              <TableCell className="text-center">
+                <div className="flex justify-center items-center gap-3">
+                  <IconButton
+                    aria-label="Descargar voucher"
+                    onClick={() => descargarVoucher(cliente)}
+                    sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.7 }}
+                  >
+                    <AdfScannerRoundedIcon sx={{ fontSize: 26 }} />
+                  </IconButton>
 
-
-      <TableCell className="text-center">
-        <div className="flex justify-center items-center gap-3">
-          <IconButton
-            aria-label="Descargar voucher"
-            onClick={() => descargarVoucher(cliente)}
-            sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.7 }}
-          >
-            <AdfScannerRoundedIcon sx={{ fontSize: 26 }} />
-          </IconButton>
-
-          <IconButton
-            aria-label="Editar cliente"
-            onClick={() => openModalEditar(cliente)}
-            sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.7 }}
-          >
-            <EditIcon sx={{ fontSize: 26 }} />
-          </IconButton>
-
-          <IconButton
-            aria-label="Eliminar cliente"
-            color="error"
-            onClick={() => handleDeleteConfirm(cliente)}
-            sx={{ p: 0.7 }}
-          >
-            <DeleteIcon sx={{ fontSize: 26 }} />
-          </IconButton>
-        </div>
-      </TableCell>
-    </TableRow>
-  )}
-</TableBody>
+                  <IconButton
+                    aria-label="Editar cliente"
+                    onClick={() => openModalEditar(cliente)}
+                    sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.7 }}
+                  >
+                    <EditIcon sx={{ fontSize: 26 }} />
+                  </IconButton>
+                </div>
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
       </Table>
 
       <div className="flex items-center justify-between mt-4">
@@ -357,20 +299,6 @@ export default function TablaClientesHoy({ refresh }) {
         </div>
         <ReporteClientesDia />
       </div>
-
-      {/* Modal eliminar */}
-      <Modal isOpen={confirmModal.show} onClose={cancelDelete} placement="center">
-        <ModalContent>
-          <ModalHeader>Confirmar Eliminación</ModalHeader>
-          <ModalBody>
-            ¿Deseas borrar al cliente <strong>{confirmModal.clienteNombre}</strong>?
-          </ModalBody>
-          <ModalFooter>
-            <Button color="default" variant="flat" onPress={cancelDelete}>Cancelar</Button>
-            <Button color="danger" onPress={handleDelete}><DeleteIcon /></Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
 
       {/* Modal editar cliente */}
       <Modal isOpen={modalEditar.show} onClose={closeModalEditar} size="md" placement="center">

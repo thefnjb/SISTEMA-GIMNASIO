@@ -55,44 +55,58 @@ const ModalEntrenadores = ({
       setAlertaExterna({ show: false, color: "default", message: "" });
     }, 5000);
   };
+const agregarEntrenador = async () => {
+  // Validación de campos vacíos
+  if (!nombre.trim() || !edad.trim() || !telefono.trim()) {
+    mostrarAlertaInterna("warning", "Todos los campos son obligatorios.");
+    return;
+  }
 
-  const agregarEntrenador = async () => {
-    if (!nombre.trim() || !edad.trim() || !telefono.trim()) {
-      mostrarAlertaInterna("warning","Todos los campos son obligatorios.");
+  const formData = new FormData();
+  formData.append("nombre", nombre);
+  formData.append("edad", edad);
+  formData.append("telefono", telefono);
+  if (fotoPerfil) formData.append("fotoPerfil", fotoPerfil);
+
+  try {
+    await api.post("/trainers/nuevo", formData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    // Limpieza
+    setNombre("");
+    setEdad("");
+    setTelefono("");
+    setFotoPerfil(null);
+
+    if (onEntrenadorAgregado) onEntrenadorAgregado();
+
+    // Mostrar alerta externa solo si se agrega correctamente
+    mostrarAlertaExterna("success", "Entrenador agregado correctamente.");
+
+    // Cerrar modal después del éxito
+    setTimeout(() => {
+      if (closeModalRef.current) closeModalRef.current();
+    }, 300);
+
+  } catch (err) {
+    console.error("Error al agregar entrenador:", err);
+
+    // Detecta si el error viene de un teléfono duplicado
+    if (
+      err.response?.data?.error?.includes("teléfono") ||
+      err.response?.data?.code === 11000
+    ) {
+      mostrarAlertaInterna("danger", "Este número de teléfono ya está registrado.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("nombre", nombre);
-    formData.append("edad", edad);
-    formData.append("telefono", telefono);
-    if (fotoPerfil) formData.append("fotoPerfil", fotoPerfil);
+    // Error genérico mostrado dentro del modal
+    mostrarAlertaInterna("danger", "Este número de teléfono ya está registrado.");
+  }
+};
 
-    try {
-      await api.post("/trainers/nuevo", formData, {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-
-      // Limpieza
-      setNombre("");
-      setEdad("");
-      setTelefono("");
-      setFotoPerfil(null);
-
-      if (onEntrenadorAgregado) onEntrenadorAgregado();
-
-      mostrarAlertaExterna("success", "Entrenador agregado correctamente.");
-
-      // 🔹 Cerrar modal después de éxito
-      setTimeout(() => {
-        if (closeModalRef.current) closeModalRef.current();
-      }, 300);
-    } catch (err) {
-      console.error("Error al agregar entrenador:", err);
-      mostrarAlertaExterna("danger", "Error al agregar entrenador.");
-    }
-  };
 
   return (
     <>
@@ -131,13 +145,13 @@ const ModalEntrenadores = ({
                 </ModalHeader>
 
                 <ModalBody className="space-y-4">
-                  {/* 🔹 Alerta interna dentro del modal */}
-                  {alertaInterna.show && (
-                    <Alert
-                      color={alertaInterna.color}
-                      title={alertaInterna.message}
-                    />
-                  )}
+                {/* 🔹 Alerta interna dentro del modal */}
+                {alertaInterna.show && (
+                  <Alert
+                    color={alertaInterna.color}
+                    title={alertaInterna.message}
+                  />
+                )}
 
                   <Input
                     label="Nombre y Apellido"
@@ -145,17 +159,29 @@ const ModalEntrenadores = ({
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
                   />
-                  <Input
-                    label="Edad"
-                    placeholder="Ingresa la edad"
-                    value={edad}
-                    onChange={(e) => setEdad(e.target.value)}
-                  />
+                 <Input
+                  label="Edad"
+                  placeholder="Ingresa la edad"
+                  type="number"
+                  maxLength={2} // solo dos dígitos visibles
+                  value={edad}
+                  onChange={(e) => {
+                    const valor = e.target.value.replace(/\D/g, ""); // solo números
+                    if (valor.length <= 2) setEdad(valor); // máximo 2 números
+                  }}
+                />
+
                   <Input
                     label="Teléfono"
                     placeholder="Ingresa el teléfono"
+                    type="tel"
+                    maxLength={9} // límite de 9 caracteres
                     value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
+                    onChange={(e) => {
+                      // Acepta solo números y máximo 9 dígitos
+                      const valor = e.target.value.replace(/\D/g, ""); // elimina letras o símbolos
+                      if (valor.length <= 9) setTelefono(valor);
+                    }}
                   />
 
                   {/* Botón subir archivo */}
