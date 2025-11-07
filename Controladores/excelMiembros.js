@@ -38,6 +38,8 @@ const generarExcelMiembros = async (req, res) => {
     // 🔹 Encabezados con estilo parecido a tu tabla
     worksheet.columns = [
         { header: "NOMBRE Y APELLIDO", key: "nombreCompleto", width: 40 },
+        { header: "TIPO DOC.", key: "tipoDocumento", width: 12 },
+        { header: "NÚMERO DOC.", key: "numeroDocumento", width: 20 },
         { header: "TELÉFONO", key: "telefono", width: 20 },
         { header: "INGRESO", key: "fechaIngreso", width: 15 },
         { header: "MENSUALIDAD", key: "mensualidad", width: 35 },
@@ -90,8 +92,13 @@ const generarExcelMiembros = async (req, res) => {
       // Determinar el estado dinámicamente
       const estado = vencimiento && vencimiento < hoy ? "Vencido" : m.estado;
 
+      // Formatear tipo de documento
+      const tipoDoc = m.tipoDocumento === "CE" ? "CE" : (m.tipoDocumento || "DNI");
+      
       const row = worksheet.addRow({
         nombreCompleto: m.nombreCompleto,
+        tipoDocumento: tipoDoc,
+        numeroDocumento: m.numeroDocumento || "-",
         telefono: m.telefono,
         fechaIngreso: m.fechaIngreso
           ? new Date(m.fechaIngreso).toLocaleDateString("es-PE")
@@ -107,7 +114,7 @@ const generarExcelMiembros = async (req, res) => {
           ? new Date(m.vencimiento).toLocaleDateString("es-PE")
           : "N/A",
         estado: estado, // Usar el estado calculado
-  creadorNombre: m.creadorNombre || "Desconocido",
+        creadorNombre: m.creadorNombre || "Desconocido",
       });
 
       // Alternar colores de fila

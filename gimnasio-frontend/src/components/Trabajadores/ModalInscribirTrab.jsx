@@ -86,19 +86,23 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
             {alerta.show && <Alert color={alerta.color} title={alerta.message} />}
 
             <>
-              <Input
-                label="Nombre completo"
-                placeholder="Ingresa el nombre completo"
-                value={nombreCompleto}
-                onChange={(e) => setNombreCompleto(e.target.value)}
-                disabled={isLoading}
-              />
+                <Input
+                  label="Nombre y Apellido"
+                  placeholder="Ej. Favio Alexander Coronado Zapata "
+                  value={nombreCompleto}
+                    onChange={(e) => {
+                    const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                    setNombreCompleto(valor);
+                  }}
+                />
               <Input
                 label="Nombre de usuario"
                 placeholder="Ingresa el nombre de usuario"
                 value={usuario}
-                onChange={(e) => setUsuario(e.target.value)}
-                disabled={isLoading}
+                onChange={(e) => {
+                  const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                    setNombreCompleto(valor);
+                  }}
               />
               <Input
                 label="Contraseña"

@@ -15,6 +15,7 @@ import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
 import FitnessCenterOutlinedIcon from '@mui/icons-material/FitnessCenterOutlined';
 import ModalSeleccionarMembresia from "../Membresia/ModalSeleccionarMembresia";
 import ModalSeleccionarEntrenador from "./ModalSeleccionarEntrenador";
+import ModalPagoComprobante from "./ModalPagoComprobante";
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -51,6 +52,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
   const [entrenador, setEntrenador] = useState(null);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
   const [debe, setDebe] = useState("");
+  const [isPagoModalOpen, setPagoModalOpen] = useState(false);
+  const [comprobantePreview, setComprobantePreview] = useState(null);
 
   // Alerta dentro del modal 
   const mostrarAlertaInterna = (type, title, message) => {
@@ -111,6 +114,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
         estadoPago: "Pagado",
         metodoPago: metodoSeleccionado,
         debe: Number(debe) || 0,
+        comprobante: comprobantePreview || undefined,
       };
 
       await api.post(
@@ -231,7 +235,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
         hideCloseButton
         size="3xl"
         backdrop="blur"
-        isDismissable={false}
+        isDismissable={!isPagoModalOpen}
         className="text-white bg-black"
       >
         <ModalContent>
@@ -310,7 +314,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                   placeholder="Ingresa el nombre"
                   value={nombreCompleto}
                   onChange={(e) => {
-                    const valor = e.target.value;
+                    const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
                     setNombreCompleto(valor);
                   }}
                   onBlur={(e) => {
@@ -388,7 +392,13 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                         key={key}
                         type="button"
                         className={`w-full p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
-                        onClick={() => setMetodoSeleccionado(key)}
+                        onClick={() => {
+                          setMetodoSeleccionado(key);
+                          // Abrir modal de comprobante automáticamente para Yape o Plin
+                          if (key === 'yape' || key === 'plin') {
+                            setPagoModalOpen(true);
+                          }
+                        }}
                       >
                         <div className="flex items-center gap-3">
                           <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
@@ -443,6 +453,17 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
         isOpen={isEntrenadorModalOpen}
         onOpenChange={setEntrenadorModalOpen}
         onSeleccionar={handleSeleccionarEntrenador}
+      />
+
+      <ModalPagoComprobante
+        isOpen={isPagoModalOpen}
+        onOpenChange={setPagoModalOpen}
+        onUploadComplete={(dataUrl) => {
+          // dataUrl es una URL base64 de la imagen
+          setComprobantePreview(dataUrl);
+          setPagoModalOpen(false);
+          mostrarAlertaInterna("success", "Comprobante listo", "Comprobante agregado correctamente.");
+        }}
       />
     </>
   );

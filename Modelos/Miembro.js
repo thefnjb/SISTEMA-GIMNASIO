@@ -67,7 +67,11 @@ congelacionSemanas: { type: Number, default: 0 },
       membresiaId: { type: mongoose.Schema.Types.ObjectId, ref: "membresias" },
       precio: { type: Number, required: true },
       fechaRenovacion: { type: Date, default: Date.now },
-      mesesAgregados: { type: Number, required: true }
+      mesesAgregados: { type: Number, required: true },
+      fotocomprobante: {
+        data: { type: Buffer },
+        contentType: { type: String }
+      }
     }],
     // Suma total acumulada de todas las membresías
     totalAcumuladoMembresias: { type: Number, default: 0 }

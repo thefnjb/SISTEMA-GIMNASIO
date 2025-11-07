@@ -7,7 +7,7 @@ import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import IconButton from '@mui/material/IconButton';
 import Button from '@mui/material/Button';
 import Grow from '@mui/material/Grow';
-import TextType from '../TextAnimation/TextType';
+import SplitText from '../TextAnimation/SplitText';
 import ClickSpark from '../ClickSpark/ClickSpark';
 
 const BarralateralTrabajador = ({ active, setActive }) => {
@@ -29,12 +29,11 @@ const BarralateralTrabajador = ({ active, setActive }) => {
       >
         <div className="w-full mb-8 text-center">
           <h1 className="mb-2 text-3xl font-extrabold tracking-wide text-white">
-            <TextType 
-              text={["Gimnasio Terrones"]}
-              typingSpeed={75}
-              pauseDuration={5000}
-              showCursor={true}
-              cursorCharacter="|"
+            <SplitText
+              text="Gimnasio Terrones"
+              tag="span"
+              splitType="chars"
+              delay={75}
             />
           </h1>
         </div>

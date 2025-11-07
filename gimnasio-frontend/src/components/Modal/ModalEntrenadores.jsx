@@ -9,9 +9,12 @@ import {
   useDisclosure,
   Alert,
 } from "@heroui/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import api from "../../utils/axiosInstance";
+import Webcam from "react-webcam";
+import { motion, AnimatePresence } from "framer-motion";
 import ArchiveRoundedIcon from "@mui/icons-material/ArchiveRounded";
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 
 const ModalEntrenadores = ({
   triggerText = "INGRESAR",
@@ -20,11 +23,15 @@ const ModalEntrenadores = ({
 }) => {
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const closeModalRef = useRef(null);
+  const webcamRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const [nombre, setNombre] = useState("");
   const [edad, setEdad] = useState("");
   const [telefono, setTelefono] = useState("");
   const [fotoPerfil, setFotoPerfil] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [view, setView] = useState("upload");
 
   // ✅ Alerta interna (dentro del modal)
   const [alertaInterna, setAlertaInterna] = useState({
@@ -39,6 +46,13 @@ const ModalEntrenadores = ({
     color: "default",
     message: "",
   });
+
+  const animationProps = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -20 },
+    transition: { duration: 0.3, ease: "easeInOut" },
+  };
 
   // Mostrar alerta interna
   const mostrarAlertaInterna = (color, message) => {
@@ -56,9 +70,57 @@ const ModalEntrenadores = ({
     }, 5000);
   };
 
+  const dataURLtoFile = (dataurl, filename) => {
+    if (!dataurl) return null;
+    let arr = dataurl.split(','),
+        mime = arr[0].match(/:(.*?);/)[1],
+        bstr = atob(arr[1]),
+        n = bstr.length,
+        u8arr = new Uint8Array(n);
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      mostrarAlertaInterna("warning", "Selecciona un archivo de imagen válido.");
+      return;
+    }
+    setFotoPerfil(file);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreview(reader.result);
+      setView("preview");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const capture = useCallback(() => {
+    if (!webcamRef.current) return;
+    try {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (imageSrc) {
+        setPreview(imageSrc);
+        const file = dataURLtoFile(imageSrc, `entrenador-${Date.now()}.jpg`);
+        setFotoPerfil(file);
+        setView("preview");
+      }
+    } catch (err) {
+      console.error(err);
+      mostrarAlertaInterna("danger", "Error al capturar la imagen.");
+    }
+  }, [webcamRef]);
+
   const agregarEntrenador = async () => {
-    if (!nombre.trim() || !edad.trim() || !telefono.trim()) {
-      mostrarAlertaInterna("warning","Todos los campos son obligatorios.");
+    if (!nombre.trim() || !edad.trim() || !telefono.trim() || !fotoPerfil) {
+      mostrarAlertaInterna(
+        "warning",
+        "Todos los campos, incluida la foto, son obligatorios."
+      );
       return;
     }
 
@@ -79,6 +141,8 @@ const ModalEntrenadores = ({
       setEdad("");
       setTelefono("");
       setFotoPerfil(null);
+      setPreview(null);
+      setView("upload");
 
       if (onEntrenadorAgregado) onEntrenadorAgregado();
 
@@ -92,6 +156,16 @@ const ModalEntrenadores = ({
       console.error("Error al agregar entrenador:", err);
       mostrarAlertaExterna("danger", "Error al agregar entrenador.");
     }
+  };
+
+  const resetState = () => {
+    setNombre("");
+    setEdad("");
+    setTelefono("");
+    setFotoPerfil(null);
+    setPreview(null);
+    setView("upload");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -122,6 +196,7 @@ const ModalEntrenadores = ({
         <ModalContent>
           {(onClose) => {
             closeModalRef.current = onClose;
+
             return (
               <div className="text-white bg-neutral-600 rounded-xl">
                 <ModalHeader>
@@ -130,7 +205,7 @@ const ModalEntrenadores = ({
                   </div>
                 </ModalHeader>
 
-                <ModalBody className="space-y-4">
+                <ModalBody className="space-y-4 min-h-[350px] overflow-hidden">
                   {/* 🔹 Alerta interna dentro del modal */}
                   {alertaInterna.show && (
                     <Alert
@@ -141,9 +216,12 @@ const ModalEntrenadores = ({
 
                   <Input
                     label="Nombre y Apellido"
-                    placeholder="Ingresa el nombre"
+                    placeholder="Ej. Favio Alexander Coronado Zapata "
                     value={nombre}
-                    onChange={(e) => setNombre(e.target.value)}
+                    onChange={(e) => {
+                      const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                      setNombre(valor);
+                    }}
                   />
                   <Input
                     label="Edad"
@@ -158,50 +236,75 @@ const ModalEntrenadores = ({
                     onChange={(e) => setTelefono(e.target.value)}
                   />
 
-                  {/* Botón subir archivo */}
-                  <div className="flex flex-col items-start space-y-2">
-                    <input
-                      id="upload-foto"
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) => setFotoPerfil(e.target.files[0])}
-                    />
-                    <label htmlFor="upload-foto">
-                      <Button
-                        as="span"
-                        className="text-white border border-white"
-                        style={{
-                          backgroundColor: "rgba(122, 15, 22, 0.3)",
-                          backdropFilter: "blur(4px)",
-                        }}
+                  <AnimatePresence mode="wait">
+                    {view === "upload" && (
+                      <motion.div
+                        key="upload"
+                        {...animationProps}
+                        className="flex flex-col items-center justify-center w-full p-6 text-center border-2 border-dashed rounded-lg border-neutral-500"
                       >
-                        <ArchiveRoundedIcon />
-                      </Button>
-                    </label>
-                    {fotoPerfil && (
-                      <span className="text-sm text-white">
-                        {fotoPerfil.name}
-                      </span>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={handleFileChange}
+                        />
+                        <div className="flex items-center gap-4">
+                          <Button
+                            onPress={() => fileInputRef.current?.click()}
+                            startContent={<ArchiveRoundedIcon />}
+                            className="text-white bg-transparent border border-neutral-500 hover:bg-neutral-700"
+                          >
+                            Subir foto
+                          </Button>
+                          <Button
+                            onPress={() => setView("camera")}
+                            startContent={<CameraAltIcon />}
+                            className="text-white bg-transparent border border-neutral-500 hover:bg-neutral-700"
+                          >
+                            Usar cámara
+                          </Button>
+                        </div>
+                      </motion.div>
                     )}
-                  </div>
 
-                  <Button
-                    className="mt-2 text-white bg-red-600 hover:bg-red-700"
-                    onPress={agregarEntrenador}
-                  >
-                    Agregar
-                  </Button>
+                    {view === "camera" && (
+                      <motion.div key="camera" {...animationProps} className="flex flex-col items-center gap-3">
+                        <Webcam
+                          audio={false}
+                          ref={webcamRef}
+                          screenshotFormat="image/jpeg"
+                          className="w-full bg-black rounded-md"
+                          autoFocus={false}
+                          videoConstraints={{ width: 1280, height: 720, facingMode: "user" }}
+                        />
+                        <Button onPress={capture} className="w-full text-white bg-red-600 hover:bg-red-700">
+                          Capturar Foto
+                        </Button>
+                      </motion.div>
+                    )}
+
+                    {view === "preview" && preview && (
+                      <motion.div key="preview" {...animationProps} className="flex flex-col items-center gap-3">
+                        <p className="font-semibold">Vista Previa</p>
+                        <img src={preview} alt="Vista previa del entrenador" className="object-cover w-40 h-40 rounded-full" />
+                        <Button
+                          onPress={() => { setPreview(null); setFotoPerfil(null); setView("upload"); }}
+                          variant="light"
+                          className="text-sm text-gray-300 hover:text-white"
+                        >
+                          Cambiar imagen
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </ModalBody>
 
                 <ModalFooter>
                   <Button
                     onPress={() => {
-                      setAlertaInterna({
-                        show: false,
-                        color: "default",
-                        message: "",
-                      });
+                      resetState();
                       onClose();
                     }}
                     className="text-white border-white"
@@ -209,6 +312,13 @@ const ModalEntrenadores = ({
                     color="danger"
                   >
                     Cerrar
+                  </Button>
+                  <Button
+                    className="text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-500"
+                    onPress={agregarEntrenador}
+                    isDisabled={!fotoPerfil}
+                  >
+                    Agregar Entrenador
                   </Button>
                 </ModalFooter>
               </div>

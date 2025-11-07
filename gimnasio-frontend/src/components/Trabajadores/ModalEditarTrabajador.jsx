@@ -90,18 +90,22 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
             {alerta.show && <Alert color={alerta.color} title={alerta.message} />}
 
             <Input
-              label="Nombre Completo"
-              placeholder="Escribe el nombre completo"
+              label="Nombre y Apellido"
+              placeholder="Ej. Favio Alexander Coronado Zapata "
               value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
-              disabled={isLoading}
+              onChange={(e) => {
+                const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                setNombre(valor);
+              }}
             />
             <Input
               label="Nombre de usuario"
               placeholder="Escribe el nombre de usuario"
               value={nombreUsuario}
-              onChange={(e) => setNombreUsuario(e.target.value)}
-              disabled={isLoading}
+              onChange={(e) => {
+                const valor = e.target.value.repeat(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                setNombre(valor);
+              }}
             />
             <Input
               label="Nueva contraseña (opcional)"

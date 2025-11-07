@@ -15,6 +15,16 @@ function getWeekRange(date = new Date()) {
     return { monday, sunday };
 }
 
+// --- Función de ayuda para procesar data URL de comprobante ---
+const procesarComprobanteDataUrl = (dataUrl) => {
+  if (!dataUrl || typeof dataUrl !== 'string') return null;
+  const matches = dataUrl.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/);
+  if (!matches) return null;
+  const mime = matches[1];
+  const base64Data = matches[3];
+  return { data: Buffer.from(base64Data, 'base64'), contentType: mime };
+}
+
 // Obtener todos los clientes del día para el gimnasio del usuario logueado
 exports.getAllClientes = async (req, res) => {
     try {
@@ -59,7 +69,7 @@ exports.getAllClientes = async (req, res) => {
 // Registrar un nuevo cliente del día
 exports.registrarCliente = async (req, res) => {
     try {
-        const { nombre, fecha, metododePago } = req.body;
+        const { nombre, fecha, metododePago, comprobante } = req.body;
         const { id, rol } = req.usuario;
 
         if (!nombre || !nombre.trim()) {
@@ -69,11 +79,22 @@ exports.registrarCliente = async (req, res) => {
         const now = new Date();
         const horaInicio = now.toTimeString().slice(0, 5);
 
+        // Procesar el comprobante si existe
+        let fotocomprobanteObj = null;
+        if (comprobante) {
+            try {
+                fotocomprobanteObj = procesarComprobanteDataUrl(comprobante);
+            } catch (err) {
+                console.error('Error procesando comprobante para cliente por día:', err);
+            }
+        }
+
         const nuevoCliente = new ClientesPorDia({
             nombre: nombre.trim(),
             fecha: fecha || new Date(),
             horaInicio,
             metododePago: metododePago || 'Efectivo',
+            fotocomprobante: fotocomprobanteObj || undefined,
             creadoPor: rol,
             creadorId: id
         });

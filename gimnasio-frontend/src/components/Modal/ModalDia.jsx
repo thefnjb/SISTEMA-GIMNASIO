@@ -11,6 +11,7 @@ import {
 } from "@heroui/react";
 import { useState, useEffect } from "react";
 import api from "../../utils/axiosInstance";
+import ModalPagoComprobante from "./ModalPagoComprobante";
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -28,6 +29,8 @@ const ModalDia = ({
   const [nombreCompleto, setNombreCompleto] = useState("");
   const [fechaInscripcion, setFechaInscripcion] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
+    const [isPagoModalOpen, setPagoModalOpen] = useState(false);
+    const [comprobanteData, setComprobanteData] = useState(null);
 
   // Estados para alertas híbridas
   const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
@@ -42,8 +45,8 @@ const ModalDia = ({
 
   const limpiarCampos = () => {
     setNombreCompleto("");
-    setFechaInscripcion("");
     setMetodoSeleccionado(null);
+    setComprobanteData(null);
     // Limpiar solo alerta interna al cerrar modal
     setAlertaInterna({ show: false, type: "", message: "", title: "" });
   };
@@ -87,6 +90,7 @@ const ModalDia = ({
           nombre: nombreCompleto,
           fecha: correctedDate,
           metododePago: metodosPago[metodoSeleccionado].nombre,
+          comprobante: comprobanteData || undefined,
         },
         { withCredentials: true }
       );
@@ -178,9 +182,12 @@ const ModalDia = ({
 
                 <Input
                   label="Nombre y Apellido"
-                  placeholder="Ej. Juan Pérez"
+                  placeholder="Ej. Favio Alexander Coronado Zapata "
                   value={nombreCompleto}
-                  onChange={(e) => setNombreCompleto(e.target.value)}
+                    onChange={(e) => {
+                    const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                    setNombreCompleto(valor);
+                  }}
                 />
 
                 <Input
@@ -201,7 +208,13 @@ const ModalDia = ({
                         className={`w-full p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${
                           metodoSeleccionado === key ? "ring-4 ring-red-400" : ""
                         }`}
-                        onClick={() => setMetodoSeleccionado(key)}
+                        onClick={() => {
+                          setMetodoSeleccionado(key);
+                          // Abrir modal de comprobante automáticamente para Yape o Plin
+                          if (key === 'yape' || key === 'plin') {
+                            setPagoModalOpen(true);
+                          }
+                        }}
                       >
                         <div className="flex items-center gap-3">
                           <img
@@ -222,6 +235,7 @@ const ModalDia = ({
                     ))}
                   </div>
                 </div>
+
               </ModalBody>
 
               <ModalFooter>
@@ -248,6 +262,16 @@ const ModalDia = ({
           )}
         </ModalContent>
       </Modal>
+
+      {/* Modal de comprobante de pago */}
+      <ModalPagoComprobante
+        isOpen={isPagoModalOpen}
+        onOpenChange={setPagoModalOpen}
+        onUploadComplete={(dataUrl) => {
+          setComprobanteData(dataUrl); // Guardamos el base64 para enviarlo
+          setPagoModalOpen(false);
+        }}
+      />
     </>
   );
 };

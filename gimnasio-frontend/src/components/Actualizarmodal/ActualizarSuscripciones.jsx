@@ -9,6 +9,7 @@ import {
   ModalFooter
 } from "@nextui-org/react";
 import api from "../../utils/axiosInstance";
+import ModalPagoComprobante from "../Modal/ModalPagoComprobante";
 
 const CustomAlert = ({ visible, message, onClose }) => {
   if (!visible) return null;
@@ -75,6 +76,9 @@ export default function ActualizarSuscripciones({
   const [isRenewing, setIsRenewing] = useState(false);
   const [toastVisible, setToastVisible] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [isPagoModalOpen, setPagoModalOpen] = useState(false);
+  const [comprobantePreview, setComprobantePreview] = useState(null);
+  const [comprobanteData, setComprobanteData] = useState(null);
 
   const vencimientoActual = useMemo(
     () => (miembro?.vencimiento ? new Date(miembro.vencimiento) : null),
@@ -178,7 +182,8 @@ export default function ActualizarSuscripciones({
     metodoPago: datos.metodoPago,
     entrenador: datos.entrenador || undefined,
     estado: datos.estado,
-    congelacionSemanas: datos.estado === "congelado" ? Number(datos.congelacionSemanas || 0) : 0
+    congelacionSemanas: datos.estado === "congelado" ? Number(datos.congelacionSemanas || 0) : 0,
+    comprobante: comprobanteData || undefined
   },
   { withCredentials: true }
 );
@@ -186,6 +191,8 @@ export default function ActualizarSuscripciones({
 
       setToastMessage("¡Éxito! Miembro actualizado correctamente");
       setToastVisible(true);
+      setComprobanteData(null);
+      setComprobantePreview(null);
       setTimeout(() => {
         setToastVisible(false);
         onClose();
@@ -209,11 +216,18 @@ export default function ActualizarSuscripciones({
     try {
       await api.post(
         `/members/miembros/${miembro._id}/renovar`,
-        { mensualidadId: selectedPlanId, debe: Number(deuda || 0), metodoPago: metodoPagoRenovacion },
+        { 
+          mensualidadId: selectedPlanId, 
+          debe: Number(deuda || 0), 
+          metodoPago: metodoPagoRenovacion,
+          comprobante: comprobanteData || undefined
+        },
         { withCredentials: true }
       );
       setToastMessage("¡Éxito! Suscripción registrada correctamente");
       setToastVisible(true);
+      setComprobanteData(null);
+      setComprobantePreview(null);
       setTimeout(() => {
         setToastVisible(false);
         onClose();
@@ -275,7 +289,17 @@ export default function ActualizarSuscripciones({
 
   return (
     <>
-      <Modal isOpen={true} onClose={onClose} size="2xl" scrollBehavior="inside" className="z-50">
+      <Modal 
+        isOpen={true} 
+        onClose={(close) => {
+          if (!isPagoModalOpen) onClose();
+        }} 
+        size="2xl" 
+        scrollBehavior="inside" 
+        className="z-50"
+        isDismissable={!isPagoModalOpen}
+        hideCloseButton={false}
+      >
         <ModalContent className={`${modalBg} text-white`}>
           <ModalHeader className={`p-4 ${headerBg} rounded-t-lg`}>
             {modo === "renovar" ? (
@@ -395,12 +419,30 @@ export default function ActualizarSuscripciones({
                         size="sm"
                         variant={datos.metodoPago === m ? "solid" : "bordered"}
                         className={`${datos.metodoPago === m ? btnPrimaryClass : btnDefaultClass} capitalize`}
-                        onClick={() => setDatos({ ...datos, metodoPago: m })}
+                        onClick={() => {
+                          setDatos({ ...datos, metodoPago: m });
+                          // Si se cambia a efectivo, limpiar comprobante
+                          if (m === 'efectivo') {
+                            setComprobanteData(null);
+                            setComprobantePreview(null);
+                          }
+                          if (m === 'yape' || m === 'plin') {
+                            setPagoModalOpen(true);
+                          }
+                        }}
                       >
                         {m}
                       </Button>
                     ))}
                   </div>
+                  {/* Mostrar vista previa del comprobante (si existe) — sin botones adicionales */}
+                  {(datos.metodoPago === 'yape' || datos.metodoPago === 'plin') && comprobantePreview && (
+                    <div className="mt-3">
+                      <div className="mb-2 text-sm font-semibold text-gray-300">Comprobante seleccionado</div>
+                      <img src={comprobantePreview} alt="comprobante" className="object-contain w-full rounded-lg max-h-40" />
+                      <div className="mt-1 text-xs text-gray-400">Para cambiar la imagen, selecciona nuevamente Yape o Plin.</div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -522,7 +564,18 @@ export default function ActualizarSuscripciones({
                               size="sm"
                               variant={metodoPagoRenovacion === m ? 'solid' : 'bordered'}
                               className={`${metodoPagoRenovacion === m ? btnPrimaryClass : btnDefaultClass} capitalize`}
-                              onClick={() => setMetodoPagoRenovacion(m)}
+                              onClick={() => {
+                                setMetodoPagoRenovacion(m);
+                                // Si se cambia a efectivo, limpiar comprobante
+                                if (m === 'efectivo') {
+                                  setComprobanteData(null);
+                                  setComprobantePreview(null);
+                                }
+                                // Abrir modal de comprobante para Yape o Plin
+                                if (m === 'yape' || m === 'plin') {
+                                  setPagoModalOpen(true);
+                                }
+                              }}
                             >
                               {m}
                             </Button>
@@ -575,6 +628,21 @@ export default function ActualizarSuscripciones({
         visible={toastVisible}
         message={toastMessage}
         onClose={() => setToastVisible(false)}
+      />
+
+      {/* Modal de comprobante de pago */}
+      <ModalPagoComprobante
+        isOpen={isPagoModalOpen}
+        onOpenChange={(open) => {
+          // Solo cerrar el modal de comprobante, no afectar el modal principal
+          setPagoModalOpen(open);
+        }}
+        onUploadComplete={(dataUrl) => {
+          // dataUrl es una URL base64 de la imagen
+          setComprobantePreview(dataUrl);
+          setComprobanteData(dataUrl);
+          setPagoModalOpen(false);
+        }}
       />
     </>
   );

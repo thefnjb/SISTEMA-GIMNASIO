@@ -17,7 +17,7 @@ import {
   DropdownItem,
   Button,
 } from "@nextui-org/react";
-import { Alert } from "@heroui/react";
+import { Alert, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter } from "@heroui/react";
 import ActualizarSuscripcion from "../../Actualizarmodal/ActualizarSuscripciones";
 import SearchIcon from "@mui/icons-material/Search";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
@@ -28,7 +28,13 @@ import BotonEliminar from "../../Iconos/BotonEliminar";
 import BotonRenovar from "../../Iconos/BotonRenovar";
 import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
 import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
-import BotonExcel from "../../Excel/BotonExcel"; 
+import BotonExcel from "../../Excel/BotonExcel";
+
+const metodosPago = {
+  yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
+  plin: { nombre: "Plin", color: "bg-blue-600", icono: "/iconos/plin.png" },
+  efectivo: { nombre: "Efectivo", color: "bg-green-600", icono: "/iconos/eefctivo.png" },
+}; 
 
 export default function TablaClientesAdmin({ refresh }) {
   const [miembros, setMiembros] = useState([]);
@@ -52,6 +58,9 @@ export default function TablaClientesAdmin({ refresh }) {
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [totalPagesServer, setTotalPagesServer] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  // Estado para mostrar modal de comprobante
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
 
   // ---------- Alertas ----------
   const showAlert = useCallback((color, title) => {
@@ -171,6 +180,86 @@ export default function TablaClientesAdmin({ refresh }) {
     }
   };
 
+  // --- Mostrar comprobante en modal ---
+  const getLatestComprobante = (miembro) => {
+    if (!miembro || !Array.isArray(miembro.historialMembresias)) return null;
+    // Buscar el último historial que tenga fotocomprobante
+    for (let i = miembro.historialMembresias.length - 1; i >= 0; i--) {
+      const h = miembro.historialMembresias[i];
+      if (h && h.fotocomprobante && h.fotocomprobante.data) {
+        return h.fotocomprobante;
+      }
+    }
+    return null;
+  };
+  
+  const openComprobanteModal = (miembro) => {
+    const fotocomp = getLatestComprobante(miembro);
+    if (!fotocomp || !fotocomp.data) {
+      showAlert("warning", "No hay comprobante disponible");
+      return;
+    }
+
+    try {
+      let imageData = null;
+      const contentType = fotocomp.contentType || 'image/jpeg';
+
+      // Caso 1: Si data es una string base64 data URL
+      if (typeof fotocomp.data === 'string') {
+        if (fotocomp.data.startsWith('data:')) {
+          setImageUrl(fotocomp.data);
+          setIsImageModalOpen(true);
+          return;
+        }
+        // Si es base64 sin el prefijo data:, agregarlo
+        if (fotocomp.data.length > 0) {
+          imageData = `data:${contentType};base64,${fotocomp.data}`;
+          setImageUrl(imageData);
+          setIsImageModalOpen(true);
+          return;
+        }
+      }
+
+      // Caso 2: Si data es un objeto Buffer serializado de MongoDB { type: 'Buffer', data: [..] }
+      let bufferArray = null;
+      if (fotocomp.data && typeof fotocomp.data === 'object') {
+        if (fotocomp.data.type === 'Buffer' && Array.isArray(fotocomp.data.data)) {
+          bufferArray = fotocomp.data.data;
+        } else if (Array.isArray(fotocomp.data)) {
+          bufferArray = fotocomp.data;
+        } else if (fotocomp.data.data && Array.isArray(fotocomp.data.data)) {
+          bufferArray = fotocomp.data.data;
+        }
+      } else if (Array.isArray(fotocomp.data)) {
+        bufferArray = fotocomp.data;
+      }
+
+      if (bufferArray && bufferArray.length > 0) {
+        // Convertir array a Uint8Array y crear Blob
+        const uint8Array = new Uint8Array(bufferArray);
+        const blob = new Blob([uint8Array], { type: contentType });
+        const url = URL.createObjectURL(blob);
+        setImageUrl(url);
+        setIsImageModalOpen(true);
+        return;
+      }
+
+      // Si llegamos aquí, no se pudo procesar
+      console.error('Formato de comprobante no reconocido:', fotocomp);
+      showAlert("danger", "Formato de comprobante no válido");
+    } catch (err) {
+      console.error('Error abriendo comprobante:', err, fotocomp);
+      showAlert('danger', 'No se pudo abrir el comprobante');
+    }
+  };
+
+  const closeImageModal = () => {
+    if (imageUrl && imageUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imageUrl);
+    }
+    setImageUrl(null);
+    setIsImageModalOpen(false);
+  };
   // ---------- Backend ----------
   const obtenerMiembros = useCallback(async (searchTerm, pageParam = 1, estadoFiltro = null) => {
     setCargando(true);
@@ -223,13 +312,19 @@ export default function TablaClientesAdmin({ refresh }) {
       setCargando(false);
     }
   }, [showAlert, rowsPerPage, calcularEstado]);
-  useEffect(() => {
-    setPage(1);
-    const estadoSeleccionado = Array.from(filtroEstado)[0];
-    obtenerMiembros(filtro, 1, estadoSeleccionado);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rowsPerPage]);
+      useEffect(() => {
+        const estadoSeleccionado = Array.from(filtroEstado)[0];
+        const obtenerTodos = estadoSeleccionado && estadoSeleccionado !== "todos";
 
+        const delayDebounceFn = setTimeout(() => {
+          obtenerMiembros(filtro, obtenerTodos ? 1 : page, estadoSeleccionado);
+        }, 400);
+
+        return () => {
+          clearTimeout(delayDebounceFn);
+        };
+      }, [filtro, page, filtroEstado, rowsPerPage, obtenerMiembros]);
+      
   const eliminarMiembro = useCallback(async (memberId) => {
     if (!memberId) return;
     try {
@@ -325,21 +420,18 @@ export default function TablaClientesAdmin({ refresh }) {
     return lista;
   }, [miembros, sortDescriptor, calcularEstado, filtroEstado]);
 
-  useEffect(() => {
-    setPage(1);
-  }, [filtro, filtroEstado]);
-
   return (
     <div className="max-w-full p-3 sm:p-4 md:p-6">
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-1">
           <Input
             type="text"
-            placeholder="Buscar por nombre o teléfono"
+            placeholder="Buscar por DNI, CE o nombre completo"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
             className="w-full sm:max-w-md"
             startContent={<SearchIcon className="text-gray-500" />}
+            aria-label="Buscar por DNI, CE o nombre completo"
           />
           
           <Dropdown>
@@ -358,7 +450,7 @@ export default function TablaClientesAdmin({ refresh }) {
               closeOnSelect={true}
               selectionMode="single"
               selectedKeys={filtroEstado}
-              onSelectionChange={setFiltroEstado}
+              onSelectionChange={(keys) => { setFiltroEstado(keys); setPage(1); }}
             >
               <DropdownItem key="todos" className="capitalize">
                 Todos los estados
@@ -453,8 +545,33 @@ export default function TablaClientesAdmin({ refresh }) {
                       </span>
                     </div>
                   </TableCell>
-                  <TableCell className="hidden lg:table-cell text-[11px]">{miembro?.entrenador?.nombre || "-"}</TableCell>
-                  <TableCell className="hidden capitalize md:table-cell text-[11px]">{miembro.metodoPago}</TableCell>
+                  <TableCell className="hidden lg:table-cell text-[11px]">{miembro?.entrenador?.nombre || "Sin Entrenador"}</TableCell>
+                  <TableCell className="hidden capitalize md:table-cell text-[11px]">
+                    <div className="flex items-center gap-2">
+                      {miembro.metodoPago && metodosPago[miembro.metodoPago.toLowerCase()] ? (
+                        <>
+                          <img 
+                            src={metodosPago[miembro.metodoPago.toLowerCase()].icono} 
+                            alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
+                            className="w-5 h-5 object-contain"
+                          />
+                          {(miembro.metodoPago.toLowerCase() === 'yape' || miembro.metodoPago.toLowerCase() === 'plin') ? (
+                            <Button 
+                              size="sm" 
+                              onClick={() => openComprobanteModal(miembro)} 
+                              className={`px-2 py-1 text-[10px] text-white ${metodosPago[miembro.metodoPago.toLowerCase()].color} hover:opacity-90`}
+                            >
+                              {metodosPago[miembro.metodoPago.toLowerCase()].nombre}
+                            </Button>
+                          ) : (
+                            <span className="capitalize text-[11px]">{metodosPago[miembro.metodoPago.toLowerCase()].nombre}</span>
+                          )}
+                        </>
+                      ) : (
+                        <span className="capitalize text-[11px]">{miembro.metodoPago || "-"}</span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1">
                       {Number(miembro?.debe || 0) <= 0 ? (
@@ -514,7 +631,7 @@ export default function TablaClientesAdmin({ refresh }) {
                   </select>
                 </>
               )}
-              {Array.from(filtroEstado)[0] !== "todos" && (
+              {Array.from(filtroEstado)[0] !== "todos" && !cargando && miembros.length > 0 && (
                 <div className="text-sm text-gray-600">
                   Mostrando todos los clientes con estado: <span className="font-semibold">{Array.from(filtroEstado)[0]}</span>
                 </div>
@@ -567,6 +684,30 @@ export default function TablaClientesAdmin({ refresh }) {
           <Alert color={alert.color} title={alert.title} />
         </div>
       )}
+
+      {/* Modal para mostrar comprobante */}
+      <Modal isOpen={isImageModalOpen} onOpenChange={(val) => { if (!val) closeImageModal(); setIsImageModalOpen(val); }} size="lg" backdrop="blur">
+        <ModalContent>
+          {(onClose) => (
+            <div className="text-white rounded-lg bg-neutral-800">
+              <ModalHeader>
+                <div className="text-lg font-bold text-center">Comprobante</div>
+              </ModalHeader>
+              <ModalBody className="p-4">
+                {imageUrl ? (
+                  // si es data URL o blob URL
+                  <img src={imageUrl} alt="comprobante" className="w-full h-auto max-h-[70vh] object-contain rounded" />
+                ) : (
+                  <div className="text-sm text-center text-gray-300">No hay imagen disponible</div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button onClick={() => { closeImageModal(); onClose(); }} className="text-white bg-red-600 hover:bg-red-700">Cerrar</Button>
+              </ModalFooter>
+            </div>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 }

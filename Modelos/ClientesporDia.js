@@ -28,6 +28,10 @@ const ClientesporDia = moogose.Schema({
         default: 7,
         min: 0
     },
+    fotocomprobante: {
+        data: { type: Buffer },
+        contentType: { type: String }
+    },
     // CAMPOS NUEVOS PARA SEPARACIÓN DE DATOS:
     creadoPor:{
         type: String,

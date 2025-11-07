@@ -3,6 +3,15 @@ const Membresia = require("../Modelos/Membresia");
 const Entrenador = require("../Modelos/Entrenador");
 const Gym = require("../Modelos/Gimnasio");
 const Trabajador = require("../Modelos/Trabajador");
+const procesarComprobanteDataUrl = (dataUrl) => {
+  if (!dataUrl || typeof dataUrl !== 'string') return null;
+  const matches = dataUrl.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/);
+  if (!matches) return null;
+  const mime = matches[1];
+  const base64Data = matches[3];
+  const buffer = Buffer.from(base64Data, 'base64');
+  return { data: buffer, contentType: mime };
+};
 
 // --- Funciones de Ayuda ---
 const calcularEstado = (fechaVencimiento) => {
@@ -160,6 +169,18 @@ exports.registroMiembros = async (req, res) => {
       membresiaSeleccionada.duracion
     );
 
+    // Si se envió un comprobante en base64 (data URL), lo procesamos para guardar en Mongo como Buffer
+    let fotocomprobanteObj = null;
+    try {
+      const comprobanteData = req.body.comprobante;
+      if (comprobanteData) {
+        fotocomprobanteObj = procesarComprobanteDataUrl(comprobanteData);
+      }
+    } catch (err) {
+      console.error('Error procesando comprobante:', err);
+      return res.status(500).json({ error: 'Error procesando comprobante' });
+    }
+
     const nuevoMiembro = new Miembro({
       nombreCompleto: formatearNombre(nombreCompleto),
       tipoDocumento,
@@ -181,6 +202,7 @@ exports.registroMiembros = async (req, res) => {
           precio: membresiaSeleccionada.precio,
           fechaRenovacion: fechaInicio,
           mesesAgregados: membresiaSeleccionada.duracion,
+          fotocomprobante: fotocomprobanteObj || undefined,
         },
       ],
       totalAcumuladoMembresias: membresiaSeleccionada.precio,
@@ -268,11 +290,33 @@ exports.actualizarMiembro = async (req, res) => {
       updateData.congelacionSemanas = nuevasemanas;
     }
 
+    // Remover comprobante de updateData para no intentar actualizarlo directamente
+    const comprobanteData = req.body.comprobante;
+    delete updateData.comprobante;
+
     const miembroActualizado = await Miembro.findByIdAndUpdate(
       miembroId,
       updateData,
       { new: true }
     );
+
+    // Si se envió comprobante en base64, procesarlo y agregarlo al historial
+    if (comprobanteData && (updateData.metodoPago === 'yape' || updateData.metodoPago === 'plin')) {
+      try {
+        const fotocomprobanteObj = procesarComprobanteDataUrl(comprobanteData);
+        if (fotocomprobanteObj && miembroActualizado.historialMembresias && miembroActualizado.historialMembresias.length > 0) {
+          // Agregar comprobante al último historial si existe
+          const ultimoHistorial = miembroActualizado.historialMembresias[miembroActualizado.historialMembresias.length - 1];
+          if (ultimoHistorial) {
+            ultimoHistorial.fotocomprobante = fotocomprobanteObj;
+            await miembroActualizado.save();
+          }
+        }
+      } catch (err) {
+        console.error('Error procesando comprobante en actualización:', err);
+        // No fallar la actualización si hay error con el comprobante
+      }
+    }
 
     res.json({ miembro: miembroActualizado, mensaje: "Miembro actualizado" });
   } catch (error) {
@@ -297,12 +341,25 @@ exports.renovarMiembro = async (req, res) => {
       return res.status(404).json({ error: "Membresía no encontrada" });
     }
 
+    // Si se envió comprobante en base64, procesarlo para guardar en Mongo como Buffer
+    let fotocomprobanteObj = null;
+    try {
+      const comprobanteData = req.body.comprobante;
+      if (comprobanteData) {
+        fotocomprobanteObj = procesarComprobanteDataUrl(comprobanteData);
+      }
+    } catch (err) {
+      console.error('Error procesando comprobante en renovación:', err);
+      return res.status(500).json({ error: 'Error procesando comprobante' });
+    }
+
     // Agregar solo la nueva membresía al historial
     miembro.historialMembresias.push({
       membresiaId: membresiaNueva._id,
       precio: membresiaNueva.precio,
       fechaRenovacion: new Date(),
       mesesAgregados: membresiaNueva.duracion,
+      fotocomprobante: fotocomprobanteObj || undefined,
     });
 
     // Recalcular total sin duplicar
