@@ -27,44 +27,51 @@ const procesarComprobanteDataUrl = (dataUrl) => {
 
 // Obtener todos los clientes del día para el gimnasio del usuario logueado
 exports.getAllClientes = async (req, res) => {
-    try {
-        const { id: userId, rol } = req.usuario;
+  try {
+    const { id: userId, rol } = req.usuario;
+    console.log("✅ Usuario autenticado:", { userId, rol });
 
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
-        let filtro = {
-            fecha: { $gte: today, $lt: tomorrow }
-        };
+    let filtro = {
+      fecha: { $gte: today, $lt: tomorrow }
+    };
 
-        if (rol === 'trabajador') {
-            filtro.creadorId = userId;
-        }
-
-        const clientes = await ClientesPorDia.find(filtro).sort({ createdAt: -1 });
-
-        const conteoPagos = await ClientesPorDia.aggregate([
-            { $match: { fecha: { $gte: today, $lt: tomorrow } } },
-            { $group: { _id: "$metododePago", count: { $sum: 1 } } }
-        ]);
-
-        const resumenPagos = { Yape: 0, Plin: 0, Efectivo: 0, Total: 0 };
-        conteoPagos.forEach(item => {
-            if (resumenPagos.hasOwnProperty(item._id)) {
-                resumenPagos[item._id] = item.count;
-                resumenPagos.Total += item.count;
-            }
-        });
-
-        res.status(200).json({ clientes, resumenPagos });
-
-    } catch (err) {
-        console.error("Error en getAllClientes:", err);
-        res.status(500).json({ error: "Error al obtener los clientes del día" });
+    if (rol === 'trabajador') {
+      filtro.creadorId = userId;
     }
+
+    console.log("📘 Filtro usado:", filtro);
+
+    const clientes = await ClientesPorDia.find(filtro).sort({ createdAt: -1 });
+    console.log("📊 Clientes encontrados:", clientes.length);
+
+    const conteoPagos = await ClientesPorDia.aggregate([
+      { $match: { fecha: { $gte: today, $lt: tomorrow } } },
+      { $group: { _id: "$metododePago", count: { $sum: 1 } } }
+    ]);
+
+    console.log("💳 Conteo de pagos:", conteoPagos);
+
+    const resumenPagos = { Yape: 0, Plin: 0, Efectivo: 0, Total: 0 };
+    conteoPagos.forEach(item => {
+      if (resumenPagos.hasOwnProperty(item._id)) {
+        resumenPagos[item._id] = item.count;
+        resumenPagos.Total += item.count;
+      }
+    });
+
+    res.status(200).json({ clientes, resumenPagos });
+
+  } catch (err) {
+    console.error("❌ Error completo en getAllClientes:", err);
+    res.status(500).json({ error: "Error al obtener los clientes del día", detalles: err.message });
+  }
 };
+
 
 // Registrar un nuevo cliente del día
 exports.registrarCliente = async (req, res) => {

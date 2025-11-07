@@ -4,24 +4,27 @@ import { CustomCard } from "../../components/Card/spacer";
 import TablaClientes from "../../components/Tabla/TablaCldia/TablaClientes";
 import ModalSuscripcion from "../../components/Modal/ModalSuscripcion";
 import ModalDia from "../../components/Modal/ModalDia";
-import TablaClientesDia from "../../components/Tabla/TablaCldia/ClientesPorDia";
-import GetAppRoundedIcon from '@mui/icons-material/GetAppRounded';
+import TablaClientesDiaTrabajador from "../../components/Tabla/TablaCldia/ClientesDiaTrabajador"; // ✅ Import corregido
+import GetAppRoundedIcon from "@mui/icons-material/GetAppRounded";
 
 const PanelTrabajador = () => {
   const [active, setActive] = useState("INICIO");
   const [refreshClientes, setRefreshClientes] = useState(0);
 
+  // 🔄 Refresca las tablas cuando se agrega un cliente o suscripción
   const handleClienteAgregado = () => {
     setRefreshClientes((prev) => prev + 1);
   };
 
+  // 🔹 Renderiza el contenido según la opción activa del menú lateral
   const renderContent = () => {
     switch (active) {
       case "INICIO":
         return (
           <div className="p-6">
-            {/* Contenedor centrado para las 2 cards con más separación */}
+            {/* 🧩 Cards principales */}
             <div className="flex flex-wrap justify-center gap-28">
+              {/* Card de Suscripción */}
               <CustomCard imageUrl="/images/suscripcion.png" className="w-72">
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -29,6 +32,7 @@ const PanelTrabajador = () => {
                 />
               </CustomCard>
 
+              {/* Card de Clientes por Día */}
               <CustomCard imageUrl="/images/clientespordiaa.png" className="w-72">
                 <div className="flex justify-center">
                   <ModalDia
@@ -40,9 +44,9 @@ const PanelTrabajador = () => {
               </CustomCard>
             </div>
 
-            {/* Tabla debajo */}
+            {/* 🧾 Tabla de clientes debajo */}
             <div className="mt-8">
-              <TablaClientesDia refresh={refreshClientes} />
+              <TablaClientesDiaTrabajador refresh={refreshClientes} />
             </div>
           </div>
         );
@@ -61,7 +65,7 @@ const PanelTrabajador = () => {
 
   return (
     <div className="relative w-full min-h-screen bg-white">
-      {/* Fondo cuadriculado */}
+      {/* Fondo cuadriculado decorativo */}
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -73,13 +77,14 @@ const PanelTrabajador = () => {
         }}
       />
 
+      {/* Contenedor principal */}
       <div className="relative z-10 flex h-screen overflow-hidden">
-        {/* Barra lateral fija */}
+        {/* Barra lateral izquierda */}
         <div className="flex-shrink-0 w-72">
           <BarralateralTrabajador active={active} setActive={setActive} />
         </div>
 
-        {/* Contenido principal */}
+        {/* Contenido dinámico */}
         <div className="flex-1 overflow-x-auto">
           <div className="min-w-[900px]">{renderContent()}</div>
         </div>

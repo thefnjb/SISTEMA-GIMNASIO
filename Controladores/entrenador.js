@@ -105,3 +105,68 @@ exports.verFotoPerfil = async (req, res) => {
     res.status(500).send("Error al obtener la imagen.");
   }
 };
+// ...existing code...
+exports.verificarClientesEntrenador = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const Miembro = require("../Modelos/Miembro");
+
+    // verificar existencia del entrenador (opcional)
+    const Entrenador = require("../Modelos/Entrenador");
+    const entrenador = await Entrenador.findOne({ _id: id, gym: req.usuario.gym_id });
+    if (!entrenador) return res.status(404).json({ error: "Entrenador no encontrado" });
+
+    // Buscar en varias posibles referencias dentro de Miembro
+    const totalMiembros = await Miembro.countDocuments({
+      $or: [
+        { entrenador: id },
+        { entrenadorAsignado: id },
+        { entrenadorId: id },
+        { "historialEntrenadores.entrenadorId": id },
+        { "historialEntrenadores._id": id }
+      ]
+    });
+
+    return res.status(200).json({
+      miembrosUsando: totalMiembros,
+      clientesUsando: totalMiembros // por compatibilidad con frontend antiguo
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Error al verificar el entrenador" });
+  }
+};
+// ...existing code...
+// ✅ Actualizar solo la foto del entrenador
+exports.actualizarFotoEntrenador = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Buscar entrenador dentro del gimnasio del usuario
+    const entrenador = await Entrenador.findOne({ _id: id, gym: req.usuario.gym_id });
+    if (!entrenador) {
+      return res.status(404).json({ error: "Entrenador no encontrado" });
+    }
+
+    // Verificar que haya archivo subido
+    if (!req.file) {
+      return res.status(400).json({ error: "No se ha subido ninguna imagen" });
+    }
+
+    // Guardar imagen en MongoDB
+    entrenador.fotoPerfil.data = req.file.buffer;
+    entrenador.fotoPerfil.contentType = req.file.mimetype;
+    await entrenador.save();
+
+    // Enviar respuesta con imagen en base64
+    const fotoPerfilBase64 = `data:${entrenador.fotoPerfil.contentType};base64,${entrenador.fotoPerfil.data.toString("base64")}`;
+
+    res.status(200).json({
+      message: "Foto de perfil actualizada correctamente",
+      fotoPerfil: fotoPerfilBase64,
+    });
+  } catch (error) {
+    console.error("Error al actualizar foto del entrenador:", error);
+    res.status(500).json({ error: "Error al actualizar la foto del entrenador" });
+  }
+};

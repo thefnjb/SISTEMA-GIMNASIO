@@ -70,83 +70,34 @@ const ModalEntrenadores = ({
     }, 5000);
   };
 
-  const dataURLtoFile = (dataurl, filename) => {
-    if (!dataurl) return null;
-    let arr = dataurl.split(','),
-        mime = arr[0].match(/:(.*?);/)[1],
-        bstr = atob(arr[1]),
-        n = bstr.length,
-        u8arr = new Uint8Array(n);
-    while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-    }
-    return new File([u8arr], filename, { type: mime });
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      mostrarAlertaInterna("warning", "Selecciona un archivo de imagen válido.");
-      return;
-    }
-    setFotoPerfil(file);
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPreview(reader.result);
-      setView("preview");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const capture = useCallback(() => {
-    if (!webcamRef.current) return;
-    try {
-      const imageSrc = webcamRef.current.getScreenshot();
-      if (imageSrc) {
-        setPreview(imageSrc);
-        const file = dataURLtoFile(imageSrc, `entrenador-${Date.now()}.jpg`);
-        setFotoPerfil(file);
-        setView("preview");
-      }
-    } catch (err) {
-      console.error(err);
-      mostrarAlertaInterna("danger", "Error al capturar la imagen.");
-    }
-  }, [webcamRef]);
-
   const agregarEntrenador = async () => {
-    if (!nombre.trim() || !edad.trim() || !telefono.trim() || !fotoPerfil) {
-      mostrarAlertaInterna(
-        "warning",
-        "Todos los campos, incluida la foto, son obligatorios."
-      );
+    if (!nombre.trim() || !edad.trim() || !telefono.trim()) {
+      mostrarAlertaInterna("warning","Todos los campos son obligatorios.");
       return;
     }
 
-    const formData = new FormData();
-    formData.append("nombre", nombre);
-    formData.append("edad", edad);
-    formData.append("telefono", telefono);
-    if (fotoPerfil) formData.append("fotoPerfil", fotoPerfil);
+  const formData = new FormData();
+  formData.append("nombre", nombre);
+  formData.append("edad", edad);
+  formData.append("telefono", telefono);
+  if (fotoPerfil) formData.append("fotoPerfil", fotoPerfil);
 
-    try {
-      await api.post("/trainers/nuevo", formData, {
-        withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+  try {
+    await api.post("/trainers/nuevo", formData, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
 
       // Limpieza
       setNombre("");
       setEdad("");
       setTelefono("");
       setFotoPerfil(null);
-      setPreview(null);
-      setView("upload");
 
-      if (onEntrenadorAgregado) onEntrenadorAgregado();
+    if (onEntrenadorAgregado) onEntrenadorAgregado();
 
-      mostrarAlertaExterna("success", "Entrenador agregado correctamente.");
+    // Mostrar alerta externa solo si se agrega correctamente
+    mostrarAlertaExterna("success", "Entrenador agregado correctamente.");
 
       // 🔹 Cerrar modal después de éxito
       setTimeout(() => {
@@ -156,16 +107,6 @@ const ModalEntrenadores = ({
       console.error("Error al agregar entrenador:", err);
       mostrarAlertaExterna("danger", "Error al agregar entrenador.");
     }
-  };
-
-  const resetState = () => {
-    setNombre("");
-    setEdad("");
-    setTelefono("");
-    setFotoPerfil(null);
-    setPreview(null);
-    setView("upload");
-    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
@@ -205,7 +146,7 @@ const ModalEntrenadores = ({
                   </div>
                 </ModalHeader>
 
-                <ModalBody className="space-y-4 min-h-[350px] overflow-hidden">
+                <ModalBody className="space-y-4">
                   {/* 🔹 Alerta interna dentro del modal */}
                   {alertaInterna.show && (
                     <Alert
@@ -223,17 +164,29 @@ const ModalEntrenadores = ({
                       setNombre(valor);
                     }}
                   />
-                  <Input
-                    label="Edad"
-                    placeholder="Ingresa la edad"
-                    value={edad}
-                    onChange={(e) => setEdad(e.target.value)}
-                  />
+                 <Input
+                  label="Edad"
+                  placeholder="Ingresa la edad"
+                  type="number"
+                  maxLength={2} // solo dos dígitos visibles
+                  value={edad}
+                  onChange={(e) => {
+                    const valor = e.target.value.replace(/\D/g, ""); // solo números
+                    if (valor.length <= 2) setEdad(valor); // máximo 2 números
+                  }}
+                />
+
                   <Input
                     label="Teléfono"
                     placeholder="Ingresa el teléfono"
+                    type="tel"
+                    maxLength={9} // límite de 9 caracteres
                     value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
+                    onChange={(e) => {
+                      // Acepta solo números y máximo 9 dígitos
+                      const valor = e.target.value.replace(/\D/g, ""); // elimina letras o símbolos
+                      if (valor.length <= 9) setTelefono(valor);
+                    }}
                   />
 
                   <AnimatePresence mode="wait">
