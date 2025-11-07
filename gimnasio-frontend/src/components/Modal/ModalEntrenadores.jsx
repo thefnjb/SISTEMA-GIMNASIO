@@ -9,7 +9,7 @@ import {
   useDisclosure,
   Alert,
 } from "@heroui/react";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import api from "../../utils/axiosInstance";
 import Webcam from "react-webcam";
 import { motion, AnimatePresence } from "framer-motion";
@@ -68,6 +68,55 @@ const ModalEntrenadores = ({
     setTimeout(() => {
       setAlertaExterna({ show: false, color: "default", message: "" });
     }, 5000);
+  };
+
+  // Maneja selección de archivo desde el input
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFotoPerfil(file);
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setPreview(ev.target.result);
+      setView("preview");
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Convierte dataURL a File
+  const dataURLtoFile = (dataurl, filename) => {
+    const arr = dataurl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  // Captura imagen desde la webcam
+  const capture = () => {
+    if (!webcamRef.current) return;
+    const screenshot = webcamRef.current.getScreenshot();
+    if (!screenshot) return;
+    const file = dataURLtoFile(screenshot, "captura.jpg");
+    setFotoPerfil(file);
+    setPreview(screenshot);
+    setView("preview");
+  };
+
+  // Resetea el estado del modal
+  const resetState = () => {
+    setNombre("");
+    setEdad("");
+    setTelefono("");
+    setFotoPerfil(null);
+    setPreview(null);
+    setView("upload");
   };
 
   const agregarEntrenador = async () => {
