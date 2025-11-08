@@ -137,7 +137,7 @@ export default function TablaTrabajadores({ refresh }) {
           <Spinner label="Cargando trabajadores..." color="primary" />
         </div>
       ) : (
-        <div className="w-full">
+        <div className="w-full overflow-x-auto">
           <Table
             aria-label="Tabla de trabajadores"
             removeWrapper
@@ -223,12 +223,14 @@ export default function TablaTrabajadores({ refresh }) {
         </div>
       )}
 
-      <ModalEditarTrabajador
-        key={editingTrabajador?._id}
-        trabajador={editingTrabajador}
-        onClose={() => setEditingTrabajador(null)}
-        onUpdate={actualizarTrabajador}
-      />
+      {editingTrabajador && (
+        <ModalEditarTrabajador
+          key={editingTrabajador._id}
+          trabajador={editingTrabajador}
+          onClose={() => setEditingTrabajador(null)}
+          onUpdate={actualizarTrabajador}
+        />
+      )}
     </div>
   );
 }

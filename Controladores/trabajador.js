@@ -72,9 +72,6 @@ const TrabajadorController = {
     desactivarTrabajador: async (req, res) => {
         try {
             const { id } = req.params;
-            // Add this line for debugging
-            console.log(`Attempting to deactivate worker with ID: ${id} for gym ID: ${req.usuario.gym_id}`);
-
             const trabajador = await Trabajador.findOneAndUpdate(
                 { _id: id, gym: req.usuario.gym_id },
                 { activo: false },
@@ -82,11 +79,9 @@ const TrabajadorController = {
             ).select('-password');
 
             if (!trabajador) {
-                // Add more specific logging here
-                console.log(`Worker with ID: ${id} not found or not associated with gym ID: ${req.usuario.gym_id}`);
                 return res.status(404).json({ error: "Trabajador no encontrado" });
             }
-
+            
             res.json({ mensaje: "Trabajador desactivado exitosamente", trabajador });
 
         } catch (error) {

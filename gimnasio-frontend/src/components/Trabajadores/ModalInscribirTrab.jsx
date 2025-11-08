@@ -18,7 +18,7 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
   const [usuario, setUsuario] = useState("");
   const [contrasena, setContrasena] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false); 
+  const [showPassword, setShowPassword] = useState(false); 
 
   const [alerta, setAlerta] = useState({ show: false, color: "default", message: "" });
 
@@ -86,23 +86,24 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
             {alerta.show && <Alert color={alerta.color} title={alerta.message} />}
 
             <>
-                <Input
-                  label="Nombre y Apellido"
-                  placeholder="Ej. Favio Alexander Coronado Zapata "
-                  value={nombreCompleto}
-                    onChange={(e) => {
-                    const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
-                    setNombreCompleto(valor);
-                  }}
-                />
+              <Input
+                label="Nombre y Apellido"
+                placeholder="Ej. Favio Alexander Coronado Zapata"
+                value={nombreCompleto}
+                onChange={(e) => {
+                  const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                  setNombreCompleto(valor);
+                }}
+                disabled={isLoading}
+              />
               <Input
                 label="Nombre de usuario"
                 placeholder="Ingresa el nombre de usuario"
                 value={usuario}
                 onChange={(e) => {
-                  const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
-                    setNombreCompleto(valor);
-                  }}
+                  setUsuario(e.target.value);
+                }}
+                disabled={isLoading}
               />
               <Input
                 label="Contraseña"
@@ -112,18 +113,18 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
                 onChange={(e) => setContrasena(e.target.value)}
                 disabled={isLoading}
                 endContent={
-                <button
-                  className="focus:outline-none"
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <VisibilityOffIcon className="text-2xl pointer-events-none text-default-400" />
-                  ) : (
-                    <VisibilityIcon className="text-2xl pointer-events-none text-default-400" />
-                  )}
-                </button>
-              }
+                  <button
+                    className="focus:outline-none"
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <VisibilityOffIcon className="text-2xl pointer-events-none text-default-400" />
+                    ) : (
+                      <VisibilityIcon className="text-2xl pointer-events-none text-default-400" />
+                    )}
+                  </button>
+                }
               />
             </>
           </ModalBody>

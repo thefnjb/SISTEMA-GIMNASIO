@@ -1,58 +1,96 @@
 import React from 'react';
+import { User } from "@heroui/react";
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import ShinyText from './ShinyText';
+
 const AvatarGroup = () => {
   return (
     <div className="flex justify-center gap-2 mb-4">
-      <img className="w-20 h-20 border-2 border-white rounded-full" src="/images/logo.ico" alt="logo" />
-    </div>
-  );
-}
-const Admin = () =>{
-  return (
-   <div className="flex  flex-col items-center justify-center  min-h-[200px]  rounded-xl p-4 shadow-sm">
-      <div className="w-[100px] h-[100px] rounded-lg  overflow-hidden mb-4">
-        <img 
-          className="object-cover w-full h-full border-white rounded-full border-1" 
-          src="/images/logo.ico" 
-          alt="logo"
-        />
-      </div>
-      <span className="flex items-center gap-2 text-base font-medium text-white">
-        <AdminPanelSettingsIcon sx={{ fontSize: 25 }} />
-        <ShinyText 
-          text="ADMIN" 
-          disabled={false} 
-          speed={4} 
-          className='custom-class' 
-          />
-      </span>
+      <User
+        avatarProps={{
+          src: "/images/logo.ico",
+          className: "w-20 h-20",
+          isBordered: false,
+        }}
+        classNames={{
+          base: "justify-center",
+        }}
+      />
     </div>
   );
 }
 
-const AdminTrabajador = () =>{
+const Admin = () => {
   return (
-   <div className="flex  flex-col items-center justify-center  min-h-[200px]  rounded-xl p-4 shadow-sm">
-      <div className="w-[100px] h-[100px] rounded-lg  overflow-hidden mb-4">
-        <img 
-          className="object-cover w-full h-full border-white rounded-full border-1" 
-          src="/images/logo.ico" 
-          alt="logo"
-        />
-      </div>
-      <span className="flex items-center gap-2 text-base font-medium text-white">
-        <AdminPanelSettingsIcon sx={{ fontSize: 25 }} />
-        <ShinyText 
-          text="TRABAJADOR" 
-          disabled={false} 
-          speed={3} 
-          className='custom-class' 
-          />
-      </span>
+    <div className="flex items-center justify-start w-full px-4 py-3 rounded-xl">
+      <User
+        avatarProps={{
+          src: "/images/logo.ico",
+          className: "w-14 h-14",
+          isBordered: false,
+        }}
+        name={
+          <span className="flex items-center gap-2 text-base font-medium text-white">
+            <AdminPanelSettingsIcon sx={{ fontSize: 22 }} />
+            <ShinyText 
+              text="ADMIN" 
+              disabled={false} 
+              speed={4} 
+              className='custom-class' 
+            />
+          </span>
+        }
+        description={
+          <span className="text-sm text-gray-400">
+            Administrador
+          </span>
+        }
+        classNames={{
+          base: "gap-3 bg-transparent",
+          wrapper: "gap-1",
+          name: "text-white font-semibold",
+          description: "text-gray-400"
+        }}
+      />
     </div>
   );
 }
+
+const AdminTrabajador = () => {
+  return (
+    <div className="flex items-center justify-start w-full px-4 py-3 rounded-xl">
+      <User
+        avatarProps={{
+          src: "/images/logo.ico",
+          className: "w-14 h-14",
+          isBordered: false,
+        }}
+        name={
+          <span className="flex items-center gap-2 text-base font-medium text-white">
+            <AdminPanelSettingsIcon sx={{ fontSize: 22 }} />
+            <ShinyText 
+              text="TRABAJADOR" 
+              disabled={false} 
+              speed={3} 
+              className='custom-class' 
+            />
+          </span>
+        }
+        description={
+          <span className="text-sm text-gray-400">
+            Empleado
+          </span>
+        }
+        classNames={{
+          base: "gap-3 bg-transparent",
+          wrapper: "gap-1",
+          name: "text-white font-semibold",
+          description: "text-gray-400"
+        }}
+      />
+    </div>
+  );
+}
+
 export default AvatarGroup;
-export { Admin };
-export { AdminTrabajador };
+export { Admin, AdminTrabajador };
