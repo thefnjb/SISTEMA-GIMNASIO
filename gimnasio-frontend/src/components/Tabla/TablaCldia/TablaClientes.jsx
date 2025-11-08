@@ -510,28 +510,32 @@ export default function TablaClientesAdmin({ refresh }) {
                   <TableCell className="hidden lg:table-cell text-[11px]">{miembro?.entrenador?.nombre || "Sin Entrenador"}</TableCell>
                   <TableCell className="hidden capitalize md:table-cell text-[11px]">
                     <div className="flex items-center gap-2">
-                      {miembro.metodoPago && metodosPago[miembro.metodoPago.toLowerCase()] ? (
+                      {miembro.metodoPago && metodosPago[miembro.metodoPago.toLowerCase()] && (
                         <>
-                          <img 
-                            src={metodosPago[miembro.metodoPago.toLowerCase()].icono} 
+                          {miembro.metodoPago.toLowerCase() === 'efectivo' ? (
+                            <div className="p-1 cursor-default">
+                              <img
+                                src={metodosPago[miembro.metodoPago.toLowerCase()].icono}
+                                alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
+                                 className="object-contain w-6 h-6 opacity-80"
+                                />
+                            </div>
+                              ) : (
+                              <Button
+                              isIconOnly
+                              size="sm"
+                              onClick={() => openComprobanteModal(miembro)}
+                               className="p-1 bg-transparent hover:opacity-80"
+                              >
+                            <img
+                            src={metodosPago[miembro.metodoPago.toLowerCase()].icono}
                             alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
-                            className="object-contain w-5 h-5"
+                              className="object-contain w-6 h-6"
                           />
-                          {(miembro.metodoPago.toLowerCase() === 'yape' || miembro.metodoPago.toLowerCase() === 'plin') ? (
-                            <Button 
-                              size="sm" 
-                              onClick={() => openComprobanteModal(miembro)} 
-                              className={`px-2 py-1 text-[10px] text-white ${metodosPago[miembro.metodoPago.toLowerCase()].color} hover:opacity-90`}
-                            >
-                              {metodosPago[miembro.metodoPago.toLowerCase()].nombre}
-                            </Button>
-                          ) : (
-                            <span className="capitalize text-[11px]">{metodosPago[miembro.metodoPago.toLowerCase()].nombre}</span>
-                          )}
-                        </>
-                      ) : (
-                        <span className="capitalize text-[11px]">{miembro.metodoPago || "-"}</span>
-                      )}
+                        </Button>
+                        )}
+                      </>
+                    )}
                     </div>
                   </TableCell>
                   <TableCell className="hidden md:table-cell">

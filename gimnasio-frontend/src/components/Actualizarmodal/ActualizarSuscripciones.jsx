@@ -269,17 +269,6 @@ export default function ActualizarSuscripciones({
     setDatos(prev => ({ ...prev, telefono: soloNums }));
     setErrors(prev => ({ ...prev, telefono: "" }));
   };
-
-  const handleDocumentoChange = (value) => {
-    const soloNumeros = value.replace(/\D/g, "");
-    if (datos.tipoDocumento === "DNI") {
-      setDatos(prev => ({ ...prev, numeroDocumento: soloNumeros.slice(0, 8) }));
-    } else {
-      setDatos(prev => ({ ...prev, numeroDocumento: soloNumeros.slice(0, 12) }));
-    }
-    setErrors(prev => ({ ...prev, numeroDocumento: "" }));
-  };
-
   const modalBg = modo === "renovar" ? "bg-neutral-900" : "bg-black";
   const headerBg = modo === "renovar" ? "bg-red-700" : "bg-gradient-to-r from-black via-neutral-800 to-red-700";
   const inputClass = "bg-white/5 text-white border-neutral-700 placeholder:text-gray-400";
@@ -344,52 +333,6 @@ export default function ActualizarSuscripciones({
                   )}
                 </div>
               )}
-
-              {/* Tipo de Documento */}
-              {modo !== "renovar" && (
-                <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
-                  <label className={labelClass}>Tipo de Documento</label>
-                  <div className="flex gap-2 mt-2">
-                    {["DNI", "CE"].map((tipo) => (
-                      <Button
-                        key={tipo}
-                        size="sm"
-                        variant={datos.tipoDocumento === tipo ? "solid" : "bordered"}
-                        className={`${datos.tipoDocumento === tipo ? btnPrimaryClass : btnDefaultClass} capitalize`}
-                        onClick={() => {
-                          setDatos({ ...datos, tipoDocumento: tipo, numeroDocumento: "" });
-                          setErrors(prev => ({ ...prev, numeroDocumento: "" }));
-                        }}
-                      >
-                        {tipo}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Número de Documento */}
-              {modo !== "renovar" && (
-                <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
-                  <label className={labelClass}>Número de {datos.tipoDocumento}</label>
-                  <Input
-                    type="tel"
-                    placeholder={datos.tipoDocumento === "DNI" ? "12345678" : "123456789012"}
-                    value={datos.numeroDocumento}
-                    onChange={(e) => handleDocumentoChange(e.target.value)}
-                    inputMode="numeric"
-                    maxLength={datos.tipoDocumento === "DNI" ? 8 : 12}
-                    className={`w-full mt-2 ${inputClass}`}
-                  />
-                  <p className="mt-1 text-xs text-gray-300">
-                    {datos.tipoDocumento === "DNI" ? "Formato: 8 dígitos" : "Formato: 9-12 dígitos"}
-                  </p>
-                  {errors.numeroDocumento && (
-                    <p className="mt-1 text-xs text-red-300">{errors.numeroDocumento}</p>
-                  )}
-                </div>
-              )}
-
               {/* Teléfono */}
               {modo !== "renovar" && (
                 <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">

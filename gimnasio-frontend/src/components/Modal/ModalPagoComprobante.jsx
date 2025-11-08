@@ -9,18 +9,17 @@ import {
   Alert,
 } from "@nextui-org/react";
 import Webcam from "react-webcam";
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
 
 const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
   const webcamRef = useRef(null);
   const fileInputRef = useRef(null);
-  const [preview, setPreview] = useState(null); // data URL
+  const [preview, setPreview] = useState(null);
   const [error, setError] = useState("");
-  const [view, setView] = useState("upload"); // 'upload', 'camera', 'preview'
-  const [isProcessing, setIsProcessing] = useState(false); // Estado para procesar imagen
+  const [view, setView] = useState("upload");
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  // Función para redimensionar y comprimir la imagen
   const resizeImage = useCallback((base64Str, maxWidth = 800, maxHeight = 800, quality = 0.7) => {
     return new Promise((resolve, reject) => {
       const img = new Image();
@@ -65,8 +64,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
           const resizedDataUrl = await resizeImage(event.target.result);
           setPreview(resizedDataUrl);
           setView("preview");
-        } catch (resizeError) {
-          console.error("Error al redimensionar:", resizeError);
+        } catch {
           setError("No se pudo procesar la imagen.");
         } finally {
           setIsProcessing(false);
@@ -77,7 +75,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
         setIsProcessing(false);
       };
       reader.readAsDataURL(file);
-    } catch (err) {
+    } catch {
       setError("Error al procesar el archivo.");
       setIsProcessing(false);
     }
@@ -90,7 +88,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
 
   const capture = useCallback(async () => {
     if (!webcamRef.current) {
-      setError("La cámara no está lista. Por favor, espera un momento.");
+      setError("La cámara no está lista. Espera un momento.");
       return;
     }
 
@@ -105,11 +103,9 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
       } else {
         setError("No se pudo capturar la imagen. Verifica permisos de cámara.");
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError("Error al capturar la imagen desde la cámara.");
-    }
- finally {
+    } finally {
       setIsProcessing(false);
     }
   }, [webcamRef, resizeImage]);
@@ -126,9 +122,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
     e.preventDefault();
     e.stopPropagation();
     const file = e.dataTransfer.files && e.dataTransfer.files[0];
-    if (file) {
-      processImage(file);
-    }
+    if (file) processImage(file);
   };
 
   const resetState = () => {
@@ -136,6 +130,11 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
     setError("");
     setView("upload");
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    // detener cámara al cerrar el modal
+    if (webcamRef.current && webcamRef.current.stream) {
+      webcamRef.current.stream.getTracks().forEach((track) => track.stop());
+    }
   };
 
   return (
@@ -146,6 +145,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
       backdrop="opaque"
       isDismissable={true}
       onClose={resetState}
+      autoFocus={false} // evita bucle de foco
       className="z-[9999]"
     >
       <ModalContent>
@@ -157,10 +157,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
 
             <ModalBody className="space-y-4 min-h-[300px]">
               {error && (
-                <Alert
-                  color="danger"
-                  className="mb-4"
-                >
+                <Alert color="danger" className="mb-4">
                   {error}
                 </Alert>
               )}
@@ -172,7 +169,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
                 </div>
               )}
 
-              {view === "upload" && (
+              {view === "upload" && !isProcessing && (
                 <div
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
@@ -185,15 +182,18 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <div onClick={() => fileInputRef.current?.click()} className="flex flex-col items-center cursor-pointer">
-                    <CloudUploadIcon sx={{ fontSize: 48, color: '#9ca3af' }} />
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex flex-col items-center cursor-pointer"
+                  >
+                    <CloudUploadIcon sx={{ fontSize: 48, color: "#9ca3af" }} />
                     <p className="mt-2 font-semibold">Arrastra y suelta una imagen aquí</p>
                     <p className="text-sm text-gray-400">o haz clic para seleccionarla</p>
                   </div>
 
                   <Button
                     onPress={() => setView("camera")}
-                    startContent={<CameraAltIcon sx={{ color: 'white' }} />}
+                    startContent={<CameraAltIcon sx={{ color: "white" }} />}
                     className="mt-4 text-white bg-transparent border border-neutral-500 hover:bg-neutral-700"
                   >
                     Usar cámara
@@ -203,18 +203,23 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
 
               {view === "camera" && (
                 <div className="flex flex-col items-center gap-3">
-                  <Webcam
-                    audio={false}
-                    ref={webcamRef}
-                    screenshotFormat="image/jpeg"
-                    className="w-full bg-black rounded-md"
-                    autoFocus={false}
-                    videoConstraints={{ 
-                      width: 1280,
-                      height: 720,
-                      facingMode: "user" }}
-                  />
-                  <Button onPress={capture} className="w-full text-white bg-red-600 hover:bg-red-700">
+                  <div tabIndex={-1}>
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      className="w-full bg-black rounded-md"
+                      videoConstraints={{
+                        width: 1280,
+                        height: 720,
+                        facingMode: "user",
+                      }}
+                    />
+                  </div>
+                  <Button
+                    onPress={capture}
+                    className="w-full text-white bg-red-600 hover:bg-red-700"
+                  >
                     Capturar Foto
                   </Button>
                 </div>
@@ -223,7 +228,11 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
               {view === "preview" && preview && (
                 <div className="flex flex-col items-center gap-3">
                   <p className="font-semibold">Vista Previa</p>
-                  <img src={preview} alt="Vista previa del comprobante" className="object-contain w-full rounded-lg max-h-80" />
+                  <img
+                    src={preview}
+                    alt="Vista previa del comprobante"
+                    className="object-contain w-full rounded-lg max-h-80"
+                  />
                   <Button
                     onPress={resetState}
                     variant="light"

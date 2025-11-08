@@ -9,7 +9,7 @@ import {
   useDisclosure,
   Alert,
 } from "@heroui/react";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import api from "../../utils/axiosInstance";
 import DateRangeOutlinedIcon from '@mui/icons-material/DateRangeOutlined';
 import FitnessCenterOutlinedIcon from '@mui/icons-material/FitnessCenterOutlined';
@@ -47,6 +47,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
   const [numeroDocumento, setNumeroDocumento] = useState("");
   const [telefono, setTelefono] = useState("");
   const [fechaInicio, setFechaInicio] = useState(obtenerFechaLocal());
+  const [isDniLoading, setIsDniLoading] = useState(false);
 
   const [membresia, setMembresia] = useState(null);
   const [entrenador, setEntrenador] = useState(null);
@@ -54,6 +55,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
   const [debe, setDebe] = useState("");
   const [isPagoModalOpen, setPagoModalOpen] = useState(false);
   const [comprobantePreview, setComprobantePreview] = useState(null);
+  const [origenNombre, setOrigenNombre] = useState('reniec');
 
   // Alerta dentro del modal 
   const mostrarAlertaInterna = (type, title, message) => {
@@ -70,6 +72,49 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
       setAlertaExterna({ show: false, type: "", message: "", title: "" });
     }, 4000);
   };
+
+  const handleDniLookup = useCallback(async () => {
+    // Solo consultar si el origen está configurado para usar RENIEC
+    if (origenNombre !== 'reniec') return;
+    if (tipoDocumento !== "DNI" || numeroDocumento.length !== 8) {
+      return;
+    }
+
+    setIsDniLoading(true);
+    try {
+      const { data } = await api.get(`/api/reniec/dni/${numeroDocumento}`);
+      if (data) {
+        let nombre = null;
+        if (data.nombres && data.apellido_paterno && data.apellido_materno) {
+          nombre = `${data.nombres} ${data.apellido_paterno} ${data.apellido_materno}`;
+        } else if (data.first_name || data.first_last_name || data.second_last_name) {
+          const fn = data.first_name || '';
+          const l1 = data.first_last_name || '';
+          const l2 = data.second_last_name || '';
+          nombre = `${fn} ${l1} ${l2}`.trim();
+        } else if (data.firstName || data.lastName) {
+
+          const fn = data.firstName || '';
+          const l1 = data.firstLastName || data.lastName || '';
+          const l2 = data.secondLastName || '';
+          nombre = `${fn} ${l1} ${l2}`.trim();
+        }
+
+        if (nombre) {
+          setNombreCompleto(formatearNombreInput(nombre));
+        } else {
+          // Si la estructura es diferente, intentar mostrar el objeto como depuración
+          console.warn('Respuesta RENIEC inesperada:', data);
+        }
+      }
+    } catch (error) {
+      const mensaje = error?.response?.data?.error || "No se pudo encontrar el DNI.";
+      mostrarAlertaInterna("warning", "Error de Búsqueda", mensaje);
+      setNombreCompleto(""); // Limpiar nombre si hay error
+    } finally {
+      setIsDniLoading(false);
+    }
+  }, [numeroDocumento, tipoDocumento, origenNombre]);
 
   // Guardar con nuevo contrato de backend
   const guardarSuscripcion = async (onClose) => {
@@ -100,6 +145,11 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
     }
     if (!metodoSeleccionado) {
       return mostrarAlertaInterna("danger", "Método de pago requerido", "Debes elegir un método de pago");
+    }
+    
+    // 🔥 VALIDACIÓN CRÍTICA: Verificar comprobante para Yape y Plin
+    if ((metodoSeleccionado === 'yape' || metodoSeleccionado === 'plin') && !comprobantePreview) {
+      return mostrarAlertaInterna("danger", "Comprobante requerido", `Debes subir el comprobante de pago para ${metodosPago[metodoSeleccionado].nombre}`);
     }
 
     try {
@@ -159,6 +209,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
     setEntrenador(null);
     setMetodoSeleccionado(null);
     setDebe("");
+    setComprobantePreview(null); // 🔥 Limpiar también el comprobante
     // Limpiar solo alerta interna al cerrar modal
     setAlertaInterna({ show: false, type: "", message: "", title: "" });
   };
@@ -180,6 +231,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
     setEntrenador(null);
     setMetodoSeleccionado(null);
     setDebe("");
+    setComprobantePreview(null);
     setAlertaInterna({ show: false, type: "", message: "", title: "" });
     onOpen();
   };
@@ -201,6 +253,13 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
       setNumeroDocumento(soloNumeros.slice(0, 12));
     }
   };
+
+  // Auto-búsqueda del DNI: cuando el número alcance 8 dígitos para DNI y el origen sea RENIEC
+  useEffect(() => {
+    if (origenNombre === 'reniec' && tipoDocumento === 'DNI' && numeroDocumento.length === 8) {
+      handleDniLookup();
+    }
+  }, [numeroDocumento, tipoDocumento, origenNombre, handleDniLookup]);
 
   return (
     <>
@@ -271,6 +330,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                       onClick={() => {
                         setTipoDocumento("DNI");
                         setNumeroDocumento("");
+                        setOrigenNombre("reniec"); // Reset to default for DNI
                       }}
                       className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
                         tipoDocumento === "DNI"
@@ -285,6 +345,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                       onClick={() => {
                         setTipoDocumento("CE");
                         setNumeroDocumento("");
+                        setOrigenNombre("manual"); // Force manual for CE
                       }}
                       className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
                         tipoDocumento === "CE"
@@ -297,15 +358,53 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                   </div>
                 </div>
 
+                {/* Origen para completar el nombre: RENIEC (consulta) o MANUAL (ingresar nombre) */}
+                {tipoDocumento === 'DNI' && (
+                  <div>
+                    <label className="block mb-2 text-sm">Origen Nombre</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setOrigenNombre('reniec')}
+                        className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                          origenNombre === 'reniec'
+                            ? "bg-red-600 ring-4 ring-red-400"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        Consultar RENIEC
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOrigenNombre('manual')}
+                        className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                          origenNombre === 'manual'
+                            ? "bg-red-600 ring-4 ring-red-400"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        Manual
+                      </button>
+                    </div>
+                    {origenNombre === 'reniec' && (
+                      <span className="block mt-2 text-xs text-gray-300">La app consultará RENIEC al completar 8 dígitos.</span>
+                    )}
+                    {origenNombre === 'manual' && (
+                      <span className="block mt-2 text-xs text-gray-300">Modo manual: escribe el nombre directamente.</span>
+                    )}
+                  </div>
+                )}
+                
                 <Input
                   label={`Número de ${tipoDocumento}`}
                   placeholder={tipoDocumento === "DNI" ? "12345678" : "123456789012"}
                   value={numeroDocumento}
                   onChange={(e) => handleDocumentoChange(e.target.value)}
+                  disabled={isDniLoading}
                   maxLength={tipoDocumento === "DNI" ? 8 : 12}
                   description={
                     tipoDocumento === "DNI"
-                      ? "Ingresa 8 dígitos"
+                      ? "Al salir del campo se buscará el DNI."
                       : "Ingresa entre 9 y 12 dígitos"
                   }
                 />
@@ -397,6 +496,9 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                           // Abrir modal de comprobante automáticamente para Yape o Plin
                           if (key === 'yape' || key === 'plin') {
                             setPagoModalOpen(true);
+                          } else {
+                            // Si cambia a efectivo, limpiar el comprobante previo
+                            setComprobantePreview(null);
                           }
                         }}
                       >
@@ -404,12 +506,31 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                           <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
                           <span className="text-lg font-medium">{metodo.nombre}</span>
                         </div>
-                        {metodoSeleccionado === key && (
-                          <span className="text-sm font-semibold">Seleccionado</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {/* 🔥 Indicador de comprobante subido para Yape/Plin */}
+                          {(key === 'yape' || key === 'plin') && metodoSeleccionado === key && comprobantePreview && (
+                            <span className="px-2 py-1 text-xs font-semibold text-green-600 bg-green-100 rounded">
+                              ✓ Comprobante
+                            </span>
+                          )}
+                          {metodoSeleccionado === key && (
+                            <span className="text-sm font-semibold">Seleccionado</span>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>
+                  
+                  {/* 🔥 Botón para ver/cambiar comprobante si ya existe uno */}
+                  {(metodoSeleccionado === 'yape' || metodoSeleccionado === 'plin') && comprobantePreview && (
+                    <button
+                      type="button"
+                      onClick={() => setPagoModalOpen(true)}
+                      className="w-full p-2 mt-2 text-sm text-white transition-all duration-200 bg-gray-700 rounded hover:bg-gray-600"
+                    >
+                      📷 Ver/Cambiar comprobante
+                    </button>
+                  )}
                 </div>
               </ModalBody>
 
@@ -459,7 +580,6 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
         isOpen={isPagoModalOpen}
         onOpenChange={setPagoModalOpen}
         onUploadComplete={(dataUrl) => {
-          // dataUrl es una URL base64 de la imagen
           setComprobantePreview(dataUrl);
           setPagoModalOpen(false);
           mostrarAlertaInterna("success", "Comprobante listo", "Comprobante agregado correctamente.");
