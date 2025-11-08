@@ -301,21 +301,18 @@ export default function TablaClientesHoy({ refresh }) {
       </TableCell>
       <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
       <TableCell>{cliente.metododePago || "No definido"}</TableCell>
-      <TableCell className="text-right">{cliente.monto ?? 7}</TableCell>
+      <TableCell className="text-center">{cliente.monto ?? 7}</TableCell>
 
-      <TableCell className="text-center font-semibold">
-  {cliente.creadoPor === "admin" ? (
-    <span className="text-red-600 bg-red-100 px-2 py-1 rounded-lg">
-      Administrador
-    </span>
-  ) : cliente.creadoPor === "trabajador" ? (
-    <span className="text-blue-600 bg-blue-100 px-2 py-1 rounded-lg">
-      {cliente.creadorId?.nombre || "Trabajador"}
-    </span>
-  ) : (
-    <span className="text-gray-500">Desconocido</span>
-  )}
+      <TableCell className="text-center">
+  <span className="text-sm text-black font-normal">
+    {cliente.creadoPor === "admin"
+      ? "Administrador"
+      : cliente.creadoPor === "trabajador"
+      ? cliente.creadorNombre || "Trabajador"
+      : "Desconocido"}
+  </span>
 </TableCell>
+
 
 
       <TableCell className="text-center">
