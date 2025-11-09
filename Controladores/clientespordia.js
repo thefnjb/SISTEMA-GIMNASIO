@@ -66,6 +66,27 @@ exports.getAllClientes = async (req, res) => {
       })
     );
 
+    // Normalizar fotocomprobante para el frontend: convertir buffers a data URL base64
+    const clientesParaFront = clientes.map((c) => {
+      try {
+        if (c && c.fotocomprobante && c.fotocomprobante.data) {
+          const fc = c.fotocomprobante;
+          // Si es Buffer (no-lean) o Buffer-like
+          if (Buffer.isBuffer(fc.data)) {
+            fc.data = `data:${fc.contentType || 'image/jpeg'};base64,${fc.data.toString('base64')}`;
+          } else if (fc.data && fc.data.type === 'Buffer' && Array.isArray(fc.data.data)) {
+            const buf = Buffer.from(fc.data.data);
+            fc.data = `data:${fc.contentType || 'image/jpeg'};base64,${buf.toString('base64')}`;
+          }
+          // si ya es string (ya convertido), dejarlo
+          c.fotocomprobante = fc;
+        }
+      } catch (err) {
+        console.error('Error normalizando fotocomprobante para frontend', err);
+      }
+      return c;
+    });
+
     // conteo de pagos (solo para el rango de hoy)
     const conteoPagos = await ClientesPorDia.aggregate([
       { $match: { fecha: { $gte: today, $lt: tomorrow } } },
@@ -80,7 +101,7 @@ exports.getAllClientes = async (req, res) => {
       }
     });
 
-    return res.status(200).json({ clientes, resumenPagos });
+  return res.status(200).json({ clientes: clientesParaFront, resumenPagos });
   } catch (err) {
     console.error("❌ Error en getAllClientes:", err);
     return res.status(500).json({ error: "Error al obtener los clientes del día", detalles: err.message });
@@ -106,6 +127,30 @@ exports.registrarCliente = async (req, res) => {
             creadoPor: rol,
             creadorId: id
         });
+
+        // Procesar comprobante si viene desde el frontend (dataURL o base64)
+        const comprobanteRaw = req.body.comprobante ?? req.body.fotocomprobante;
+        if (comprobanteRaw) {
+          try {
+            // Si es data URL
+            if (typeof comprobanteRaw === 'string' && comprobanteRaw.startsWith('data:')) {
+              const parsed = procesarComprobanteDataUrl(comprobanteRaw);
+              if (parsed) {
+                nuevoCliente.fotocomprobante = { data: parsed.data, contentType: parsed.contentType };
+              }
+            } else if (typeof comprobanteRaw === 'string') {
+              // Podría ser base64 sin prefijo
+              const buffer = Buffer.from(comprobanteRaw, 'base64');
+              nuevoCliente.fotocomprobante = { data: buffer, contentType: 'image/jpeg' };
+            } else if (comprobanteRaw.data && Array.isArray(comprobanteRaw.data)) {
+              // Caso: objeto serializado { data: [...] }
+              const buf = Buffer.from(comprobanteRaw.data);
+              nuevoCliente.fotocomprobante = { data: buf, contentType: comprobanteRaw.contentType || 'image/jpeg' };
+            }
+          } catch (err) {
+            console.error('Error procesando comprobante al registrar cliente:', err);
+          }
+        }
 
     await nuevoCliente.save();
     return res.status(201).json({ message: "Cliente registrado", cliente: nuevoCliente });
@@ -135,6 +180,23 @@ exports.actualizarCliente = async (req, res) => {
     cliente.nombre = nombre.trim();
     cliente.metododePago = metododePago || cliente.metododePago || "Efectivo";
     if (monto != null) cliente.monto = Number(monto);
+
+    // Procesar comprobante si se envía en la actualización
+    const comprobanteRaw = req.body.comprobante ?? req.body.fotocomprobante;
+    if (comprobanteRaw) {
+      try {
+        if (typeof comprobanteRaw === 'string' && comprobanteRaw.startsWith('data:')) {
+          const parsed = procesarComprobanteDataUrl(comprobanteRaw);
+          if (parsed) cliente.fotocomprobante = { data: parsed.data, contentType: parsed.contentType };
+        } else if (typeof comprobanteRaw === 'string') {
+          cliente.fotocomprobante = { data: Buffer.from(comprobanteRaw, 'base64'), contentType: 'image/jpeg' };
+        } else if (comprobanteRaw.data && Array.isArray(comprobanteRaw.data)) {
+          cliente.fotocomprobante = { data: Buffer.from(comprobanteRaw.data), contentType: comprobanteRaw.contentType || 'image/jpeg' };
+        }
+      } catch (err) {
+        console.error('Error procesando comprobante en actualizarCliente:', err);
+      }
+    }
 
     const clienteActualizado = await cliente.save();
     return res.status(200).json({ message: "Cliente actualizado", cliente: clienteActualizado });
