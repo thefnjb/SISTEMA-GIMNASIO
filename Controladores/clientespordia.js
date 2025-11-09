@@ -71,18 +71,35 @@ exports.getAllClientes = async (req, res) => {
       try {
         if (c && c.fotocomprobante && c.fotocomprobante.data) {
           const fc = c.fotocomprobante;
-          // Si es Buffer (no-lean) o Buffer-like
+          let dataUrl = null;
+          
+          // Si es Buffer (no-lean)
           if (Buffer.isBuffer(fc.data)) {
-            fc.data = `data:${fc.contentType || 'image/jpeg'};base64,${fc.data.toString('base64')}`;
-          } else if (fc.data && fc.data.type === 'Buffer' && Array.isArray(fc.data.data)) {
-            const buf = Buffer.from(fc.data.data);
-            fc.data = `data:${fc.contentType || 'image/jpeg'};base64,${buf.toString('base64')}`;
+            dataUrl = `data:${fc.contentType || 'image/jpeg'};base64,${fc.data.toString('base64')}`;
           }
-          // si ya es string (ya convertido), dejarlo
-          c.fotocomprobante = fc;
+          // Si es objeto con estructura Buffer serializado
+          else if (fc.data && typeof fc.data === 'object') {
+            // Intentar diferentes formatos de Buffer serializado
+            if (fc.data.type === 'Buffer' && Array.isArray(fc.data.data)) {
+              const buf = Buffer.from(fc.data.data);
+              dataUrl = `data:${fc.contentType || 'image/jpeg'};base64,${buf.toString('base64')}`;
+            } else if (Array.isArray(fc.data)) {
+              const buf = Buffer.from(fc.data);
+              dataUrl = `data:${fc.contentType || 'image/jpeg'};base64,${buf.toString('base64')}`;
+            }
+          }
+          // Si ya es string
+          else if (typeof fc.data === 'string') {
+            dataUrl = fc.data.startsWith('data:') ? fc.data : `data:${fc.contentType || 'image/jpeg'};base64,${fc.data}`;
+          }
+          
+          if (dataUrl) {
+            c.fotocomprobante = { data: dataUrl, contentType: fc.contentType };
+            c.comprobante = dataUrl;
+          }
         }
       } catch (err) {
-        console.error('Error normalizando fotocomprobante para frontend', err);
+        console.error('Error normalizando fotocomprobante:', err.message);
       }
       return c;
     });
@@ -183,7 +200,13 @@ exports.actualizarCliente = async (req, res) => {
 
     // Procesar comprobante si se envía en la actualización
     const comprobanteRaw = req.body.comprobante ?? req.body.fotocomprobante;
-    if (comprobanteRaw) {
+    
+    // Si cambia a Efectivo, eliminar comprobante
+    if (metododePago === 'Efectivo') {
+      cliente.fotocomprobante = undefined;
+    }
+    // Si hay un nuevo comprobante (Yape/Plin), procesarlo
+    else if (comprobanteRaw) {
       try {
         if (typeof comprobanteRaw === 'string' && comprobanteRaw.startsWith('data:')) {
           const parsed = procesarComprobanteDataUrl(comprobanteRaw);
@@ -197,6 +220,7 @@ exports.actualizarCliente = async (req, res) => {
         console.error('Error procesando comprobante en actualizarCliente:', err);
       }
     }
+    // Si no se envía comprobante pero es Yape/Plin, mantener el existente (no hacer nada)
 
     const clienteActualizado = await cliente.save();
     return res.status(200).json({ message: "Cliente actualizado", cliente: clienteActualizado });

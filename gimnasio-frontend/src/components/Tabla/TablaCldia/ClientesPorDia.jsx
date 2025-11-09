@@ -15,13 +15,13 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
-  Input,
 } from "@heroui/react";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import IconButton from "@mui/material/IconButton";
 import ReporteClientesDia from "../../Pdf/BotonpdfClientesdia";
+import ModalEditarClienteDia from "../../Modal/ModalEditarClienteDia";
 import api from "../../../utils/axiosInstance";
 
 // 🔹 Función para formatear hora
@@ -85,47 +85,59 @@ export default function TablaClientesHoy({ refresh }) {
     cliente: null,
   });
 
-  const [nombreEdit, setNombreEdit] = useState("");
-  const [metodoPagoEdit, setMetodoPagoEdit] = useState("");
-  const [guardando, setGuardando] = useState(false);
-
   const openModalEditar = (cliente) => {
-    setNombreEdit(cliente.nombre || "");
-    setMetodoPagoEdit(cliente.metododePago || "");
     setModalEditar({ show: true, cliente });
   };
 
   const closeModalEditar = () => {
     setModalEditar({ show: false, cliente: null });
-    setNombreEdit("");
-    setMetodoPagoEdit("");
   };
 
-  // 🔹 Guardar cambios
-  const handleGuardarEdicion = async () => {
-    if (!modalEditar.cliente?._id) return;
+  // Modal ver comprobante
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
 
-    if (nombreEdit.trim() === "" || metodoPagoEdit.trim() === "") {
-      showAlert("danger", "Por favor complete todos los campos.");
+  const metodosPago = {
+    yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
+    plin: { nombre: "Plin", color: "bg-blue-600", icono: "/iconos/plin.png" },
+    efectivo: { nombre: "Efectivo", color: "bg-green-600", icono: "/iconos/eefctivo.png" },
+  };
+
+  const openComprobanteModal = (cliente) => {
+    // Buscar comprobante en múltiples ubicaciones posibles
+    let comprobanteUrl = null;
+    
+    // Opción 1: campo comprobante directo
+    if (cliente.comprobante) {
+      comprobanteUrl = cliente.comprobante;
+    }
+    // Opción 2: fotocomprobante.data (puede ser string o objeto)
+    else if (cliente.fotocomprobante?.data) {
+      const fc = cliente.fotocomprobante;
+      if (typeof fc.data === 'string') {
+        comprobanteUrl = fc.data.startsWith('data:') ? fc.data : `data:${fc.contentType || 'image/jpeg'};base64,${fc.data}`;
+      } else if (fc.data.type === 'Buffer' && Array.isArray(fc.data.data)) {
+        // Convertir array de bytes a base64
+        const base64 = btoa(String.fromCharCode.apply(null, fc.data.data));
+        comprobanteUrl = `data:${fc.contentType || 'image/jpeg'};base64,${base64}`;
+      }
+    }
+    
+    if (!comprobanteUrl) {
+      showAlert("warning", "No hay comprobante guardado");
       return;
     }
+    
+    setImageUrl(comprobanteUrl);
+    setIsImageModalOpen(true);
+  };
 
-    try {
-      setGuardando(true);
-      await api.put(`/visits/actualizarcliente/${modalEditar.cliente._id}`, {
-  nombre: nombreEdit,
-  metododePago: metodoPagoEdit,
-});
-
-      showAlert("success", "Cliente actualizado correctamente");
-      closeModalEditar();
-      await fetchClientes();
-    } catch (error) {
-      console.error("Error al actualizar cliente:", error);
-      showAlert("danger", "Error al guardar los cambios");
-    } finally {
-      setGuardando(false);
+  const closeImageModal = () => {
+    if (imageUrl && imageUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(imageUrl);
     }
+    setImageUrl(null);
+    setIsImageModalOpen(false);
   };
 
   const rowsPerPage = 4;
@@ -276,7 +288,7 @@ export default function TablaClientesHoy({ refresh }) {
         <TableColumn key="nombre" allowsSorting>Nombre</TableColumn>
         <TableColumn key="fecha" allowsSorting>Fecha</TableColumn>
         <TableColumn key="horaInicio" allowsSorting>Hora de Inicio</TableColumn>
-        <TableColumn key="metododePago" allowsSorting className="text-center w-[140px]">Método de Pago</TableColumn>
+        <TableColumn key="metododePago" allowsSorting className="text-center">PAGO</TableColumn>
         <TableColumn key="precio" className="text-right w-[100px]" allowsSorting>Monto (S/)</TableColumn>
         <TableColumn key="cambios" className="text-center w-[120px]">Cambios</TableColumn>
         <TableColumn key="acciones" className="text-center w-[150px]">Acciones</TableColumn>
@@ -300,11 +312,40 @@ export default function TablaClientesHoy({ refresh }) {
         {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString() : "Sin fecha"}
       </TableCell>
       <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
-      <TableCell>{cliente.metododePago || "No definido"}</TableCell>
+      <TableCell className="text-center capitalize">
+        <div className="flex items-center justify-center gap-2">
+          {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] && (
+            <>
+              {cliente.metododePago.toLowerCase() === 'efectivo' ? (
+                <div className="p-1 cursor-default">
+                  <img
+                    src={metodosPago[cliente.metododePago.toLowerCase()].icono}
+                    alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
+                    className="object-contain w-6 h-6 opacity-80"
+                  />
+                </div>
+              ) : (
+                <Button
+                  isIconOnly
+                  size="sm"
+                  onClick={() => openComprobanteModal(cliente)}
+                  className="p-1 bg-transparent hover:opacity-80"
+                >
+                  <img
+                    src={metodosPago[cliente.metododePago.toLowerCase()].icono}
+                    alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
+                    className="object-contain w-6 h-6"
+                  />
+                </Button>
+              )}
+            </>
+          )}
+        </div>
+      </TableCell>
       <TableCell className="text-center">{cliente.monto ?? 7}</TableCell>
 
       <TableCell className="text-center">
-  <span className="text-sm text-black font-normal">
+  <span className="text-sm font-normal text-black">
     {cliente.creadoPor === "admin"
       ? "Administrador"
       : cliente.creadoPor === "trabajador"
@@ -316,7 +357,7 @@ export default function TablaClientesHoy({ refresh }) {
 
 
       <TableCell className="text-center">
-        <div className="flex justify-center items-center gap-3">
+        <div className="flex items-center justify-center gap-3">
           <IconButton
             aria-label="Descargar voucher"
             onClick={() => descargarVoucher(cliente)}
@@ -355,74 +396,89 @@ export default function TablaClientesHoy({ refresh }) {
         <ReporteClientesDia />
       </div>
 
-      {/* Modal eliminar */}
-      <Modal isOpen={confirmModal.show} onClose={cancelDelete} placement="center">
-        <ModalContent>
-          <ModalHeader>Confirmar Eliminación</ModalHeader>
-          <ModalBody>
-            ¿Deseas borrar al cliente <strong>{confirmModal.clienteNombre}</strong>?
-          </ModalBody>
-          <ModalFooter>
-            <Button color="default" variant="flat" onPress={cancelDelete}>Cancelar</Button>
-            <Button color="danger" onPress={handleDelete}><DeleteIcon /></Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+    {/* Modal eliminar */}
+    <Modal 
+      isOpen={confirmModal.show} 
+      onClose={cancelDelete} 
+      placement="center"
+      backdrop="blur"
+    >
+      <ModalContent className="p-4 shadow-lg rounded-2xl">
+        <ModalHeader className="text-lg font-semibold text-red-600">
+          Confirmar eliminación
+        </ModalHeader>
+        <ModalBody className="text-sm text-gray-700">
+          <p>
+            ¿Seguro que deseas eliminar al cliente{" "}
+            <span className="font-semibold text-black">
+              {confirmModal.clienteNombre}
+            </span>?
+          </p>
+        </ModalBody>
+        <ModalFooter className="flex justify-end gap-3">
+          <Button 
+            color="default" 
+            variant="flat" 
+            onPress={cancelDelete}
+            className="px-4"
+          >
+            Cancelar
+          </Button>
+          <Button 
+            color="danger" 
+            onPress={handleDelete}
+            className="flex items-center gap-2 px-4"
+          >
+            <DeleteIcon fontSize="small" />
+            Eliminar
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
 
       {/* Modal editar cliente */}
-      <Modal isOpen={modalEditar.show} onClose={closeModalEditar} size="md" placement="center">
-        <ModalContent className="bg-[#101820] text-white rounded-2xl">
-          <ModalHeader className="text-lg font-bold">Editar Cliente</ModalHeader>
-          <ModalBody className="space-y-3">
-            <div>
-              <label className="block text-sm text-gray-300 mb-1">Nombre y Apellido</label>
-              <Input
-                variant="flat"
-                radius="md"
-                value={nombreEdit}
-                onChange={(e) => setNombreEdit(e.target.value)}
-                classNames={{
-                  input: "bg-[#1a1f2b] text-white",
-                  inputWrapper: "bg-[#1a1f2b] border border-gray-700",
-                }}
-                placeholder="Ingrese el nombre"
-              />
-            </div>
+      <ModalEditarClienteDia
+        isOpen={modalEditar.show}
+        onClose={closeModalEditar}
+        cliente={modalEditar.cliente}
+        onSuccess={fetchClientes}
+        showAlert={showAlert}
+      />
 
-            <div>
-              <label className="block text-sm text-gray-300 mb-2">Método de Pago</label>
-              <div className="flex gap-3">
-                {["Yape", "Plin", "Efectivo"].map((m) => (
-                  <Button
-                    key={m}
-                    onPress={() => setMetodoPagoEdit(m)}
-                    className={`text-white font-semibold ${
-                      metodoPagoEdit === m
-                        ? "bg-red-600 hover:bg-red-700"
-                        : "bg-[#1a1f2b] hover:bg-[#2a2f3b]"
-                    }`}
-                    radius="md"
-                    size="sm"
-                  >
-                    {m}
-                  </Button>
-                ))}
-              </div>
+      {/* Modal para mostrar comprobante */}
+      <Modal 
+        isOpen={isImageModalOpen} 
+        onOpenChange={(val) => { if (!val) closeImageModal(); setIsImageModalOpen(val); }} 
+        size="lg" 
+        backdrop="blur"
+      >
+        <ModalContent>
+          {(onClose) => (
+            <div className="text-white rounded-lg bg-neutral-800">
+              <ModalHeader>
+                <div className="text-lg font-bold text-center">Comprobante de Pago</div>
+              </ModalHeader>
+              <ModalBody className="p-4">
+                {imageUrl ? (
+                  <img 
+                    src={imageUrl} 
+                    alt="comprobante" 
+                    className="w-full h-auto max-h-[70vh] object-contain rounded" 
+                  />
+                ) : (
+                  <div className="text-sm text-center text-gray-300">No hay imagen disponible</div>
+                )}
+              </ModalBody>
+              <ModalFooter>
+                <Button 
+                  onClick={() => { closeImageModal(); onClose(); }} 
+                  className="text-white bg-red-600 hover:bg-red-700"
+                >
+                  Cerrar
+                </Button>
+              </ModalFooter>
             </div>
-          </ModalBody>
-          <ModalFooter>
-            <Button color="default" variant="flat" onPress={closeModalEditar}>
-              Cancelar
-            </Button>
-            <Button
-              color="danger"
-              onPress={handleGuardarEdicion}
-              isDisabled={guardando}
-              className="bg-red-700 text-white hover:bg-red-800"
-            >
-              {guardando ? "Guardando..." : "Guardar Cambios"}
-            </Button>
-          </ModalFooter>
+          )}
         </ModalContent>
       </Modal>
     </div>

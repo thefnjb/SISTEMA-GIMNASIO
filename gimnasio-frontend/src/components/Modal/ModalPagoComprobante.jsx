@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, } from "react";
 import {
   Modal,
   ModalContent,
@@ -113,9 +113,12 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
   const handleConfirm = () => {
     if (!preview) {
       setError("No hay imagen para subir. Toma o selecciona una foto primero.");
-      return;
+      return false;
     }
-    if (onUploadComplete) onUploadComplete(preview);
+    if (onUploadComplete) {
+      onUploadComplete(preview);
+    }
+    return true;
   };
 
   const handleDrop = (e) => {
@@ -125,7 +128,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
     if (file) processImage(file);
   };
 
-  const resetState = () => {
+  const resetState = useCallback(() => {
     setPreview(null);
     setError("");
     setView("upload");
@@ -135,18 +138,22 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
     if (webcamRef.current && webcamRef.current.stream) {
       webcamRef.current.stream.getTracks().forEach((track) => track.stop());
     }
-  };
+  }, []);
 
   return (
     <Modal
       isOpen={isOpen}
-      onOpenChange={onOpenChange}
+      onOpenChange={(open) => {
+        if (onOpenChange) {
+          onOpenChange(open);
+        }
+      }}
       size="2xl"
-      backdrop="opaque"
-      isDismissable={true}
-      onClose={resetState}
-      autoFocus={false} // evita bucle de foco
-      className="z-[9999]"
+      backdrop="blur"
+      isDismissable={false}
+      hideCloseButton={false}
+      className="z-[10001]"
+      portalContainer={typeof document !== 'undefined' ? document.body : undefined}
     >
       <ModalContent>
         {(onClose) => (
@@ -248,16 +255,24 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
               <Button
                 color="default"
                 variant="light"
-                onPress={onClose}
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  resetState();
+                  if (onOpenChange) onOpenChange(false);
+                }}
                 className="text-white"
               >
                 Cancelar
               </Button>
               <Button
                 color="primary"
-                onPress={() => {
-                  handleConfirm();
-                  onClose();
+                onPress={(e) => {
+                  e?.stopPropagation?.();
+                  const success = handleConfirm();
+                  if (success) {
+                    resetState();
+                    if (onOpenChange) onOpenChange(false);
+                  }
                 }}
                 className="text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-500"
                 isDisabled={!preview || isProcessing}
