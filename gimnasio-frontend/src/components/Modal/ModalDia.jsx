@@ -30,7 +30,7 @@ const ModalDia = ({
   const [fechaInscripcion, setFechaInscripcion] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
     const [isPagoModalOpen, setPagoModalOpen] = useState(false);
-    const [comprobanteData, setComprobanteData] = useState(null);
+    const [comprobantePreview, setComprobantePreview] = useState(null);
 
   // Estados para alertas híbridas
   const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
@@ -46,7 +46,7 @@ const ModalDia = ({
   const limpiarCampos = () => {
     setNombreCompleto("");
     setMetodoSeleccionado(null);
-    setComprobanteData(null);
+    setComprobantePreview(null);
     // Limpiar solo alerta interna al cerrar modal
     setAlertaInterna({ show: false, type: "", message: "", title: "" });
   };
@@ -66,7 +66,12 @@ const ModalDia = ({
       setAlertaExterna({ show: false, type: "", message: "", title: "" });
     }, 4000);
   };
-
+  const formatearNombreInput = (value) => {
+    return value
+      .split(" ")
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+      .join(" ");
+  };
   const guardarCliente = async (onClose) => {
     // 🚨 Validaciones - Alertas INTERNAS (dentro del modal)
     if (!nombreCompleto.trim()) {
@@ -80,7 +85,9 @@ const ModalDia = ({
     if (!metodoSeleccionado) {
       return mostrarAlertaInterna("warning", "Método de pago requerido", "Selecciona un método de pago");
     }
-
+    if ((metodoSeleccionado === 'yape' || metodoSeleccionado === 'plin') && !comprobantePreview) {
+        return mostrarAlertaInterna("danger", "Comprobante requerido", `Debes subir el comprobante de pago para ${metodosPago[metodoSeleccionado].nombre}`);
+      }
     const correctedDate = new Date(`${fechaInscripcion}T00:00:00`);
 
     try {
@@ -90,7 +97,7 @@ const ModalDia = ({
           nombre: nombreCompleto,
           fecha: correctedDate,
           metododePago: metodosPago[metodoSeleccionado].nombre,
-          comprobante: comprobanteData || undefined,
+          comprobante: comprobantePreview || undefined,
         },
         { withCredentials: true }
       );
@@ -188,6 +195,10 @@ const ModalDia = ({
                     const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
                     setNombreCompleto(valor);
                   }}
+                  onBlur={(e) => {
+                    const valorFormateado = formatearNombreInput(e.target.value);
+                    setNombreCompleto(valorFormateado);
+                  }}
                 />
 
                 <Input
@@ -226,14 +237,31 @@ const ModalDia = ({
                             {metodo.nombre}
                           </span>
                         </div>
-                        {metodoSeleccionado === key && (
-                          <span className="text-sm font-semibold">
-                            Seleccionado
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {/* 🔥 Indicador de comprobante subido para Yape/Plin */}
+                          {(key === 'yape' || key === 'plin') && metodoSeleccionado === key && comprobantePreview && (
+                            <span className="px-2 py-1 text-xs font-semibold text-green-600 bg-green-100 rounded">
+                              ✓ Comprobante
+                            </span>
+                          )}
+                          {metodoSeleccionado === key && (
+                            <span className="text-sm font-semibold">
+                              Seleccionado
+                            </span>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>
+                  {(metodoSeleccionado === 'yape' || metodoSeleccionado === 'plin') && comprobantePreview && (
+                    <button
+                      type="button"
+                      onClick={() => setPagoModalOpen(true)}
+                      className="w-full p-2 mt-2 text-sm text-white transition-all duration-200 bg-gray-700 rounded hover:bg-gray-600"
+                    >
+                      📷 Ver/Cambiar comprobante
+                    </button>
+                  )}
                 </div>
 
               </ModalBody>
@@ -268,8 +296,10 @@ const ModalDia = ({
         isOpen={isPagoModalOpen}
         onOpenChange={setPagoModalOpen}
         onUploadComplete={(dataUrl) => {
-          setComprobanteData(dataUrl); // Guardamos el base64 para enviarlo
+          setComprobantePreview(dataUrl); // Guardamos el base64 para enviarlo
           setPagoModalOpen(false);
+          mostrarAlertaInterna("success", "Comprobante listo", "Comprobante agregado correctamente.");
+
         }}
       />
     </>
