@@ -177,7 +177,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
   const abrirEdicion = async (entrenador) => {
     setLoadingEditar(true);
     try {
-      const res = await api.get(`/trainers/verificarclientes/${entrenador._id}`, {
+      /* const res = await api.get(`/trainers/verificarclientes/${entrenador._id}`, {
         withCredentials: true,
       });
       const miembrosUsando = res.data.miembrosUsando ?? res.data.clientesUsando ?? 0;
@@ -190,7 +190,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
         );
         setLoadingEditar(false);
         return;
-      }
+      } */
 
       // Si no está en uso: preparar formulario y abrir modal de edición
       setFormEdicion({
