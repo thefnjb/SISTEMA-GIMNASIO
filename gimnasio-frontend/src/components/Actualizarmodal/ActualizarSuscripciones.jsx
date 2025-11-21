@@ -79,6 +79,9 @@ export default function ActualizarSuscripciones({
   const [isPagoModalOpen, setPagoModalOpen] = useState(false);
   const [comprobantePreview, setComprobantePreview] = useState(null);
   const [comprobanteData, setComprobanteData] = useState(null);
+  // Estados para retener la selección de método hasta confirmar subida del comprobante
+  const [pendingMetodoPago, setPendingMetodoPago] = useState(null);
+  const [pendingMetodoPagoRenovacion, setPendingMetodoPagoRenovacion] = useState(null);
 
   const vencimientoActual = useMemo(
     () => (miembro?.vencimiento ? new Date(miembro.vencimiento) : null),
@@ -356,27 +359,32 @@ export default function ActualizarSuscripciones({
                 <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
                   <p className="mb-2 text-sm font-medium text-gray-200">Método de pago</p>
                   <div className="flex gap-2">
-                    {["yape", "plin", "efectivo"].map((m) => (
-                      <Button
-                        key={m}
-                        size="sm"
-                        variant={datos.metodoPago === m ? "solid" : "bordered"}
-                        className={`${datos.metodoPago === m ? btnPrimaryClass : btnDefaultClass} capitalize`}
-                        onClick={() => {
-                          setDatos({ ...datos, metodoPago: m });
-                          // Si se cambia a efectivo, limpiar comprobante
-                          if (m === 'efectivo') {
-                            setComprobanteData(null);
-                            setComprobantePreview(null);
-                          }
-                          if (m === 'yape' || m === 'plin') {
-                            setPagoModalOpen(true);
-                          }
-                        }}
-                      >
-                        {m}
-                      </Button>
-                    ))}
+                    {["yape", "plin", "efectivo"].map((m) => {
+                      const isSelected = datos.metodoPago === m || pendingMetodoPago === m;
+                      return (
+                        <Button
+                          key={m}
+                          size="sm"
+                          variant={isSelected ? "solid" : "bordered"}
+                          className={`${isSelected ? btnPrimaryClass : btnDefaultClass} capitalize`}
+                          onClick={() => {
+                            if (m === 'efectivo') {
+                              // Confirm immediate switch a efectivo
+                              setDatos({ ...datos, metodoPago: m });
+                              setComprobanteData(null);
+                              setComprobantePreview(null);
+                              setPendingMetodoPago(null);
+                            } else {
+                              // Para yape/plin no confirmar aún: abrir modal y marcar pendiente
+                              setPendingMetodoPago(m);
+                              setPagoModalOpen(true);
+                            }
+                          }}
+                        >
+                          {m}
+                        </Button>
+                      );
+                    })}
                   </div>
                   {/* Mostrar vista previa del comprobante (si existe) — sin botones adicionales */}
                   {(datos.metodoPago === 'yape' || datos.metodoPago === 'plin') && comprobantePreview && (
@@ -501,28 +509,30 @@ export default function ActualizarSuscripciones({
                       <div className="p-3 bg-gray-800 border rounded-md border-neutral-700">
                         <div className="mb-2 text-sm text-gray-400">Método de pago para la renovación</div>
                         <div className="flex gap-2">
-                          {['yape', 'plin', 'efectivo'].map((m) => (
-                            <Button
-                              key={m}
-                              size="sm"
-                              variant={metodoPagoRenovacion === m ? 'solid' : 'bordered'}
-                              className={`${metodoPagoRenovacion === m ? btnPrimaryClass : btnDefaultClass} capitalize`}
-                              onClick={() => {
-                                setMetodoPagoRenovacion(m);
-                                // Si se cambia a efectivo, limpiar comprobante
-                                if (m === 'efectivo') {
-                                  setComprobanteData(null);
-                                  setComprobantePreview(null);
-                                }
-                                // Abrir modal de comprobante para Yape o Plin
-                                if (m === 'yape' || m === 'plin') {
-                                  setPagoModalOpen(true);
-                                }
-                              }}
-                            >
-                              {m}
-                            </Button>
-                          ))}
+                          {['yape', 'plin', 'efectivo'].map((m) => {
+                            const isSelectedR = metodoPagoRenovacion === m || pendingMetodoPagoRenovacion === m;
+                            return (
+                              <Button
+                                key={m}
+                                size="sm"
+                                variant={isSelectedR ? 'solid' : 'bordered'}
+                                className={`${isSelectedR ? btnPrimaryClass : btnDefaultClass} capitalize`}
+                                onClick={() => {
+                                  if (m === 'efectivo') {
+                                    setMetodoPagoRenovacion(m);
+                                    setComprobanteData(null);
+                                    setComprobantePreview(null);
+                                    setPendingMetodoPagoRenovacion(null);
+                                  } else {
+                                    setPendingMetodoPagoRenovacion(m);
+                                    setPagoModalOpen(true);
+                                  }
+                                }}
+                              >
+                                {m}
+                              </Button>
+                            );
+                          })}
                         </div>
                       </div>
 
@@ -578,12 +588,26 @@ export default function ActualizarSuscripciones({
         isOpen={isPagoModalOpen}
         onOpenChange={(open) => {
           // Solo cerrar el modal de comprobante, no afectar el modal principal
+          // Si el usuario cierra (open === false) sin subir comprobante, limpiar pendientes
           setPagoModalOpen(open);
+          if (!open) {
+            setPendingMetodoPago(null);
+            setPendingMetodoPagoRenovacion(null);
+          }
         }}
         onUploadComplete={(dataUrl) => {
           // dataUrl es una URL base64 de la imagen
           setComprobantePreview(dataUrl);
           setComprobanteData(dataUrl);
+          // Confirmar método pendiente (si hay)
+          if (pendingMetodoPago) {
+            setDatos(prev => ({ ...prev, metodoPago: pendingMetodoPago }));
+            setPendingMetodoPago(null);
+          }
+          if (pendingMetodoPagoRenovacion) {
+            setMetodoPagoRenovacion(pendingMetodoPagoRenovacion);
+            setPendingMetodoPagoRenovacion(null);
+          }
           setPagoModalOpen(false);
         }}
       />
