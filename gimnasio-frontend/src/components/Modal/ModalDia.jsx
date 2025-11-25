@@ -202,10 +202,11 @@ const ModalDia = ({
                 />
 
                 <Input
-                  label="Fecha de inscripción"
+                  label="Fecha de inscripción (automática)"
                   type="date"
                   value={fechaInscripcion}
-                  onChange={(e) => setFechaInscripcion(e.target.value)}
+                  readOnly
+                  aria-label="Fecha de inscripción automática"
                 />
 
                 {/* Método de pago */}
