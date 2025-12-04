@@ -19,6 +19,7 @@ export default function ModalEditarClienteDia({
   showAlert,
 }) {
   const [nombreEdit, setNombreEdit] = useState("");
+  const [dniEdit, setDniEdit] = useState("");
   const [metodoPagoEdit, setMetodoPagoEdit] = useState("");
   const [comprobanteBase64, setComprobanteBase64] = useState(null);
   const [guardando, setGuardando] = useState(false);
@@ -27,6 +28,8 @@ export default function ModalEditarClienteDia({
   useEffect(() => {
     if (cliente) {
       setNombreEdit(cliente.nombre || "");
+      // Mantener compatibilidad con ambos formatos (dni antiguo o numeroDocumento nuevo)
+      setDniEdit(cliente.dni || cliente.numeroDocumento || "");
       setMetodoPagoEdit(cliente.metododePago || "");
       let comprobanteExistente = null;
 
@@ -40,6 +43,7 @@ export default function ModalEditarClienteDia({
       setComprobanteBase64(comprobanteExistente);
     }
   }, [cliente]);
+
 
   const handleMetodoPagoChange = (metodo) => {
     setMetodoPagoEdit(metodo);
@@ -66,7 +70,11 @@ export default function ModalEditarClienteDia({
 
     try {
       setGuardando(true);
-      const dataToSend = { nombre: nombreEdit, metododePago: metodoPagoEdit };
+      const dataToSend = { 
+        nombre: nombreEdit, 
+        dni: dniEdit.trim() || undefined,
+        metododePago: metodoPagoEdit 
+      };
       if (comprobanteBase64) dataToSend.comprobante = comprobanteBase64;
 
       await api.put(`/visits/actualizarcliente/${cliente._id}`, dataToSend);
@@ -85,6 +93,7 @@ export default function ModalEditarClienteDia({
 
   const resetForm = () => {
     setNombreEdit("");
+    setDniEdit("");
     setMetodoPagoEdit("");
     setComprobanteBase64(null);
   };
@@ -121,6 +130,22 @@ export default function ModalEditarClienteDia({
                   input: "bg-[#22242c] text-white placeholder:text-gray-500",
                   inputWrapper:
                     "bg-[#22242c] border border-gray-600 hover:border-gray-400 focus-within:border-red-600",
+                }}
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1 text-sm text-gray-300">DNI</label>
+              <Input
+                variant="flat"
+                radius="md"
+                value={dniEdit}
+                isReadOnly
+                placeholder="Ej. 75362380"
+                classNames={{
+                  input: "bg-[#22242c] text-white placeholder:text-gray-500 cursor-not-allowed",
+                  inputWrapper:
+                    "bg-[#22242c] border border-gray-600 opacity-60 cursor-not-allowed",
                 }}
               />
             </div>

@@ -148,21 +148,22 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
           onOpenChange(open);
         }
       }}
-      size="2xl"
+      size={{ base: "full", sm: "xl", md: "2xl" }}
       backdrop="blur"
       isDismissable={false}
       hideCloseButton={false}
       className="z-[10001]"
+      scrollBehavior="inside"
       portalContainer={typeof document !== 'undefined' ? document.body : undefined}
     >
       <ModalContent>
         {(onClose) => (
           <div className="text-white bg-neutral-900 rounded-xl">
             <ModalHeader className="flex flex-col gap-1">
-              <div className="text-2xl font-bold text-center">Subir comprobante</div>
+              <div className="text-xl sm:text-2xl font-bold text-center">Subir comprobante</div>
             </ModalHeader>
 
-            <ModalBody className="space-y-4 min-h-[300px]">
+            <ModalBody className="space-y-3 sm:space-y-4 min-h-[250px] sm:min-h-[300px] px-3 sm:px-6">
               {error && (
                 <Alert color="danger" className="mb-4">
                   {error}
@@ -251,7 +252,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
               )}
             </ModalBody>
 
-            <ModalFooter>
+            <ModalFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
               <Button
                 color="default"
                 variant="light"
@@ -260,7 +261,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
                   resetState();
                   if (onOpenChange) onOpenChange(false);
                 }}
-                className="text-white"
+                className="w-full sm:w-auto text-white"
               >
                 Cancelar
               </Button>
@@ -274,7 +275,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
                     if (onOpenChange) onOpenChange(false);
                   }
                 }}
-                className="text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-500"
+                className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-500"
                 isDisabled={!preview || isProcessing}
               >
                 Confirmar y subir

@@ -292,21 +292,22 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         hideCloseButton
-        size="3xl"
+        size={{ base: "full", sm: "2xl", md: "3xl" }}
         backdrop="blur"
         isDismissable={!isPagoModalOpen}
         className="text-white bg-black"
+        scrollBehavior="inside"
       >
         <ModalContent>
           {(onClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-3xl font-bold text-center text-red-500">
+                <div className="w-full text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500">
                   Nueva Suscripción
                 </div>
               </ModalHeader>
 
-              <ModalBody className="space-y-4 max-h-[70vh] overflow-y-auto">
+              <ModalBody className="space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-3 sm:px-6">
                 {/* 🔥 ALERTA INTERNA - Para validaciones y errores */}
                 {alertaInterna.show && (
                   <div className="mb-4">
@@ -323,8 +324,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                 )}
                 {/* Tipo de Documento */}
                 <div>
-                  <label className="block mb-2 text-sm">Tipo de Documento</label>
-                  <div className="flex gap-2">
+                  <label className="block mb-2 text-xs sm:text-sm">Tipo de Documento</label>
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -361,8 +362,8 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                 {/* Origen para completar el nombre: RENIEC (consulta) o MANUAL (ingresar nombre) */}
                 {tipoDocumento === 'DNI' && (
                   <div>
-                    <label className="block mb-2 text-sm">Origen Nombre</label>
-                    <div className="flex gap-2">
+                    <label className="block mb-2 text-xs sm:text-sm">Origen Nombre</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <button
                         type="button"
                         onClick={() => setOrigenNombre('reniec')}
@@ -484,7 +485,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
 
                 {/* Método de pago */}
                 <div>
-                  <label className="block mb-1 text-sm">Método de Pago</label>
+                  <label className="block mb-1 text-xs sm:text-sm">Método de Pago</label>
                   <div className="flex flex-col gap-2">
                     {Object.entries(metodosPago).map(([key, metodo]) => (
                       <button
@@ -534,7 +535,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                 </div>
               </ModalBody>
 
-              <ModalFooter>
+              <ModalFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
                 <Button
                   color="danger"
                   variant="light"
@@ -542,14 +543,14 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                     limpiarCampos();
                     onClose();
                   }}
-                  className="text-white border-white"
+                  className="w-full sm:w-auto text-white border-white"
                 >
                   Cerrar
                 </Button>
                 <Button
                   color="primary"
                   onPress={() => guardarSuscripcion(onClose)}
-                  className="text-white bg-red-600 hover:bg-red-700"
+                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700"
                 >
                   Guardar
                 </Button>

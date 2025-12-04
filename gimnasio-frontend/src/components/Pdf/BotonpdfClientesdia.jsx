@@ -29,13 +29,16 @@ const ReporteClientesDia = () => {
 
   return (
     <Button
-              color="danger"
-              style={{ backgroundColor: "#7a0f16" }}
-              variant="solid"
-              onPress={descargarPDF}
-            >
-        <CloudDownloadRoundedIcon />
-            </Button>
+      color="danger"
+      style={{ backgroundColor: "#7a0f16" }}
+      variant="solid"
+      onPress={descargarPDF}
+      size="sm"
+      className="text-xs sm:text-sm"
+    >
+      <CloudDownloadRoundedIcon className="text-base sm:text-lg" />
+      <span className="hidden sm:inline ml-1">Descargar PDF</span>
+    </Button>
   );
 };
 

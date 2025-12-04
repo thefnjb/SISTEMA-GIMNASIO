@@ -128,16 +128,57 @@ exports.getAllClientes = async (req, res) => {
 // ---------- POST: registrar cliente ----------
 exports.registrarCliente = async (req, res) => {
     try {
-        const { nombre, fecha, metododePago } = req.body;
+        const { nombre, tipoDocumento, numeroDocumento, fecha, metododePago } = req.body;
         const { id, rol } = req.usuario;
 
     if (!nombre || !nombre.trim()) return res.status(400).json({ error: "El nombre es requerido" });
 
+        // Validar formato de documento si se proporciona
+        if (tipoDocumento && numeroDocumento) {
+            if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+                return res.status(400).json({ error: "El DNI debe tener exactamente 8 dígitos" });
+            }
+            if (tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDocumento)) {
+                return res.status(400).json({ error: "El CE debe tener entre 9 y 12 dígitos" });
+            }
+        }
+
+        // Verificar si ya existe un cliente con el mismo documento en el día actual
+        if (tipoDocumento && numeroDocumento) {
+            const fechaCliente = fecha ? new Date(fecha) : new Date();
+            fechaCliente.setHours(0, 0, 0, 0);
+            const fechaFin = new Date(fechaCliente);
+            fechaFin.setDate(fechaFin.getDate() + 1);
+
+            // Normalizar el número de documento (eliminar espacios y asegurar que sea string)
+            const numeroDocNormalizado = String(numeroDocumento).trim().replace(/\s+/g, '');
+            const tipoDocNormalizado = String(tipoDocumento).trim();
+
+            // Buscar cliente existente con el mismo documento en el mismo día
+            const clienteExistente = await ClientesPorDia.findOne({
+                tipoDocumento: tipoDocNormalizado,
+                numeroDocumento: numeroDocNormalizado,
+                fecha: { $gte: fechaCliente, $lt: fechaFin }
+            });
+
+            if (clienteExistente) {
+                return res.status(409).json({ 
+                    error: `Ya existe un cliente registrado con ${tipoDocNormalizado} ${numeroDocNormalizado} en la fecha seleccionada.` 
+                });
+            }
+        }
+
         const now = new Date();
         const horaInicio = now.toTimeString().slice(0, 5);
 
+        // Normalizar documentos antes de guardar
+        const tipoDocFinal = tipoDocumento ? String(tipoDocumento).trim() : undefined;
+        const numeroDocFinal = numeroDocumento ? String(numeroDocumento).trim().replace(/\s+/g, '') : undefined;
+
         const nuevoCliente = new ClientesPorDia({
             nombre: nombre.trim(),
+            tipoDocumento: tipoDocFinal,
+            numeroDocumento: numeroDocFinal,
             fecha: fecha || new Date(),
             horaInicio,
             metododePago: metododePago || 'Efectivo',
@@ -183,7 +224,7 @@ exports.actualizarCliente = async (req, res) => {
     if (!req.usuario || !req.usuario.id) return res.status(401).json({ error: "Usuario no autenticado" });
     const { id: userId, rol } = req.usuario;
     const { id: clienteId } = req.params;
-    const { nombre, metododePago, monto } = req.body;
+    const { nombre, dni, tipoDocumento, numeroDocumento, metododePago, monto } = req.body;
 
     if (!nombre || !nombre.trim()) return res.status(400).json({ error: "El nombre es requerido" });
 
@@ -195,6 +236,35 @@ exports.actualizarCliente = async (req, res) => {
     }
 
     cliente.nombre = nombre.trim();
+    
+    // Compatibilidad: si viene 'dni' (formato antiguo), convertirlo a tipoDocumento/numeroDocumento
+    if (dni !== undefined) {
+      if (dni && dni.trim()) {
+        cliente.tipoDocumento = "DNI";
+        cliente.numeroDocumento = dni.trim();
+      } else {
+        cliente.tipoDocumento = undefined;
+        cliente.numeroDocumento = undefined;
+      }
+    }
+    // Si viene tipoDocumento/numeroDocumento (formato nuevo), usarlo
+    else if (tipoDocumento !== undefined || numeroDocumento !== undefined) {
+      if (tipoDocumento && numeroDocumento) {
+        // Validar formato de documento si se proporciona
+        if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+          return res.status(400).json({ error: "El DNI debe tener exactamente 8 dígitos" });
+        }
+        if (tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDocumento)) {
+          return res.status(400).json({ error: "El CE debe tener entre 9 y 12 dígitos" });
+        }
+        cliente.tipoDocumento = tipoDocumento;
+        cliente.numeroDocumento = numeroDocumento.trim();
+      } else {
+        cliente.tipoDocumento = undefined;
+        cliente.numeroDocumento = undefined;
+      }
+    }
+    
     cliente.metododePago = metododePago || cliente.metododePago || "Efectivo";
     if (monto != null) cliente.monto = Number(monto);
 

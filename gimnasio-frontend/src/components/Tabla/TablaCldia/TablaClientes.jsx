@@ -445,32 +445,81 @@ export default function TablaClientesAdmin({ refresh }) {
           <Spinner label="Cargando miembros..." color="primary" />
         </div>
       ) : (
-        <div className="w-full">
-          <Table
-            aria-label="Tabla de miembros"
-            removeWrapper
-            isStriped
-            sortDescriptor={sortDescriptor}
-            onSortChange={setSortDescriptor}
-            classNames={{
-              table: "bg-white w-full table-auto text-[11px]",
-              td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] px-1.5 py-0.5",
-              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] font-semibold px-1.5 py-1 text-center",
-              tr: "hover:bg-gray-50 transition-colors",
-            }}
-          >
+        <>
+        {/* Vista de Cards para móvil */}
+        <div className="md:hidden space-y-3 mb-4">
+          {miembrosOrdenados.map((miembro) => (
+            <div key={miembro._id} className="bg-white rounded-lg shadow-md p-3 border border-gray-200">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 20 }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-gray-800 truncate">{miembro.nombreCompleto}</p>
+                    <p className="text-xs text-gray-500">{miembro.telefono}</p>
+                  </div>
+                </div>
+                <Chip color={calcularEstado(miembro).color} variant="flat" size="sm" className="text-[10px]">
+                  {calcularEstado(miembro).etiqueta}
+                </Chip>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                <div>
+                  <span className="text-gray-500">Vence:</span>
+                  <span className="ml-1 font-medium">{mostrarVencimiento(miembro)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Mensualidad:</span>
+                  <span className="ml-1 font-medium">{formatearMensualidadNumero(miembro)}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                <div className="flex items-center gap-2">
+                  <AdfScannerRoundedIcon
+                    onClick={() => descargarVoucher(miembro)}
+                    sx={{ color: "#555555", fontSize: 18, cursor: "pointer" }}
+                  />
+                  <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
+                  <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
+                </div>
+              </div>
+            </div>
+          ))}
+          {miembrosOrdenados.length === 0 && (
+            <div className="text-center py-8 text-gray-500">No hay miembros encontrados.</div>
+          )}
+        </div>
+
+        {/* Vista de Tabla para desktop */}
+        <div className="hidden md:block w-full overflow-x-auto -mx-2 sm:-mx-3 md:mx-0 px-2 sm:px-3 md:px-0 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+          <div className="min-w-full inline-block">
+            <Table
+              aria-label="Tabla de miembros"
+              removeWrapper
+              isStriped
+              sortDescriptor={sortDescriptor}
+              onSortChange={setSortDescriptor}
+              classNames={{
+                base: "min-w-full",
+                table: "bg-white w-full table-auto text-[11px]",
+                td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] px-1.5 py-0.5",
+                th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] font-semibold px-1.5 py-1 text-center",
+                tr: "hover:bg-gray-50 transition-colors",
+              }}
+            >
             <TableHeader>
-              <TableColumn className="min-w-[140px]">NOMBRE Y APELLIDO</TableColumn>
-              <TableColumn className="w-[100px]">TELÉFONO</TableColumn>
-              <TableColumn className="hidden md:table-cell">DOCUMENTO</TableColumn>
-              <TableColumn key="ingreso" allowsSorting className="min-w-[120px] text-center hidden md:table-cell">INGRESO</TableColumn>
-              <TableColumn className="hidden md:table-cell">MENSUALIDAD</TableColumn>
-              <TableColumn className="hidden lg:table-cell">ENTRENADOR</TableColumn>
-              <TableColumn className="hidden md:table-cell">PAGO</TableColumn>
-              <TableColumn key="debe" allowsSorting className="hidden md:table-cell">DEBE</TableColumn>
-              <TableColumn>VENCE</TableColumn>
-              <TableColumn key="estado" allowsSorting>ESTADO</TableColumn>
-              <TableColumn className="hidden md:table-cell">ACCIONES</TableColumn>
+              <TableColumn className="min-w-[120px]">NOMBRE Y APELLIDO</TableColumn>
+              <TableColumn className="w-[90px]">TELÉFONO</TableColumn>
+              <TableColumn className="hidden md:table-cell min-w-[100px]">DOCUMENTO</TableColumn>
+              <TableColumn key="ingreso" allowsSorting className="min-w-[100px] text-center hidden md:table-cell">INGRESO</TableColumn>
+              <TableColumn className="hidden md:table-cell min-w-[80px]">MENSUALIDAD</TableColumn>
+              <TableColumn className="hidden lg:table-cell min-w-[110px]">ENTRENADOR</TableColumn>
+              <TableColumn className="hidden md:table-cell min-w-[60px]">PAGO</TableColumn>
+              <TableColumn key="debe" allowsSorting className="hidden md:table-cell min-w-[90px]">DEBE</TableColumn>
+              <TableColumn className="min-w-[90px]">VENCE</TableColumn>
+              <TableColumn key="estado" allowsSorting className="min-w-[100px]">ESTADO</TableColumn>
+              <TableColumn className="hidden md:table-cell min-w-[120px]">ACCIONES</TableColumn>
             </TableHeader>
 
             <TableBody emptyContent={"No hay miembros encontrados."}>
@@ -554,7 +603,7 @@ export default function TablaClientesAdmin({ refresh }) {
                       {calcularEstado(miembro).etiqueta}
                     </Chip>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1 h-[35px] justify-end">
                       <AdfScannerRoundedIcon
                         onClick={() => descargarVoucher(miembro)}
@@ -568,17 +617,19 @@ export default function TablaClientesAdmin({ refresh }) {
               ))}
             </TableBody>
           </Table>
+          </div>
+        </div>
 
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               {Array.from(filtroEstado)[0] === "todos" && (
-                <>
-                  <label htmlFor="rowsPerPage" className="mr-2 text-sm text-gray-600">Filas por página</label>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="rowsPerPage" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Filas por página:</label>
                   <select
                     id="rowsPerPage"
                     value={rowsPerPage}
                     onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
-                    className="px-2 py-1 text-sm border rounded"
+                    className="px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     aria-label="Filas por página"
                   >
                     <option value={10}>10</option>
@@ -587,29 +638,29 @@ export default function TablaClientesAdmin({ refresh }) {
                     <option value={40}>40</option>
                     <option value={50}>50</option>
                   </select>
-                </>
+                </div>
               )}
               {Array.from(filtroEstado)[0] !== "todos" && !cargando && miembros.length > 0 && (
-                <div className="text-sm text-gray-600">
+                <div className="text-xs sm:text-sm text-gray-600">
                   Mostrando todos los clientes con estado: <span className="font-semibold">{Array.from(filtroEstado)[0]}</span>
                 </div>
               )}
-            </div>
-
-            {Array.from(filtroEstado)[0] === "todos" && (
-              <div className="flex justify-center flex-1">
-                <Pagination
-                  total={totalPages}
-                  initialPage={page}
-                  onChange={(page) => setPage(page)}
-                  color="red"
-                />
-              </div>
-            )}
-            {Array.from(filtroEstado)[0] !== "todos" && <div className="flex-1" />}
-            <div className="w-20" />
           </div>
+
+          {Array.from(filtroEstado)[0] === "todos" && (
+            <div className="flex justify-center flex-1 w-full sm:w-auto mt-3 sm:mt-0">
+              <Pagination
+                total={totalPages}
+                initialPage={page}
+                onChange={(page) => setPage(page)}
+                color="red"
+                size="sm"
+              />
+            </div>
+          )}
+          {Array.from(filtroEstado)[0] !== "todos" && <div className="flex-1" />}
         </div>
+        </>
       )}
 
       {mostrarModal && modoModal !== "editarDeuda" && (

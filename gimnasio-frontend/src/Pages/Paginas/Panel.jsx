@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Barralateral from "../../components/Barralateral/Barralateral";
 import { CustomCard } from "../../components/Card/spacer";
+import { CustomCardMobile } from "../../components/Card/CustomCardMobile";
 import Ingresos from "./Ingresos";
 import IncribirTrabajador from "../../components/Trabajadores/incribirTrabajador";
 import TablaClientesAdmin from "../../components/Tabla/TablaCldia/TablaClientesAdmin";
@@ -22,9 +23,10 @@ function Panel() {
   const [showVer, setShowVer] = useState(false);
   const [refreshClientes, setRefreshClientes] = useState(0);
   const [refreshEntrenadores, setRefreshEntrenadores] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false); 
 
   const handleClienteAgregado = () => {
-    setRefreshClientes((prev) => prev + 1); 
+    setRefreshClientes((prev) => prev + 1);
   };
 
   const handleEntrenadorAgregado = () => {
@@ -32,43 +34,78 @@ function Panel() {
   };
 
   const renderContent = () => {
-    switch (active)  {
+    switch (active) {
       case "INICIO":
         return (
-          <div className="p-6">
-            <div className="flex justify-end mb-6">
+          <div className="p-4 sm:p-6">
+            <div className="flex justify-end mb-4 sm:mb-6">
               <Button
-                className="flex items-center gap-3 px-4 py-2 font-bold text-white bg-red-800 rounded shadow hover:bg-red-800"
+                className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base font-bold text-white bg-red-800 rounded shadow hover:bg-red-800"
               >
                 <span
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowAgregar(true);
                   }}
-                  className="text-xl cursor-pointer"
+                  className="text-lg sm:text-xl cursor-pointer"
                   title="Agregar membresía"
                 >
-                  <AddCircleOutlineRoundedIcon/>
+                  <AddCircleOutlineRoundedIcon />
                 </span>
                 <span
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowVer(true);
                   }}
-                  className="text-xl cursor-pointer"
+                  className="text-lg sm:text-xl cursor-pointer"
                   title="Ver membresías"
                 >
-                  <RemoveRedEyeRoundedIcon/>
+                  <RemoveRedEyeRoundedIcon />
                 </span>
-                MEMBRESÍAS
+                <span className="hidden sm:inline">MEMBRESÍAS</span>
+                <span className="sm:hidden">MEMB.</span>
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-              <CustomCard imageUrl="/images/suscripcion.png">
-                <ModalSuscripcion 
+            {/* Cards para móvil/tablet */}
+            <div className="flex flex-col gap-4 md:hidden">
+              <CustomCardMobile imageUrl="/images/suscripcion.png">
+                <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
-                  onSuscripcionExitosa={handleClienteAgregado} 
+                  onSuscripcionExitosa={handleClienteAgregado}
+                />
+              </CustomCardMobile>
+
+              <CustomCardMobile imageUrl="/images/clientespordiaa.png">
+                <ModalDia
+                  triggerText={<GetAppRoundedIcon fontSize="large" />}
+                  title="Clientes por Dia"
+                  onClienteAgregado={handleClienteAgregado}
+                />
+              </CustomCardMobile>
+
+              <CustomCardMobile imageUrl="/images/entrenadores.PNG">
+                <div className="flex gap-4">
+                  <ModalEntrenadores
+                    triggerText={<GetAppRoundedIcon fontSize="large" />}
+                    title="Entrenadores"
+                    onEntrenadorAgregado={handleEntrenadorAgregado}
+                  />
+                  <ModalVerEntrenadores
+                    triggerText={<RemoveRedEyeRoundedIcon fontSize="large" />}
+                    title="Entrenadores"
+                    refresh={refreshEntrenadores}
+                  />
+                </div>
+              </CustomCardMobile>
+            </div>
+
+            {/* Cards para desktop */}
+            <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <CustomCard imageUrl="/images/suscripcion.png">
+                <ModalSuscripcion
+                  triggerText={<GetAppRoundedIcon fontSize="large" />}
+                  onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCard>
 
@@ -84,13 +121,13 @@ function Panel() {
 
               <CustomCard imageUrl="/images/entrenadores.PNG">
                 <div className="flex gap-10">
-                  <ModalEntrenadores 
-                    triggerText={<GetAppRoundedIcon fontSize="large" />} 
+                  <ModalEntrenadores
+                    triggerText={<GetAppRoundedIcon fontSize="large" />}
                     title="Entrenadores"
                     onEntrenadorAgregado={handleEntrenadorAgregado}
                   />
-                  <ModalVerEntrenadores 
-                    triggerText={<RemoveRedEyeRoundedIcon fontSize="large" />} 
+                  <ModalVerEntrenadores
+                    triggerText={<RemoveRedEyeRoundedIcon fontSize="large" />}
                     title="Entrenadores"
                     refresh={refreshEntrenadores}
                   />
@@ -120,7 +157,7 @@ function Panel() {
 
       case "CLIENTES":
         return (
-          <div className="w-full p-4 overflow-x-auto">
+          <div className="w-full p-3 sm:p-4 md:p-6 overflow-x-auto">
             <TablaClientesAdmin refresh={refreshClientes} />
           </div>
         );
@@ -145,14 +182,62 @@ function Panel() {
       />
 
       <div className="relative z-10 flex h-screen overflow-hidden">
-        {/* Barra lateral fija */}
-        <div className="flex-shrink-0 w-72">
-          <Barralateral active={active} setActive={setActive} />
+        {/* Static sidebar for desktop */}
+        <div className="hidden md:flex md:flex-shrink-0">
+          <div className="flex flex-col w-72">
+            <Barralateral active={active} setActive={setActive} />
+          </div>
         </div>
 
-        <div className="flex-1 overflow-x-auto">
-          <div className="min-w-[900px]">
-            {renderContent()}
+        {/* Mobile sidebar overlay */}
+        {sidebarOpen && (
+          <div className="md:hidden" role="dialog" aria-modal="true">
+            <div className="fixed inset-0 z-40 flex">
+              <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
+              <div className="relative flex flex-col flex-1 w-full max-w-xs bg-white">
+                <div className="absolute top-0 right-0 pt-2 -mr-12">
+                  <button
+                    type="button"
+                    className="flex items-center justify-center w-10 h-10 ml-1 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-black"
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <span className="sr-only">Close sidebar</span>
+                    <svg className="w-6 h-6 text-black" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div onClick={() => setSidebarOpen(false)}>
+                  <Barralateral active={active} setActive={setActive} />
+                </div>
+              </div>
+              <div className="flex-shrink-0 w-14"></div>
+            </div>
+          </div>
+        )}
+
+        {/* Main content */}
+        <div className="flex flex-col flex-1 w-0 overflow-hidden">
+          {/* Mobile header with hamburger button */}
+          <div className="flex items-center pt-3 pl-3 md:hidden">
+            <button
+              type="button"
+              className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <span className="sr-only">Open sidebar</span>
+              <svg className="w-6 h-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+            <h1 className="ml-4 text-xl font-bold">{active}</h1>
+          </div>
+
+          {/* Content area */}
+          <div className="flex-1 overflow-y-auto">
+            <div>
+              {renderContent()}
+            </div>
           </div>
         </div>
       </div>

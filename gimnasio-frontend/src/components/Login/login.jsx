@@ -36,7 +36,7 @@ function Login() {
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ Usuario: usuario, Contraseña: password }),
+        body: JSON.stringify({ usuario: usuario, password: password }),
       });
 
       if (response.ok) {
@@ -77,20 +77,24 @@ function Login() {
 
   return (
     <div className="flex flex-col min-h-screen text-white bg-black lg:flex-row">
-      {/* Imagen lateral */}
-      <div className="relative hidden overflow-hidden lg:block lg:w-1/2">
+      {/* Imagen lateral - Banner en móvil, panel lateral en desktop */}
+      <div className="relative w-full h-48 sm:h-64 md:h-80 lg:h-auto lg:w-1/2 overflow-hidden">
         <div
-          className="w-full h-full bg-center bg-cover animate-zoomImage grayscale"
-          style={{ backgroundImage: "url('/images/login.png')" }}
+          className="w-full h-full bg-center bg-cover bg-no-repeat animate-zoomImage grayscale lg:grayscale-0"
+          style={{ 
+            backgroundImage: "url('/images/login.png')"
+          }}
         ></div>
+        {/* Overlay oscuro solo en móvil para mejor contraste */}
+        <div className="absolute inset-0 bg-black/40 lg:hidden"></div>
       </div>
 
       {/* Formulario */}
-      <div className="flex items-center justify-center w-full px-6 py-10 shadow-inner bg-zinc-900 lg:w-1/2">
-        <div className="w-full max-w-md space-y-6 animate-fadeInDown">
+      <div className="flex items-center justify-center w-full px-4 sm:px-6 py-8 sm:py-10 shadow-inner bg-zinc-900 lg:w-1/2">
+        <div className="w-full max-w-md space-y-4 sm:space-y-6 animate-fadeInDown">
           <div className="text-center">
             <AvatarGroup />
-            <h1 className="text-3xl font-extrabold tracking-wide">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wide">
               <TextType 
                 text={["Gimnasio Terrones"]}
                 typingSpeed={75}
@@ -99,7 +103,7 @@ function Login() {
                 cursorCharacter="|"
               />
             </h1>
-            <p className="mt-1 text-sm text-gray-400">Accede con tus credenciales</p>
+            <p className="mt-1 text-xs sm:text-sm text-gray-400">Accede con tus credenciales</p>
           </div>
 
           {errorCredenciales && (
@@ -113,9 +117,9 @@ function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={`space-y-5 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
+          <form onSubmit={handleSubmit} className={`space-y-4 sm:space-y-5 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
             <div>
-              <label htmlFor="usuario" className="block mb-2 text-sm font-semibold">
+              <label htmlFor="usuario" className="block mb-2 text-xs sm:text-sm font-semibold">
                 Usuario
               </label>
               <Input
@@ -129,7 +133,7 @@ function Login() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block mb-2 text-sm font-semibold">
+              <label htmlFor="password" className="block mb-2 text-xs sm:text-sm font-semibold">
                 Contraseña
               </label>
               <div className="relative">

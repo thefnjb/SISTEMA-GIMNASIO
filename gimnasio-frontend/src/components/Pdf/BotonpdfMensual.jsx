@@ -39,10 +39,11 @@ export default function Añosselector() {
 
   return (
     <Autocomplete
-      className="max-w-xs"
+      className="w-full sm:max-w-xs"
       defaultItems={years}
       label="Selecciona un año para descargar"
       onSelectionChange={(key) => handleDownload(key)}
+      size="sm"
     >
       {(year) => <AutocompleteItem key={year.key}>{year.label}</AutocompleteItem>}
     </Autocomplete>

@@ -6,14 +6,71 @@ const TrabajadorController = {
     // Crear nuevo trabajador
     crearTrabajador : async (req, res) => {
     try {
-        const { nombre, nombreUsuario, password } = req.body;
+        const { nombre, tipoDocumento, numeroDocumento, nombreUsuario, password } = req.body;
+
+        // Normalizar el nombre
+        const nombreNormalizado = nombre.trim();
+
+        // Validar que el nombre no esté en uso en el mismo gym
+        const nombreExiste = await Trabajador.findOne({ 
+            nombre: nombreNormalizado,
+            gym: req.usuario.gym_id
+        });
+        if (nombreExiste) {
+            return res.status(409).json({ 
+                error: `Ya existe un trabajador con el nombre "${nombreNormalizado}" en este gimnasio.` 
+            });
+        }
+
+        // Validar que el nombreUsuario no esté en uso antes de continuar
+        const usuarioExiste = await Trabajador.findOne({ 
+            nombreUsuario: nombreUsuario.trim(),
+            gym: req.usuario.gym_id
+        });
+        if (usuarioExiste) {
+            return res.status(409).json({ 
+                error: `El nombre de usuario "${nombreUsuario.trim()}" ya está en uso. Por favor, elige otro nombre de usuario.` 
+            });
+        }
+
+        // Validar formato de documento si se proporciona
+        if (tipoDocumento && numeroDocumento) {
+            if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+                return res.status(400).json({ error: "El DNI debe tener exactamente 8 dígitos" });
+            }
+            if (tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDocumento)) {
+                return res.status(400).json({ error: "El CE debe tener entre 9 y 12 dígitos" });
+            }
+            
+            // Normalizar el número de documento
+            const numeroDocNormalizado = String(numeroDocumento).trim().replace(/\s+/g, '');
+            const tipoDocNormalizado = String(tipoDocumento).trim();
+            
+            // Verificar si el documento ya existe en el mismo gym
+            const documentoExiste = await Trabajador.findOne({ 
+                tipoDocumento: tipoDocNormalizado, 
+                numeroDocumento: numeroDocNormalizado,
+                gym: req.usuario.gym_id
+            });
+            if (documentoExiste) {
+                return res.status(409).json({ 
+                    error: `Ya existe un trabajador con el ${tipoDocNormalizado} ${numeroDocNormalizado}.` 
+                });
+            }
+        }
 
         // Encriptar contraseña
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Normalizar documentos antes de guardar
+        const tipoDocFinal = tipoDocumento ? String(tipoDocumento).trim() : undefined;
+        const numeroDocFinal = numeroDocumento ? String(numeroDocumento).trim().replace(/\s+/g, '') : undefined;
+
         const nuevoTrabajador = new Trabajador({
-        nombre,
-        nombreUsuario,
+        nombre: nombreNormalizado,
+        tipoDocumento: tipoDocFinal,
+        numeroDocumento: numeroDocFinal,
+        nombreUsuario: nombreUsuario.trim(),
         password: hashedPassword,
         passwordPlano: password,
         gym: req.usuario.gym_id,
@@ -50,11 +107,12 @@ const TrabajadorController = {
                 query.$or = [
                     { nombre: searchRegex },
                     { nombreUsuario: searchRegex },
+                    { numeroDocumento: searchRegex },
                 ];
             }
 
             const trabajadores = await Trabajador.find(query)
-                .select('nombre nombreUsuario rol gym passwordPlano activo') // mostramos el campo passwordPlano
+                .select('nombre tipoDocumento numeroDocumento nombreUsuario rol gym passwordPlano activo') // mostramos el campo passwordPlano
                 .populate('gym', 'nombre');
 
             res.json({
@@ -117,7 +175,7 @@ const TrabajadorController = {
     actualizarTrabajador: async (req, res) => {
         try {
             const { id } = req.params;
-            const { nombre, nombreUsuario, password } = req.body;
+            const { nombre, tipoDocumento, numeroDocumento, nombreUsuario, password } = req.body;
 
             if (!nombre) {
                 return res.status(400).json({ error: "El nombre es requerido." });
@@ -126,12 +184,60 @@ const TrabajadorController = {
                 return res.status(400).json({ error: "El nombre de usuario es requerido." });
             }
 
+            // Validar formato de documento si se proporciona
+            if (tipoDocumento && numeroDocumento) {
+                if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+                    return res.status(400).json({ error: "El DNI debe tener exactamente 8 dígitos" });
+                }
+                if (tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDocumento)) {
+                    return res.status(400).json({ error: "El CE debe tener entre 9 y 12 dígitos" });
+                }
+            }
+
             const trabajador = await Trabajador.findOne({ _id: id, gym: req.usuario.gym_id });
             if (!trabajador) {
                 return res.status(404).json({ error: "Trabajador no encontrado." });
             }
 
-            trabajador.nombre = nombre;
+            // Normalizar el nombre
+            const nombreNormalizado = nombre.trim();
+
+            // Verificar si el nombre ya existe en otro trabajador del mismo gym
+            const nombreExiste = await Trabajador.findOne({ 
+                nombre: nombreNormalizado,
+                gym: req.usuario.gym_id,
+                _id: { $ne: id } // Excluir el trabajador actual
+            });
+            if (nombreExiste) {
+                return res.status(409).json({ 
+                    error: `Ya existe otro trabajador con el nombre "${nombreNormalizado}" en este gimnasio.` 
+                });
+            }
+
+            // Verificar si el documento ya existe en otro trabajador del mismo gym
+            if (tipoDocumento && numeroDocumento) {
+                const numeroDocNormalizado = String(numeroDocumento).trim().replace(/\s+/g, '');
+                const tipoDocNormalizado = String(tipoDocumento).trim();
+                const documentoExiste = await Trabajador.findOne({ 
+                    tipoDocumento: tipoDocNormalizado,
+                    numeroDocumento: numeroDocNormalizado,
+                    gym: req.usuario.gym_id,
+                    _id: { $ne: id } // Excluir el trabajador actual
+                });
+                if (documentoExiste) {
+                    return res.status(409).json({ 
+                        error: `Ya existe otro trabajador con el ${tipoDocNormalizado} ${numeroDocNormalizado}.` 
+                    });
+                }
+            }
+
+            trabajador.nombre = nombreNormalizado;
+            if (tipoDocumento !== undefined) {
+                trabajador.tipoDocumento = tipoDocumento ? String(tipoDocumento).trim() : undefined;
+            }
+            if (numeroDocumento !== undefined) {
+                trabajador.numeroDocumento = numeroDocumento ? String(numeroDocumento).trim().replace(/\s+/g, '') : undefined;
+            }
 
             if (nombreUsuario !== trabajador.nombreUsuario) {
                 const existe = await Trabajador.findOne({ nombreUsuario });

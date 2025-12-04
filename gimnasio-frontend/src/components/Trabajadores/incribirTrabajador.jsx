@@ -14,14 +14,15 @@ function IncribirTrabajador() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-end mb-6">
+    <div className="p-3 sm:p-4 md:p-6">
+      <div className="flex justify-end mb-4 sm:mb-6">
         <Button
-          className="flex items-center gap-3 px-4 py-2 font-bold text-white bg-red-800 rounded shadow hover:bg-red-800"
+          className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base font-bold text-white bg-red-800 rounded shadow hover:bg-red-800"
           onClick={() => setShowAgregar(true)}
         >
-          <AddCircleOutlineRoundedIcon />
-          INSCRIBIR TRABAJADOR
+          <AddCircleOutlineRoundedIcon className="text-lg sm:text-xl" />
+          <span className="hidden sm:inline">INSCRIBIR TRABAJADOR</span>
+          <span className="sm:hidden">AGREGAR</span>
         </Button>
       </div>
 

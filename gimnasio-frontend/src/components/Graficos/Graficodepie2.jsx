@@ -80,21 +80,21 @@ function ChartPieInteractive2() {
   }, [selectedMonth, selectedYear]);
 
   return (
-    <div className="rounded-lg shadow p-6">
+    <div className="rounded-lg shadow p-3 sm:p-4 md:p-6">
       {/* Encabezado */}
-      <div className="flex items-center justify-between pb-4 border-b border-gray-200 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-gray-200 mb-4 sm:mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">
             Clientes Proporción
           </h3>
-          <p className="text-sm text-gray-600">Clientes por Día</p>
+          <p className="text-xs sm:text-sm text-gray-600">Clientes por Día</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           {/* Select Mes */}
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="px-3 py-2 bg-red-600 text-black border border-red-700 rounded-lg"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-red-600 text-white border border-red-700 rounded-lg"
           >
             {meses.map((m) => (
               <option key={m.value} value={m.value}>
@@ -107,7 +107,7 @@ function ChartPieInteractive2() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="px-3 py-2 bg-red-600 text-black border border-red-700 rounded-lg"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-red-600 text-white border border-red-700 rounded-lg"
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -119,7 +119,7 @@ function ChartPieInteractive2() {
       </div>
 
       {/* Cuerpo con leyenda izquierda y gráfico derecha */}
-      <div className="flex flex-col md:flex-row gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6 md:flex-row">
         {/* Leyenda izquierda */}
         <div className="flex flex-col justify-center gap-4 md:w-1/4">
           <div className="flex items-center gap-2">
@@ -141,7 +141,7 @@ function ChartPieInteractive2() {
           ) : data.length === 0 ? (
             <p className="text-gray-500 text-center">No hay datos</p>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={250} className="sm:h-[300px]">
               <PieChart>
                 <ReTooltip />
                 <Pie

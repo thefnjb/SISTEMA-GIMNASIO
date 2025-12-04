@@ -27,10 +27,14 @@ const ModalDia = ({
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   const [nombreCompleto, setNombreCompleto] = useState("");
+  const [tipoDocumento, setTipoDocumento] = useState("DNI");
+  const [numeroDocumento, setNumeroDocumento] = useState("");
   const [fechaInscripcion, setFechaInscripcion] = useState("");
   const [metodoSeleccionado, setMetodoSeleccionado] = useState(null);
     const [isPagoModalOpen, setPagoModalOpen] = useState(false);
     const [comprobantePreview, setComprobantePreview] = useState(null);
+  const [isDniLoading, setIsDniLoading] = useState(false);
+  const [origenNombre, setOrigenNombre] = useState('reniec');
 
   // Estados para alertas híbridas
   const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
@@ -45,11 +49,70 @@ const ModalDia = ({
 
   const limpiarCampos = () => {
     setNombreCompleto("");
+    setTipoDocumento("DNI");
+    setNumeroDocumento("");
     setMetodoSeleccionado(null);
     setComprobantePreview(null);
+    setOrigenNombre('reniec');
     // Limpiar solo alerta interna al cerrar modal
     setAlertaInterna({ show: false, type: "", message: "", title: "" });
   };
+
+  const formatearNombreInput = (value) => {
+    return value
+      .split(" ")
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  // Consulta RENIEC para DNI
+  const handleDniLookup = async () => {
+    if (origenNombre !== 'reniec') return;
+    if (tipoDocumento !== "DNI" || numeroDocumento.length !== 8) {
+      return;
+    }
+
+    setIsDniLoading(true);
+    try {
+      const { data } = await api.get(`/api/reniec/dni/${numeroDocumento}`);
+      if (data) {
+        let nombre = null;
+        if (data.nombres && data.apellido_paterno && data.apellido_materno) {
+          nombre = `${data.nombres} ${data.apellido_paterno} ${data.apellido_materno}`;
+        } else if (data.first_name || data.first_last_name || data.second_last_name) {
+          const fn = data.first_name || '';
+          const l1 = data.first_last_name || '';
+          const l2 = data.second_last_name || '';
+          nombre = `${fn} ${l1} ${l2}`.trim();
+        } else if (data.firstName || data.lastName) {
+          const fn = data.firstName || '';
+          const l1 = data.firstLastName || data.lastName || '';
+          const l2 = data.secondLastName || '';
+          nombre = `${fn} ${l1} ${l2}`.trim();
+        }
+
+        if (nombre) {
+          setNombreCompleto(formatearNombreInput(nombre));
+        } else {
+          console.warn('Respuesta RENIEC inesperada:', data);
+        }
+      }
+    } catch (error) {
+      const mensaje = error?.response?.data?.error || "No se pudo encontrar el DNI.";
+      mostrarAlertaInterna("warning", "Error de Búsqueda", mensaje);
+      setNombreCompleto(""); // Limpiar nombre si hay error
+    } finally {
+      setIsDniLoading(false);
+    }
+  };
+
+  // Auto-búsqueda del DNI cuando alcance 8 dígitos
+  useEffect(() => {
+    if (origenNombre === 'reniec' && tipoDocumento === 'DNI' && numeroDocumento.length === 8) {
+      handleDniLookup();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numeroDocumento, tipoDocumento, origenNombre]);
 
   // 🎯 Función para mostrar alertas DENTRO del modal (validaciones y errores)
   const mostrarAlertaInterna = (type, title, message) => {
@@ -65,12 +128,6 @@ const ModalDia = ({
     setTimeout(() => {
       setAlertaExterna({ show: false, type: "", message: "", title: "" });
     }, 4000);
-  };
-  const formatearNombreInput = (value) => {
-    return value
-      .split(" ")
-      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
-      .join(" ");
   };
   const guardarCliente = async (onClose) => {
     // 🚨 Validaciones - Alertas INTERNAS (dentro del modal)
@@ -95,6 +152,8 @@ const ModalDia = ({
         "/visits/registrarcliente",
         {
           nombre: nombreCompleto,
+          tipoDocumento: tipoDocumento || undefined,
+          numeroDocumento: numeroDocumento.trim() || undefined,
           fecha: correctedDate,
           metododePago: metodosPago[metodoSeleccionado].nombre,
           comprobante: comprobantePreview || undefined,
@@ -160,18 +219,20 @@ const ModalDia = ({
         hideCloseButton
         backdrop="blur"
         isDismissable={false}
+        size={{ base: "full", sm: "2xl", md: "3xl" }}
         className="text-white bg-black"
+        scrollBehavior="inside"
       >
         <ModalContent>
           {(onClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-3xl font-bold text-center text-red-500">
+                <div className="w-full text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500">
                   {title}
                 </div>
               </ModalHeader>
 
-              <ModalBody className="space-y-4">
+              <ModalBody className="space-y-3 sm:space-y-4 px-3 sm:px-6">
                 {/* 🔥 ALERTA INTERNA - Para validaciones y errores */}
                 {alertaInterna.show && (
                   <div className="mb-4">
@@ -186,6 +247,99 @@ const ModalDia = ({
                     />
                   </div>
                 )}
+
+                {/* Tipo de Documento */}
+                <div>
+                  <label className="block mb-2 text-xs sm:text-sm">Tipo de Documento (Opcional)</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTipoDocumento("DNI");
+                        setNumeroDocumento("");
+                        setOrigenNombre("reniec");
+                      }}
+                      className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                        tipoDocumento === "DNI"
+                          ? "bg-red-600 ring-4 ring-red-400"
+                          : "bg-gray-700 hover:bg-gray-600"
+                      }`}
+                    >
+                      DNI
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTipoDocumento("CE");
+                        setNumeroDocumento("");
+                        setOrigenNombre("manual");
+                      }}
+                      className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                        tipoDocumento === "CE"
+                          ? "bg-red-600 ring-4 ring-red-400"
+                          : "bg-gray-700 hover:bg-gray-600"
+                      }`}
+                    >
+                      CE
+                    </button>
+                  </div>
+                </div>
+                {/* Origen para completar el nombre */}
+                {tipoDocumento === "DNI" && (
+                  <div>
+                    <label className="block mb-2 text-xs sm:text-sm">Origen del nombre</label>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setOrigenNombre('reniec')}
+                        className={`flex-1 p-2 rounded text-white transition-all ${
+                          origenNombre === 'reniec'
+                            ? "bg-red-600 ring-4 ring-red-400"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        Consultar RENIEC
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOrigenNombre('manual')}
+                        className={`flex-1 p-2 rounded text-white transition-all ${
+                          origenNombre === 'manual'
+                            ? "bg-red-600 ring-4 ring-red-400"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        Manual
+                      </button>
+                    </div>
+                    {origenNombre === 'reniec' && (
+                      <span className="block mt-2 text-xs text-gray-300">La app consultará RENIEC al completar 8 dígitos.</span>
+                    )}
+                  </div>
+                )}
+                {/* Número de Documento */}
+                <Input
+                  label={`${tipoDocumento} (Obligatorio)`}
+                  placeholder={tipoDocumento === "DNI" ? "Ej. 12345678" : "Ej. 123456789"}
+                  value={numeroDocumento}
+                  onChange={(e) => {
+                    const soloNumeros = e.target.value.replace(/\D/g, "");
+                    if (tipoDocumento === "DNI") {
+                      setNumeroDocumento(soloNumeros.slice(0, 8));
+                    } else {
+                      setNumeroDocumento(soloNumeros.slice(0, 12));
+                    }
+                  }}
+                  endContent={
+                    isDniLoading && tipoDocumento === "DNI" && numeroDocumento.length === 8 ? (
+                      <div className="flex items-center">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : null
+                  }
+                />
+
+
 
                 <Input
                   label="Nombre y Apellido"
@@ -211,7 +365,7 @@ const ModalDia = ({
 
                 {/* Método de pago */}
                 <div>
-                  <label className="block mb-1 text-sm">Método de Pago</label>
+                  <label className="block mb-1 text-xs sm:text-sm">Método de Pago</label>
                   <div className="flex flex-col gap-2">
                     {Object.entries(metodosPago).map(([key, metodo]) => (
                       <button
@@ -267,7 +421,7 @@ const ModalDia = ({
 
               </ModalBody>
 
-              <ModalFooter>
+              <ModalFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
                 <Button
                   color="danger"
                   variant="light"
@@ -275,14 +429,14 @@ const ModalDia = ({
                     limpiarCampos();
                     onClose();
                   }}
-                  className="text-white border-white"
+                  className="w-full sm:w-auto text-white border-white"
                 >
                   Cerrar
                 </Button>
                 <Button
                   color="primary"
                   onPress={() => guardarCliente(onClose)}
-                  className="text-white bg-red-600 hover:bg-red-700"
+                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700"
                 >
                   Guardar
                 </Button>

@@ -4,19 +4,19 @@ const jwt = require('jsonwebtoken');
 
 exports.login = async (req, res) => {
   try {
-    const { Usuario, Contraseña } = req.body;
+    const { usuario, password } = req.body;
 
-    if (!Usuario || !Contraseña) {
+    if (!usuario || !password) {
       return res.status(400).json({ error: "Usuario y contraseña son requeridos" });
     }
 
-    const admin = await Gym.findOne({ Usuario });
+    const admin = await Gym.findOne({ usuario });
     if (!admin) {
       return res.status(400).json({ error: "Usuario no encontrado" });
     }
 
-    const contraseñaValida = await bcrypt.compare(Contraseña, admin.Contraseña);
-    if (!contraseñaValida) {
+    const passwordValida = await bcrypt.compare(password, admin.password);
+    if (!passwordValida) {
       return res.status(400).json({ error: "Contraseña incorrecta" });
     }
 
@@ -42,7 +42,7 @@ exports.login = async (req, res) => {
       success: true,
       usuario: {
         id: admin._id,
-        usuario: admin.Usuario,
+        usuario: admin.usuario,
         rol: 'admin' // Informamos al frontend que el rol es admin
       }
     });
@@ -54,16 +54,16 @@ exports.login = async (req, res) => {
 
 exports.registrar = async (req, res) => {
   try {
-    const { Usuario, Contraseña } = req.body;
+    const { usuario, password } = req.body;
 
-    const usuarioExistente = await Gym.findOne({ Usuario });
+    const usuarioExistente = await Gym.findOne({ usuario });
     if (usuarioExistente) {
       return res.status(400).json({ error: "Usuario ya existe" });
     }
 
     const nuevoUsuario = new Gym({
-      Usuario,
-      Contraseña: bcrypt.hashSync(Contraseña, 10)
+      usuario,
+      password: bcrypt.hashSync(password, 10)
     });
 
     await nuevoUsuario.save();

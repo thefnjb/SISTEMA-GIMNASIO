@@ -8,7 +8,7 @@ import Añosselector from "../../components/Pdf/BotonpdfMensual"
 function Ingresos() {
   return (
     <div
-      className="min-h-screen p-6"
+      className="min-h-screen p-3 sm:p-4 md:p-6"
       style={{
         backgroundColor: "#ffffff", // blanco
         backgroundImage: `
@@ -18,24 +18,24 @@ function Ingresos() {
         backgroundSize: "40px 40px", // tamaño de los cuadritos
       }}
     >
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <Añosselector />
       </div>
 
       {/* Gráfico de líneas arriba */}
-      <div className="mb-8">
+      <div className="mb-4 sm:mb-6 md:mb-8">
         <ChartAreaInteractive />
       </div>
 
       {/* Gráficos de pie lado a lado */}
-      <div className="flex flex-col justify-center gap-20 md:flex-row">
+      <div className="flex flex-col justify-center gap-8 sm:gap-12 md:gap-16 lg:gap-20 md:flex-row">
         {/* Izquierda */}
-        <div className="w-full md:w-1/3">
+        <div className="w-full md:w-1/2 lg:w-1/3">
           <ChartPieInteractive />
         </div>
 
         {/* Derecha */}
-        <div className="w-full md:w-1/3">
+        <div className="w-full md:w-1/2 lg:w-1/3">
           <ChartPieInteractive2 />
         </div>
       </div>

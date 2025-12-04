@@ -215,7 +215,7 @@ export function ChartAreaInteractive() {
   }
 
   return (
-    <div className="p-6 rounded-lg shadow" style={{ backgroundColor: "#ffffff" }}>
+    <div className="p-3 sm:p-4 md:p-6 rounded-lg shadow" style={{ backgroundColor: "#ffffff" }}>
       {error && (
         <div className="p-4 mb-4 border border-yellow-200 rounded-lg bg-yellow-50">
           <div className="flex items-center">
@@ -246,18 +246,18 @@ export function ChartAreaInteractive() {
         </div>
       )}
 
-      <div className="flex items-center justify-between pb-4 mb-6 border-b border-gray-200">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 mb-4 sm:mb-6 border-b border-gray-200">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Ingresos de Clientes</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900">Ingresos de Clientes</h3>
+          <p className="text-xs sm:text-sm text-gray-600">
             Comparación entre clientes por día vs clientes con mensualidad (POR MES)
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 bg-white border border-gray-300 rounded-lg"
           >
             <option value="12m">Últimos 12 meses</option>
             <option value="6m">Últimos 6 meses</option>
@@ -267,7 +267,7 @@ export function ChartAreaInteractive() {
           <select
             value={selectedYear}
             onChange={(e) => handleYearChange(e.target.value)}
-            className="px-3 py-2 text-gray-900 bg-white border border-gray-300 rounded-lg"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-900 bg-white border border-gray-300 rounded-lg"
           >
             {years.map((year) => (
               <option key={year} value={year}>
@@ -278,7 +278,7 @@ export function ChartAreaInteractive() {
         </div>
       </div>
 
-      <div className="w-full h-80">
+      <div className="w-full h-64 sm:h-80">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

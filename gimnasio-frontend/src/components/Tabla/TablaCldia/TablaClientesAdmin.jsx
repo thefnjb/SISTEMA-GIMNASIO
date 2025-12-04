@@ -551,18 +551,18 @@ export default function TablaClientesAdmin({ refresh }) {
               }}
             >
             <TableHeader>
-              <TableColumn className="min-w-[140px]">NOMBRE</TableColumn>
-              <TableColumn className="w-[100px]">TELÉFONO</TableColumn>
-              <TableColumn className="hidden md:table-cell">DOCUMENTO</TableColumn>
-              <TableColumn key="ingreso" allowsSorting className="min-w-[120px] text-center hidden md:table-cell">INGRESO</TableColumn>
-              <TableColumn className="hidden md:table-cell">MENSUALIDAD</TableColumn>
-              <TableColumn className="hidden lg:table-cell">ENTRENADOR</TableColumn>
-              <TableColumn className="hidden md:table-cell">PAGO</TableColumn>
-              <TableColumn key="debe" allowsSorting className="hidden md:table-cell">DEBE</TableColumn>
-              <TableColumn>VENCE</TableColumn>
-              <TableColumn key="estado" allowsSorting>ESTADO</TableColumn>
-              <TableColumn className="hidden sm:table-cell">CAMBIOS</TableColumn>
-              <TableColumn className="hidden md:table-cell">ACCIONES</TableColumn>
+              <TableColumn className="min-w-[120px]">NOMBRE</TableColumn>
+              <TableColumn className="w-[90px]">TELÉFONO</TableColumn>
+              <TableColumn className="hidden md:table-cell min-w-[100px]">DOCUMENTO</TableColumn>
+              <TableColumn key="ingreso" allowsSorting className="min-w-[100px] text-center hidden md:table-cell">INGRESO</TableColumn>
+              <TableColumn className="hidden md:table-cell min-w-[80px]">MENSUALIDAD</TableColumn>
+              <TableColumn className="hidden lg:table-cell min-w-[110px]">ENTRENADOR</TableColumn>
+              <TableColumn className="hidden md:table-cell min-w-[60px]">PAGO</TableColumn>
+              <TableColumn key="debe" allowsSorting className="hidden md:table-cell min-w-[90px]">DEBE</TableColumn>
+              <TableColumn className="min-w-[90px]">VENCE</TableColumn>
+              <TableColumn key="estado" allowsSorting className="min-w-[100px]">ESTADO</TableColumn>
+              <TableColumn className="hidden sm:table-cell min-w-[50px]">CAMBIOS</TableColumn>
+              <TableColumn className="hidden md:table-cell min-w-[120px]">ACCIONES</TableColumn>
             </TableHeader>
 
             <TableBody emptyContent={"No hay miembros encontrados."}>
@@ -672,15 +672,15 @@ export default function TablaClientesAdmin({ refresh }) {
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
               {Array.from(filtroEstado)[0] === "todos" && (
-                <>
-                  <label htmlFor="rowsPerPage" className="hidden sm:block mr-2 text-xs sm:text-sm text-gray-600">Filas por página</label>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="rowsPerPage" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Filas por página:</label>
                   <select
                     id="rowsPerPage"
                     value={rowsPerPage}
                     onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
-                    className="px-2 py-1 text-xs sm:text-sm border rounded"
+                    className="px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     aria-label="Filas por página"
                   >
                     <option value={10}>10</option>
@@ -689,7 +689,7 @@ export default function TablaClientesAdmin({ refresh }) {
                     <option value={40}>40</option>
                     <option value={50}>50</option>
                   </select>
-                </>
+                </div>
               )}
               {Array.from(filtroEstado)[0] !== "todos" && !cargando && miembros.length > 0 && (
                 <div className="text-xs sm:text-sm text-gray-600">
@@ -699,7 +699,7 @@ export default function TablaClientesAdmin({ refresh }) {
           </div>
 
           {Array.from(filtroEstado)[0] === "todos" && (
-            <div className="flex justify-center flex-1 w-full sm:w-auto">
+            <div className="flex justify-center flex-1 w-full sm:w-auto mt-3 sm:mt-0">
               <Pagination
                 total={totalPages}
                 initialPage={page}

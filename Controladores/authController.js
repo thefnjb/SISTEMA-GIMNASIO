@@ -12,12 +12,12 @@ const AuthController = {
     // NUEVA FUNCIÓN DE LOGIN UNIFICADO
     loginUnificado: async (req, res) => {
         try {
-            const { Usuario, Contraseña } = req.body;
+            const { usuario, password } = req.body;
 
             // 1. Buscar como Administrador (Gimnasio)
-            let admin = await Gym.findOne({ Usuario }).select('+Contraseña');
+            let admin = await Gym.findOne({ usuario }).select('+password');
             if (admin) {
-                const isMatch = await bcrypt.compare(Contraseña, admin.Contraseña);
+                const isMatch = await bcrypt.compare(password, admin.password);
                 if (isMatch) {
                     const payload = { id: admin._id, rol: 'admin', gym_id: admin._id }; // CORREGIDO: Añadido gym_id
                     const token = jwt.sign(payload, process.env.JWT_SecretKey, { expiresIn: '8h' });
@@ -26,9 +26,9 @@ const AuthController = {
             }
 
             // 2. Si no es admin, buscar como Trabajador
-            let trabajador = await Trabajador.findOne({ nombreUsuario: Usuario, activo: true }).select('+password');
+            let trabajador = await Trabajador.findOne({ nombreUsuario: usuario, activo: true }).select('+password');
             if (trabajador) {
-                const isMatch = await bcrypt.compare(Contraseña, trabajador.password);
+                const isMatch = await bcrypt.compare(password, trabajador.password);
                 if (isMatch) {
                     const payload = { id: trabajador._id, rol: 'trabajador', gym_id: trabajador.gym };
                     const token = jwt.sign(payload, process.env.JWT_TRABAJADOR_SECRET, { expiresIn: '8h' });

@@ -212,8 +212,8 @@ export default function ClientesDiaTrabajador({ refresh }) {
   if (!Array.isArray(clientes)) return null;
 
   return (
-    <div className="p-4 bg-gray-100 rounded-xl">
-      <h2 className="mb-4 text-xl font-bold text-black">Clientes de Hoy</h2>
+    <div className="p-3 sm:p-4 md:p-6 bg-gray-100 rounded-xl">
+      <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-black">Clientes de Hoy</h2>
 
       {alert.show && (
         <div className="mb-4">
@@ -247,18 +247,19 @@ export default function ClientesDiaTrabajador({ refresh }) {
           )
         }
         classNames={{
-          base: "bg-white rounded-lg shadow",
-          th: "text-red-600 font-bold bg-gray-200",
-          td: "text-black",
+          base: "bg-white rounded-lg shadow overflow-x-auto",
+          th: "text-red-600 font-bold bg-gray-200 text-xs sm:text-sm",
+          td: "text-black text-xs sm:text-sm",
         }}
       >
         <TableHeader>
-          <TableColumn key="nombre" allowsSorting>Nombre</TableColumn>
-          <TableColumn key="fecha" allowsSorting>Fecha</TableColumn>
-          <TableColumn key="horaInicio" allowsSorting>Hora de Inicio</TableColumn>
+          <TableColumn key="nombre" allowsSorting className="min-w-[120px]">Nombre</TableColumn>
+          <TableColumn key="documento" allowsSorting className="min-w-[120px]">Documento</TableColumn>
+          <TableColumn key="fecha" allowsSorting className="hidden sm:table-cell">Fecha</TableColumn>
+          <TableColumn key="horaInicio" allowsSorting className="min-w-[100px]">Hora</TableColumn>
           <TableColumn key="metododePago" allowsSorting className="text-center">PAGO</TableColumn>
-          <TableColumn key="precio" className="text-right" allowsSorting>Monto (S/)</TableColumn>
-          <TableColumn key="acciones" className="text-center">Acciones</TableColumn>
+          <TableColumn key="precio" className="text-right min-w-[80px]" allowsSorting>Monto</TableColumn>
+          <TableColumn key="acciones" className="text-center min-w-[120px]">Acciones</TableColumn>
         </TableHeader>
 
         <TableBody
@@ -273,8 +274,13 @@ export default function ClientesDiaTrabajador({ refresh }) {
         >
           {(cliente) => (
             <TableRow key={cliente._id || cliente.nombre}>
-              <TableCell>{cliente.nombre || "Sin nombre"}</TableCell>
+              <TableCell className="font-medium">{cliente.nombre || "Sin nombre"}</TableCell>
               <TableCell>
+                {cliente.tipoDocumento && cliente.numeroDocumento 
+                  ? `${cliente.tipoDocumento}: ${cliente.numeroDocumento}` 
+                  : "-"}
+              </TableCell>
+              <TableCell className="hidden sm:table-cell">
                 {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString() : "Sin fecha"}
               </TableCell>
               <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
@@ -308,25 +314,27 @@ export default function ClientesDiaTrabajador({ refresh }) {
                   )}
                 </div>
               </TableCell>
-              <TableCell className="text-right">{cliente.monto ?? 7}</TableCell>
+              <TableCell className="text-right font-semibold">{cliente.monto ?? 7}</TableCell>
 
               {/* 🔹 Acciones (sin eliminar) */}
               <TableCell className="text-center">
-                <div className="flex items-center justify-center gap-3">
+                <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
                   <IconButton
                     aria-label="Descargar voucher"
                     onClick={() => descargarVoucher(cliente)}
-                    sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.7 }}
+                    sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                    size="small"
                   >
-                    <AdfScannerRoundedIcon sx={{ fontSize: 26 }} />
+                    <AdfScannerRoundedIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
                   </IconButton>
 
                   <IconButton
                     aria-label="Editar cliente"
                     onClick={() => openModalEditar(cliente)}
-                    sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.7 }}
+                    sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                    size="small"
                   >
-                    <EditIcon sx={{ fontSize: 26 }} />
+                    <EditIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
                   </IconButton>
                 </div>
               </TableCell>
@@ -335,8 +343,8 @@ export default function ClientesDiaTrabajador({ refresh }) {
         </TableBody>
       </Table>
 
-      <div className="flex items-center justify-between mt-4">
-        <div className="text-lg font-bold text-black">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4">
+        <div className="text-base sm:text-lg font-bold text-black">
           Total Recaudado Hoy: <span className="text-red-600">S/ {totalMontoHoy.toFixed(2)}</span>
         </div>
         <ReporteClientesDia />
@@ -355,7 +363,7 @@ export default function ClientesDiaTrabajador({ refresh }) {
       <Modal 
         isOpen={isImageModalOpen} 
         onOpenChange={(val) => { if (!val) closeImageModal(); setIsImageModalOpen(val); }} 
-        size="lg" 
+        size={{ base: "full", sm: "lg" }}
         backdrop="blur"
       >
         <ModalContent>

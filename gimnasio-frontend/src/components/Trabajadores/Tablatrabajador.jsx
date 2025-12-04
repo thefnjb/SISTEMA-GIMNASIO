@@ -118,7 +118,7 @@ export default function TablaTrabajadores({ refresh }) {
   }, [filtro, obtenerTrabajadores, refresh]);
 
   return (
-    <div className="max-w-full p-4">
+    <div className="max-w-full p-3 sm:p-4 md:p-6">
       {/* Buscador */}
       <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
         <Input
@@ -129,7 +129,7 @@ export default function TablaTrabajadores({ refresh }) {
           className="w-full sm:max-w-md"
           startContent={<SearchIcon className="text-gray-500" />}
         />
-        <div className="px-1 text-sm text-gray-600">{trabajadores.length} resultados</div>
+        <div className="px-1 text-xs sm:text-sm text-gray-600">{trabajadores.length} resultados</div>
       </div>
 
       {cargando ? (
@@ -143,42 +143,48 @@ export default function TablaTrabajadores({ refresh }) {
             removeWrapper
             isStriped
             classNames={{
-              table: "bg-white min-w-full",
-              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-xs font-semibold text-center px-3 py-2",
-              td: "text-gray-800 border-b border-gray-200 align-middle text-sm px-3 py-2",
+              table: "bg-white min-w-full overflow-x-auto",
+              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] sm:text-xs font-semibold text-center px-2 sm:px-3 py-1 sm:py-2",
+              td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] sm:text-sm px-2 sm:px-3 py-1 sm:py-2",
               tr: "hover:bg-gray-50 transition-colors",
             }}
           >
             <TableHeader>
-              <TableColumn>NOMBRE</TableColumn>
-              <TableColumn className="text-center">USUARIO</TableColumn>
-              <TableColumn className="text-center">CONTRASEÑA</TableColumn>
+              <TableColumn className="min-w-[150px]">NOMBRE</TableColumn>
+              <TableColumn className="text-center min-w-[120px]">DOCUMENTO</TableColumn>
+              <TableColumn className="text-center hidden sm:table-cell">USUARIO</TableColumn>
+              <TableColumn className="text-center hidden md:table-cell">CONTRASEÑA</TableColumn>
               <TableColumn className="text-center">ROL</TableColumn>
               <TableColumn className="text-center">ACTIVO</TableColumn>
-              <TableColumn>ACCIONES</TableColumn>
+              <TableColumn className="min-w-[120px]">ACCIONES</TableColumn>
             </TableHeader>
 
             <TableBody items={trabajadores} emptyContent={"No hay trabajadores encontrados."}>
               {(trab) => (
                 <TableRow key={trab._id}>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <CoPresentRoundedIcon sx={{ color: "#555", fontSize: 28 }} />
-                      <span>{trab.nombre}</span>
+                    <div className="flex items-center gap-1 sm:gap-2">
+                      <CoPresentRoundedIcon sx={{ color: "#555", fontSize: { xs: 20, sm: 24, md: 28 } }} />
+                      <span className="text-xs sm:text-sm">{trab.nombre}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center">{trab.nombreUsuario}</TableCell>
-                  <TableCell className="text-center">
-                    <span>{"********"}</span>
+                  <TableCell className="text-center text-xs sm:text-sm">
+                    {trab.tipoDocumento && trab.numeroDocumento 
+                      ? `${trab.tipoDocumento}: ${trab.numeroDocumento}` 
+                      : "-"}
                   </TableCell>
-                  <TableCell className="text-center">{trab.rol}</TableCell>
+                  <TableCell className="text-center hidden sm:table-cell text-xs sm:text-sm">{trab.nombreUsuario}</TableCell>
+                  <TableCell className="text-center hidden md:table-cell">
+                    <span className="text-xs sm:text-sm">{"********"}</span>
+                  </TableCell>
+                  <TableCell className="text-center text-xs sm:text-sm">{trab.rol}</TableCell>
                   <TableCell className="text-center">
                     <Chip color={trab.activo ? "success" : "danger"} variant="flat">
                       {trab.activo ? "Activo" : "Inactivo"}
                     </Chip>
                   </TableCell>
                   <TableCell>
-                    <div className="relative flex items-center justify-center gap-3">
+                    <div className="relative flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
                       <Tooltip content="Editar Trabajador">
                         <BotonEditar onClick={() => setEditingTrabajador(trab)} />
                       </Tooltip>
@@ -187,10 +193,11 @@ export default function TablaTrabajadores({ refresh }) {
                           <Button
                             isIconOnly
                             variant="light"
+                            size="sm"
                             onPress={() => desactivarTrabajador(trab._id)}
                             className="text-yellow-600"
                           >
-                            <CancelPresentationRoundedIcon className="text-lg" />
+                            <CancelPresentationRoundedIcon className="text-base sm:text-lg" />
                           </Button>
                         </Tooltip>
                       ) : (
@@ -198,10 +205,11 @@ export default function TablaTrabajadores({ refresh }) {
                           <Button
                             isIconOnly
                             variant="light"
+                            size="sm"
                             onPress={() => activarTrabajador(trab._id)}
                             className="text-green-600"
                           >
-                            <PlayCircleOutlineRoundedIcon className="text-lg" />
+                            <PlayCircleOutlineRoundedIcon className="text-base sm:text-lg" />
                           </Button>
                         </Tooltip>
                       )}

@@ -1,12 +1,11 @@
 const mongoose = require('mongoose');
 
 const gymSchema = new mongoose.Schema({
-    Usuario:{
+    usuario:{
         type:String,
         required: true,
-
     },
-    Contraseña:{
+    password:{
         type:String,
         required: true,
     }

@@ -112,18 +112,20 @@ const Membresia = ({ onClose }) => {
         onOpenChange={onOpenChange}
         backdrop="blur"
         isDismissable={false}
+        size={{ base: "full", sm: "2xl", md: "3xl" }}
         className="text-white bg-black"
+        scrollBehavior="inside"
       >
         <ModalContent>
           {(modalClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-3xl font-bold text-center text-red-500">
+                <div className="w-full text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500">
                   Agregar Nueva Membresía
                 </div>
               </ModalHeader>
 
-              <ModalBody className="space-y-4">
+              <ModalBody className="space-y-3 sm:space-y-4 px-3 sm:px-6">
                 {/* 🚨 ALERTA INTERNA */}
                 {alertaInterna.show && (
                   <div className="mb-4">
@@ -177,7 +179,7 @@ const Membresia = ({ onClose }) => {
                 />
               </ModalBody>
 
-              <ModalFooter>
+              <ModalFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
                 <Button
                   color="danger"
                   variant="light"
@@ -186,12 +188,12 @@ const Membresia = ({ onClose }) => {
                     modalClose();
                   }}
                   isDisabled={loading}
-                  className="text-white border-white"
+                  className="w-full sm:w-auto text-white border-white"
                 >
                   Cancelar
                 </Button>
                 <Button
-                  className="text-white bg-red-600 hover:bg-red-700"
+                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700"
                   onPress={() => handleGuardar(modalClose)}
                   isLoading={loading}
                   isDisabled={loading}

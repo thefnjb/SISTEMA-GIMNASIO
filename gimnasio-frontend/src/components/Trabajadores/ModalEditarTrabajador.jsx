@@ -14,6 +14,8 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate }) {
   const [nombre, setNombre] = useState(trabajador?.nombre || "");
+  const [tipoDocumento, setTipoDocumento] = useState(trabajador?.tipoDocumento || "DNI");
+  const [numeroDocumento, setNumeroDocumento] = useState(trabajador?.numeroDocumento || "");
   const [nombreUsuario, setNombreUsuario] = useState(trabajador?.nombreUsuario || "");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +33,8 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
 
   const handleClose = () => {
     setNombre("");
+    setTipoDocumento("DNI");
+    setNumeroDocumento("");
     setNombreUsuario("");
     setPassword("");
     setAlerta({ show: false, color: "default", message: "" });
@@ -52,6 +56,8 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
     try {
       await onUpdate(trabajador._id, {
         nombre,
+        tipoDocumento: tipoDocumento || undefined,
+        numeroDocumento: numeroDocumento.trim() || undefined,
         nombreUsuario,
         ...(password && { password }),
       });
@@ -98,14 +104,68 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
                 setNombre(valor);
               }}
             />
+            
+            {/* Tipo de Documento */}
+            <div>
+              <label className="block mb-2 text-sm text-gray-300">Tipo de Documento</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTipoDocumento("DNI");
+                    setNumeroDocumento("");
+                  }}
+                  className={`flex-1 p-2 rounded text-white transition-all ${
+                    tipoDocumento === "DNI"
+                      ? "bg-red-600 ring-2 ring-red-400"
+                      : "bg-gray-700 hover:bg-gray-600"
+                  }`}
+                  disabled={isLoading}
+                >
+                  DNI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTipoDocumento("CE");
+                    setNumeroDocumento("");
+                  }}
+                  className={`flex-1 p-2 rounded text-white transition-all ${
+                    tipoDocumento === "CE"
+                      ? "bg-red-600 ring-2 ring-red-400"
+                      : "bg-gray-700 hover:bg-gray-600"
+                  }`}
+                  disabled={isLoading}
+                >
+                  CE
+                </button>
+              </div>
+            </div>
+
+            {/* Número de Documento */}
+            <Input
+              label={`${tipoDocumento}`}
+              placeholder={tipoDocumento === "DNI" ? "Ej. 75362380" : "Ej. 753623801"}
+              value={numeroDocumento}
+              onChange={(e) => {
+                const soloNumeros = e.target.value.replace(/\D/g, "");
+                if (tipoDocumento === "DNI") {
+                  setNumeroDocumento(soloNumeros.slice(0, 8));
+                } else {
+                  setNumeroDocumento(soloNumeros.slice(0, 12));
+                }
+              }}
+              disabled={isLoading}
+            />
+
             <Input
               label="Nombre de usuario"
               placeholder="Escribe el nombre de usuario"
               value={nombreUsuario}
               onChange={(e) => {
-                const valor = e.target.value.repeat(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
-                setNombre(valor);
+                setNombreUsuario(e.target.value);
               }}
+              disabled={isLoading}
             />
             <Input
               label="Nueva contraseña (opcional)"
