@@ -421,29 +421,32 @@ export default function TablaClientesAdmin({ refresh }) {
   }, [miembros, sortDescriptor, calcularEstado, filtroEstado]);
 
   return (
-    <div className="max-w-full p-3 sm:p-4 md:p-6">
-      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-1">
-          <Input
-            type="text"
-            placeholder="Buscar por DNI, CE o nombre completo"
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            className="w-full sm:max-w-md"
-            startContent={<SearchIcon className="text-gray-500" />}
-            aria-label="Buscar por DNI, CE o nombre completo"
-          />
-          
-          <Dropdown>
-            <DropdownTrigger>
-              <Button 
-                endContent={<KeyboardArrowDownIcon className="text-small" />} 
-                variant="flat"
-                className="capitalize"
-              >
-                {Array.from(filtroEstado)[0] === "todos" ? "Todos los estados" : Array.from(filtroEstado)[0]}
-              </Button>
-            </DropdownTrigger>
+    <div className="max-w-full p-2 sm:p-3 md:p-4 lg:p-6 overflow-hidden">
+      <div className="flex flex-col gap-2 sm:gap-3 mb-3 sm:mb-4">
+        <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:flex-1">
+            <Input
+              type="text"
+              placeholder="Buscar por DNI, CE o nombre completo"
+              value={filtro}
+              onChange={(e) => setFiltro(e.target.value)}
+              className="w-full sm:max-w-md text-xs sm:text-sm"
+              size="sm"
+              startContent={<SearchIcon className="text-gray-500 text-sm" />}
+              aria-label="Buscar por DNI, CE o nombre completo"
+            />
+            
+            <Dropdown>
+              <DropdownTrigger>
+                <Button 
+                  endContent={<KeyboardArrowDownIcon className="text-small" />} 
+                  variant="flat"
+                  size="sm"
+                  className="capitalize text-xs sm:text-sm"
+                >
+                  {Array.from(filtroEstado)[0] === "todos" ? "Todos los estados" : Array.from(filtroEstado)[0]}
+                </Button>
+              </DropdownTrigger>
             <DropdownMenu
               disallowEmptySelection
               aria-label="Filtro de Estado"
@@ -472,9 +475,10 @@ export default function TablaClientesAdmin({ refresh }) {
           {/* Selector rows per page moved below the table */}
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="px-1 text-sm text-gray-600">{totalItems} CLIENTES</div>
-          <BotonExcel />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="px-1 text-xs sm:text-sm text-gray-600 whitespace-nowrap">{totalItems} CLIENTES</div>
+            <BotonExcel />
+          </div>
         </div>
       </div>
       {cargando ? (
@@ -482,22 +486,72 @@ export default function TablaClientesAdmin({ refresh }) {
           <Spinner label="Cargando miembros..." color="primary" />
         </div>
       ) : (
-        <div className="w-full">
-          <Table
-            aria-label="Tabla de miembros"
-            removeWrapper
-            isStriped
-            sortDescriptor={sortDescriptor}
-            onSortChange={setSortDescriptor}
-            classNames={{
-              table: "bg-white w-full table-auto text-[11px]",
-              td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] px-1.5 py-0.5",
-              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] font-semibold px-1.5 py-1 text-center",
-              tr: "hover:bg-gray-50 transition-colors",
-            }}
-          >
+        <>
+        {/* Vista de Cards para móvil */}
+        <div className="md:hidden space-y-3 mb-4">
+          {miembrosOrdenados.map((miembro) => (
+            <div key={miembro._id} className="bg-white rounded-lg shadow-md p-3 border border-gray-200">
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 20 }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-gray-800 truncate">{miembro.nombreCompleto}</p>
+                    <p className="text-xs text-gray-500">{miembro.telefono}</p>
+                  </div>
+                </div>
+                <Chip color={calcularEstado(miembro).color} variant="flat" size="sm" className="text-[10px]">
+                  {calcularEstado(miembro).etiqueta}
+                </Chip>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                <div>
+                  <span className="text-gray-500">Vence:</span>
+                  <span className="ml-1 font-medium">{mostrarVencimiento(miembro)}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Mensualidad:</span>
+                  <span className="ml-1 font-medium">{formatearMensualidadNumero(miembro)}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                <div className="flex items-center gap-2">
+                  <AdfScannerRoundedIcon
+                    onClick={() => descargarVoucher(miembro)}
+                    sx={{ color: "#555555", fontSize: 18, cursor: "pointer" }}
+                  />
+                  <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
+                  <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
+                  <BotonEliminar onClick={() => eliminarMiembro(miembro._id)} />
+                </div>
+              </div>
+            </div>
+          ))}
+          {miembrosOrdenados.length === 0 && (
+            <div className="text-center py-8 text-gray-500">No hay miembros encontrados.</div>
+          )}
+        </div>
+
+        {/* Vista de Tabla para desktop */}
+        <div className="hidden md:block w-full overflow-x-auto -mx-2 sm:-mx-3 md:mx-0 px-2 sm:px-3 md:px-0 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
+          <div className="min-w-full inline-block">
+            <Table
+              aria-label="Tabla de miembros"
+              removeWrapper
+              isStriped
+              sortDescriptor={sortDescriptor}
+              onSortChange={setSortDescriptor}
+              classNames={{
+                base: "min-w-full",
+                table: "bg-white w-full table-auto text-[11px]",
+                td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] px-1.5 py-0.5",
+                th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] font-semibold px-1.5 py-1 text-center",
+                tr: "hover:bg-gray-50 transition-colors",
+              }}
+            >
             <TableHeader>
-              <TableColumn className="min-w-[140px]">NOMBRE Y APELLIDO</TableColumn>
+              <TableColumn className="min-w-[140px]">NOMBRE</TableColumn>
               <TableColumn className="w-[100px]">TELÉFONO</TableColumn>
               <TableColumn className="hidden md:table-cell">DOCUMENTO</TableColumn>
               <TableColumn key="ingreso" allowsSorting className="min-w-[120px] text-center hidden md:table-cell">INGRESO</TableColumn>
@@ -507,7 +561,7 @@ export default function TablaClientesAdmin({ refresh }) {
               <TableColumn key="debe" allowsSorting className="hidden md:table-cell">DEBE</TableColumn>
               <TableColumn>VENCE</TableColumn>
               <TableColumn key="estado" allowsSorting>ESTADO</TableColumn>
-              <TableColumn>CAMBIOS</TableColumn>
+              <TableColumn className="hidden sm:table-cell">CAMBIOS</TableColumn>
               <TableColumn className="hidden md:table-cell">ACCIONES</TableColumn>
             </TableHeader>
 
@@ -592,14 +646,14 @@ export default function TablaClientesAdmin({ refresh }) {
                       {calcularEstado(miembro).etiqueta}
                     </Chip>
                   </TableCell>
-                  <TableCell>
-                    <span className="text-[10px] text-gray-600">
+                  <TableCell className="hidden sm:table-cell">
+                    <span className="text-[9px] sm:text-[10px] text-gray-600 truncate max-w-[80px]">
                       {miembro?.creadorNombre
                         ? `${miembro.creadorNombre}`
                         : "Desconocido"}
                     </span>
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="hidden md:table-cell">
                     <div className="flex items-center gap-1 h-[35px] justify-end">
                       <AdfScannerRoundedIcon
                         onClick={() => descargarVoucher(miembro)}
@@ -614,17 +668,19 @@ export default function TablaClientesAdmin({ refresh }) {
               ))}
             </TableBody>
           </Table>
+          </div>
+        </div>
 
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
               {Array.from(filtroEstado)[0] === "todos" && (
                 <>
-                  <label htmlFor="rowsPerPage" className="mr-2 text-sm text-gray-600">Filas por página</label>
+                  <label htmlFor="rowsPerPage" className="hidden sm:block mr-2 text-xs sm:text-sm text-gray-600">Filas por página</label>
                   <select
                     id="rowsPerPage"
                     value={rowsPerPage}
                     onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
-                    className="px-2 py-1 text-sm border rounded"
+                    className="px-2 py-1 text-xs sm:text-sm border rounded"
                     aria-label="Filas por página"
                   >
                     <option value={10}>10</option>
@@ -636,26 +692,26 @@ export default function TablaClientesAdmin({ refresh }) {
                 </>
               )}
               {Array.from(filtroEstado)[0] !== "todos" && !cargando && miembros.length > 0 && (
-                <div className="text-sm text-gray-600">
+                <div className="text-xs sm:text-sm text-gray-600">
                   Mostrando todos los clientes con estado: <span className="font-semibold">{Array.from(filtroEstado)[0]}</span>
                 </div>
               )}
-            </div>
-
-            {Array.from(filtroEstado)[0] === "todos" && (
-              <div className="flex justify-center flex-1">
-                <Pagination
-                  total={totalPages}
-                  initialPage={page}
-                  onChange={(page) => setPage(page)}
-                  color="red"
-                />
-              </div>
-            )}
-            {Array.from(filtroEstado)[0] !== "todos" && <div className="flex-1" />}
-            <div className="w-20" />
           </div>
+
+          {Array.from(filtroEstado)[0] === "todos" && (
+            <div className="flex justify-center flex-1 w-full sm:w-auto">
+              <Pagination
+                total={totalPages}
+                initialPage={page}
+                onChange={(page) => setPage(page)}
+                color="red"
+                size="sm"
+              />
+            </div>
+          )}
+          {Array.from(filtroEstado)[0] !== "todos" && <div className="flex-1" />}
         </div>
+        </>
       )}
 
       {mostrarModal && modoModal !== "editarDeuda" && (
