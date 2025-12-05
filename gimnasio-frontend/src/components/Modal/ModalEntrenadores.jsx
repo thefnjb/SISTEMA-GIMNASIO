@@ -8,8 +8,9 @@ import {
   Input,
   useDisclosure,
   Alert,
+  CircularProgress,
 } from "@heroui/react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import api from "../../utils/axiosInstance";
 import Webcam from "react-webcam";
 import { motion, AnimatePresence } from "framer-motion";
@@ -27,6 +28,10 @@ const ModalEntrenadores = ({
   const fileInputRef = useRef(null);
 
   const [nombre, setNombre] = useState("");
+  const [tipoDocumento, setTipoDocumento] = useState("DNI");
+  const [numeroDocumento, setNumeroDocumento] = useState("");
+  const [isDniLoading, setIsDniLoading] = useState(false);
+  const [origenNombre, setOrigenNombre] = useState('reniec');
   const [edad, setEdad] = useState("");
   const [telefono, setTelefono] = useState("");
   const [fotoPerfil, setFotoPerfil] = useState(null);
@@ -109,9 +114,69 @@ const ModalEntrenadores = ({
     setView("preview");
   };
 
+  // Formatear nombre para input
+  const formatearNombreInput = (value) => {
+    return value
+      .split(" ")
+      .map(palabra => palabra.charAt(0).toUpperCase() + palabra.slice(1).toLowerCase())
+      .join(" ");
+  };
+
+  // Consulta RENIEC para DNI
+  const handleDniLookup = async () => {
+    if (origenNombre !== 'reniec') return;
+    if (tipoDocumento !== "DNI" || numeroDocumento.length !== 8) {
+      return;
+    }
+
+    setIsDniLoading(true);
+    try {
+      const { data } = await api.get(`/api/reniec/dni/${numeroDocumento}`);
+      if (data) {
+        let nombre = null;
+        if (data.nombres && data.apellido_paterno && data.apellido_materno) {
+          nombre = `${data.nombres} ${data.apellido_paterno} ${data.apellido_materno}`;
+        } else if (data.first_name || data.first_last_name || data.second_last_name) {
+          const fn = data.first_name || '';
+          const l1 = data.first_last_name || '';
+          const l2 = data.second_last_name || '';
+          nombre = `${fn} ${l1} ${l2}`.trim();
+        } else if (data.firstName || data.lastName) {
+          const fn = data.firstName || '';
+          const l1 = data.firstLastName || data.lastName || '';
+          const l2 = data.secondLastName || '';
+          nombre = `${fn} ${l1} ${l2}`.trim();
+        }
+
+        if (nombre) {
+          setNombre(formatearNombreInput(nombre));
+        } else {
+          console.warn('Respuesta RENIEC inesperada:', data);
+        }
+      }
+    } catch (error) {
+      const mensaje = error?.response?.data?.error || "No se pudo encontrar el DNI.";
+      mostrarAlertaInterna("warning", mensaje);
+      setNombre(""); // Limpiar nombre si hay error
+    } finally {
+      setIsDniLoading(false);
+    }
+  };
+
+  // Auto-búsqueda del DNI cuando alcance 8 dígitos
+  useEffect(() => {
+    if (origenNombre === 'reniec' && tipoDocumento === 'DNI' && numeroDocumento.length === 8) {
+      handleDniLookup();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numeroDocumento, tipoDocumento, origenNombre]);
+
   // Resetea el estado del modal
   const resetState = () => {
     setNombre("");
+    setTipoDocumento("DNI");
+    setNumeroDocumento("");
+    setOrigenNombre('reniec');
     setEdad("");
     setTelefono("");
     setFotoPerfil(null);
@@ -125,10 +190,24 @@ const ModalEntrenadores = ({
       return;
     }
 
+    // Validar documento si se proporciona
+    if (tipoDocumento && numeroDocumento) {
+      if (tipoDocumento === "DNI" && numeroDocumento.length !== 8) {
+        mostrarAlertaInterna("warning", "El DNI debe tener 8 dígitos.");
+        return;
+      }
+      if (tipoDocumento === "CE" && (numeroDocumento.length < 9 || numeroDocumento.length > 12)) {
+        mostrarAlertaInterna("warning", "El CE debe tener entre 9 y 12 dígitos.");
+        return;
+      }
+    }
+
   const formData = new FormData();
-  formData.append("nombre", nombre);
+  formData.append("nombre", nombre.trim());
   formData.append("edad", edad);
   formData.append("telefono", telefono);
+  if (tipoDocumento) formData.append("tipoDocumento", tipoDocumento);
+  if (numeroDocumento) formData.append("numeroDocumento", numeroDocumento.trim().replace(/\s+/g, ''));
   if (fotoPerfil) formData.append("fotoPerfil", fotoPerfil);
 
   try {
@@ -138,10 +217,7 @@ const ModalEntrenadores = ({
     });
 
       // Limpieza
-      setNombre("");
-      setEdad("");
-      setTelefono("");
-      setFotoPerfil(null);
+      resetState();
 
     if (onEntrenadorAgregado) onEntrenadorAgregado();
 
@@ -154,7 +230,9 @@ const ModalEntrenadores = ({
       }, 300);
     } catch (err) {
       console.error("Error al agregar entrenador:", err);
-      mostrarAlertaExterna("danger", "Error al agregar entrenador.");
+      const mensajeError = err?.response?.data?.error || "Error al agregar entrenador.";
+      mostrarAlertaExterna("danger", mensajeError);
+      mostrarAlertaInterna("danger", mensajeError);
     }
   };
 
@@ -179,9 +257,11 @@ const ModalEntrenadores = ({
         isOpen={isOpen}
         onOpenChange={onOpenChange}
         hideCloseButton
+        size={{ base: "full", sm: "lg", md: "xl" }}
         backdrop="blur"
         isDismissable={false}
         className="text-white bg-black"
+        scrollBehavior="inside"
       >
         <ModalContent>
           {(onClose) => {
@@ -195,7 +275,7 @@ const ModalEntrenadores = ({
                   </div>
                 </ModalHeader>
 
-                <ModalBody className="space-y-4">
+                <ModalBody className="space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-3 sm:px-6">
                   {/* 🔹 Alerta interna dentro del modal */}
                   {alertaInterna.show && (
                     <Alert
@@ -204,14 +284,118 @@ const ModalEntrenadores = ({
                     />
                   )}
 
+                  {/* Tipo de Documento */}
+                  <div>
+                    <label className="block mb-2 text-xs sm:text-sm">Tipo de Documento</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTipoDocumento("DNI");
+                          setNumeroDocumento("");
+                          setOrigenNombre("reniec"); // Reset to default for DNI
+                        }}
+                        className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                          tipoDocumento === "DNI"
+                            ? "bg-red-600 ring-4 ring-red-400"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        DNI
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTipoDocumento("CE");
+                          setNumeroDocumento("");
+                          setOrigenNombre("manual"); // Force manual for CE
+                        }}
+                        className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                          tipoDocumento === "CE"
+                            ? "bg-red-600 ring-4 ring-red-400"
+                            : "bg-gray-700 hover:bg-gray-600"
+                        }`}
+                      >
+                        CE (Carné Extranjería)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Origen para completar el nombre: RENIEC (consulta) o MANUAL (ingresar nombre) */}
+                  {tipoDocumento === 'DNI' && (
+                    <div>
+                      <label className="block mb-2 text-xs sm:text-sm">Origen Nombre</label>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOrigenNombre('reniec');
+                            if (numeroDocumento.length === 8) {
+                              handleDniLookup();
+                            }
+                          }}
+                          className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                            origenNombre === 'reniec'
+                              ? "bg-red-600 ring-4 ring-red-400"
+                              : "bg-gray-700 hover:bg-gray-600"
+                          }`}
+                        >
+                          Consultar RENIEC
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setOrigenNombre('manual')}
+                          className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                            origenNombre === 'manual'
+                              ? "bg-red-600 ring-4 ring-red-400"
+                              : "bg-gray-700 hover:bg-gray-600"
+                          }`}
+                        >
+                          Manual
+                        </button>
+                      </div>
+                      {origenNombre === 'reniec' && (
+                        <span className="block mt-2 text-xs text-gray-300">La app consultará RENIEC al completar 8 dígitos.</span>
+                      )}
+                      {origenNombre === 'manual' && (
+                        <span className="block mt-2 text-xs text-gray-300">Modo manual: escribe el nombre directamente.</span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Número de Documento */}
+                  <Input
+                    label={tipoDocumento === "DNI" ? "Número de DNI" : "Número de CE"}
+                    placeholder={tipoDocumento === "DNI" ? "Ingresa 8 dígitos" : "Ingresa 9-12 dígitos"}
+                    value={numeroDocumento}
+                    onChange={(e) => {
+                      const valor = e.target.value.replace(/\D/g, ""); // Solo números
+                      if (tipoDocumento === "DNI" && valor.length <= 8) {
+                        setNumeroDocumento(valor);
+                      } else if (tipoDocumento === "CE" && valor.length <= 12) {
+                        setNumeroDocumento(valor);
+                      }
+                    }}
+                    maxLength={tipoDocumento === "DNI" ? 8 : 12}
+                    endContent={
+                      tipoDocumento === "DNI" && numeroDocumento.length === 8 && isDniLoading && (
+                        <CircularProgress size="sm" aria-label="Cargando..." />
+                      )
+                    }
+                  />
+
                   <Input
                     label="Nombre y Apellido"
                     placeholder="Ej. Favio Alexander Coronado Zapata "
                     value={nombre}
                     onChange={(e) => {
-                      const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
-                      setNombre(valor);
+                      if (origenNombre === 'manual') {
+                        const valor = e.target.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, "");
+                        setNombre(valor);
+                      }
                     }}
+                    isReadOnly={origenNombre === 'reniec' && tipoDocumento === 'DNI'}
+                    description={origenNombre === 'reniec' && tipoDocumento === 'DNI' ? "Se completará automáticamente desde RENIEC" : ""}
                   />
                  <Input
                   label="Edad"
