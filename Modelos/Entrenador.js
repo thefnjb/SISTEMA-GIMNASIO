@@ -6,6 +6,27 @@ const EntrenadorSchema = new mongoose.Schema({
     required: true,
     trim: true,
   },
+  tipoDocumento: {
+    type: String,
+    enum: ["DNI", "CE"],
+    trim: true,
+  },
+  numeroDocumento: {
+    type: String,
+    trim: true,
+    validate: {
+      validator: function(v) {
+        if (!v) return true; // Opcional
+        if (this.tipoDocumento === "DNI") {
+          return /^\d{8}$/.test(v);
+        } else if (this.tipoDocumento === "CE") {
+          return /^\d{9,12}$/.test(v);
+        }
+        return false;
+      },
+      message: "DNI debe tener 8 dígitos, CE debe tener entre 9 y 12 dígitos"
+    }
+  },
   edad: {
     type: Number,
     required: true,
@@ -27,5 +48,8 @@ const EntrenadorSchema = new mongoose.Schema({
     required: true,
   },
 }, { timestamps: true });
+
+// Índice único compuesto para evitar nombres duplicados en el mismo gym
+EntrenadorSchema.index({ nombre: 1, gym: 1 }, { unique: true });
 
 module.exports = mongoose.model("Entrenador", EntrenadorSchema);

@@ -2,14 +2,46 @@ const Entrenador = require("../Modelos/Entrenador");
 
 exports.crearEntrenador = async (req, res) => {
   try {
-    const { nombre, edad, telefono } = req.body;
+    const { nombre, edad, telefono, tipoDocumento, numeroDocumento } = req.body;
+
+    // Validar formato de documento si se proporciona
+    if (tipoDocumento && numeroDocumento) {
+      if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+        return res.status(400).json({ error: "El DNI debe tener exactamente 8 dígitos" });
+      }
+      if (tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDocumento)) {
+        return res.status(400).json({ error: "El CE debe tener entre 9 y 12 dígitos" });
+      }
+    }
+
+    // Normalizar nombre para comparación (sin espacios extra, en minúsculas)
+    const nombreNormalizado = nombre.trim().toLowerCase();
+
+    // Verificar si ya existe un entrenador con el mismo nombre en el mismo gym
+    const entrenadorExistente = await Entrenador.findOne({
+      nombre: { $regex: new RegExp(`^${nombreNormalizado}$`, 'i') },
+      gym: req.usuario.gym_id
+    });
+
+    if (entrenadorExistente) {
+      return res.status(409).json({ 
+        error: `Ya existe un entrenador con el nombre "${nombre}" en este gimnasio.` 
+      });
+    }
+
+    // Normalizar documentos antes de guardar
+    const tipoDocFinal = tipoDocumento ? String(tipoDocumento).trim() : undefined;
+    const numeroDocFinal = numeroDocumento ? String(numeroDocumento).trim().replace(/\s+/g, '') : undefined;
 
     const nuevoEntrenador = new Entrenador({
-      nombre,
+      nombre: nombre.trim(),
+      tipoDocumento: tipoDocFinal,
+      numeroDocumento: numeroDocFinal,
       edad,
       telefono,
       gym: req.usuario.gym_id
     });
+    
     // si se sube foto, guardamos en Mongo
     if (req.file) {
       nuevoEntrenador.fotoPerfil.data = req.file.buffer;
@@ -19,7 +51,16 @@ exports.crearEntrenador = async (req, res) => {
     await nuevoEntrenador.save();
     res.status(201).json({ message: "Entrenador creado correctamente" });
   } catch (err) {
-    console.error("Error al crear entrenador:", err);
+    
+    // Manejar error de duplicado del índice único
+    if (err.code === 11000) {
+      const campo = Object.keys(err.keyPattern)[0];
+      if (campo === 'nombre') {
+        return res.status(409).json({ error: "Ya existe un entrenador con este nombre en este gimnasio." });
+      }
+      return res.status(409).json({ error: "Ya existe un entrenador con estos datos." });
+    }
+    
     res.status(500).json({ error: "Error al crear el entrenador" });
   }
 };
@@ -38,6 +79,8 @@ exports.verEntrenadores = async (req, res) => {
     const entrenadoresConImagen = entrenadores.map((ent) => ({
       _id: ent._id,
       nombre: ent.nombre,
+      tipoDocumento: ent.tipoDocumento,
+      numeroDocumento: ent.numeroDocumento,
       edad: ent.edad,
       telefono: ent.telefono,
       fotoPerfil: ent.fotoPerfil.data
@@ -54,12 +97,50 @@ exports.verEntrenadores = async (req, res) => {
 };exports.actualizarEntrenador = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, edad, telefono } = req.body;
+    const { nombre, edad, telefono, tipoDocumento, numeroDocumento } = req.body;
+
+    // Validar formato de documento si se proporciona
+    if (tipoDocumento && numeroDocumento) {
+      if (tipoDocumento === "DNI" && !/^\d{8}$/.test(numeroDocumento)) {
+        return res.status(400).json({ error: "El DNI debe tener exactamente 8 dígitos" });
+      }
+      if (tipoDocumento === "CE" && !/^\d{9,12}$/.test(numeroDocumento)) {
+        return res.status(400).json({ error: "El CE debe tener entre 9 y 12 dígitos" });
+      }
+    }
+
+    // Verificar si el nombre ya existe en otro entrenador del mismo gym
+    if (nombre) {
+      const nombreNormalizado = nombre.trim().toLowerCase();
+      const entrenadorConMismoNombre = await Entrenador.findOne({
+        nombre: { $regex: new RegExp(`^${nombreNormalizado}$`, 'i') },
+        gym: req.usuario.gym_id,
+        _id: { $ne: id } // Excluir el entrenador actual
+      });
+
+      if (entrenadorConMismoNombre) {
+        return res.status(409).json({ 
+          error: `Ya existe otro entrenador con el nombre "${nombre}" en este gimnasio.` 
+        });
+      }
+    }
+
+    // Normalizar documentos antes de actualizar
+    const tipoDocFinal = tipoDocumento ? String(tipoDocumento).trim() : undefined;
+    const numeroDocFinal = numeroDocumento ? String(numeroDocumento).trim().replace(/\s+/g, '') : undefined;
+
+    const datosActualizar = {
+      ...(nombre && { nombre: nombre.trim() }),
+      ...(edad && { edad }),
+      ...(telefono && { telefono }),
+      ...(tipoDocFinal && { tipoDocumento: tipoDocFinal }),
+      ...(numeroDocFinal && { numeroDocumento: numeroDocFinal }),
+    };
 
     const entrenadorActualizado = await Entrenador.findOneAndUpdate(
       { _id: id, gym: req.usuario.gym_id },
-      { nombre, edad, telefono },
-      { new: true }
+      datosActualizar,
+      { new: true, runValidators: true }
     );
 
     if (!entrenadorActualizado) {
@@ -79,6 +160,12 @@ exports.verEntrenadores = async (req, res) => {
     });
   } catch (err) {
     console.error("Error al actualizar entrenador:", err);
+    
+    // Manejar error de duplicado del índice único
+    if (err.code === 11000) {
+      return res.status(409).json({ error: "Ya existe un entrenador con este nombre en este gimnasio." });
+    }
+    
     res.status(500).json({ error: "Error al actualizar el entrenador" });
   }
 };

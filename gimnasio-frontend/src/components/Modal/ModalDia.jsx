@@ -219,7 +219,7 @@ const ModalDia = ({
         hideCloseButton
         backdrop="blur"
         isDismissable={false}
-        size={{ base: "full", sm: "2xl", md: "3xl" }}
+        size={{ base: "full", sm: "lg", md: "xl" }}
         className="text-white bg-black"
         scrollBehavior="inside"
       >
@@ -232,7 +232,7 @@ const ModalDia = ({
                 </div>
               </ModalHeader>
 
-              <ModalBody className="space-y-3 sm:space-y-4 px-3 sm:px-6">
+              <ModalBody className="space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-3 sm:px-6">
                 {/* 🔥 ALERTA INTERNA - Para validaciones y errores */}
                 {alertaInterna.show && (
                   <div className="mb-4">
