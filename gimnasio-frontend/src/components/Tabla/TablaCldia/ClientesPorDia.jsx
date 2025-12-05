@@ -19,9 +19,11 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import IconButton from "@mui/material/IconButton";
 import ReporteClientesDia from "../../Pdf/BotonpdfClientesdia";
 import ModalEditarClienteDia from "../../Modal/ModalEditarClienteDia";
+import TodosClientes from "./TodosClientes";
 import api from "../../../utils/axiosInstance";
 
 // 🔹 Función para formatear hora
@@ -37,6 +39,7 @@ const formatTime12Hour = (timeString) => {
 };
 
 export default function TablaClientesHoy({ refresh }) {
+  const [mostrarTodos, setMostrarTodos] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -243,9 +246,51 @@ export default function TablaClientesHoy({ refresh }) {
 
   if (!Array.isArray(clientes)) return null;
 
+  // Si mostrarTodos es true, mostrar el componente TodosClientes
+  if (mostrarTodos) {
+    return (
+      <div className="p-3 sm:p-4 md:p-6 bg-gray-100 rounded-xl">
+        <div className="flex items-center justify-between mb-3 sm:mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-bold text-black">Clientes Constantes</h2>
+            <IconButton
+              aria-label="Cambiar a clientes de hoy"
+              onClick={() => setMostrarTodos(false)}
+              sx={{ 
+                color: "#d32f2f", 
+                "&:hover": { color: "#9a1b1b", backgroundColor: "rgba(211, 47, 47, 0.1)" },
+                p: 0.5
+              }}
+              size="small"
+            >
+              <SwapHorizIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+            </IconButton>
+          </div>
+        </div>
+        <TodosClientes refresh={refresh} mostrarTitulo={false} />
+      </div>
+    );
+  }
+
   return (
     <div className="p-3 sm:p-4 md:p-6 bg-gray-100 rounded-xl">
-      <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-black">Clientes de Hoy</h2>
+      <div className="flex items-center justify-between mb-3 sm:mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-bold text-black">Clientes de Hoy</h2>
+          <IconButton
+            aria-label="Cambiar a clientes constantes"
+            onClick={() => setMostrarTodos(true)}
+            sx={{ 
+              color: "#d32f2f", 
+              "&:hover": { color: "#9a1b1b", backgroundColor: "rgba(211, 47, 47, 0.1)" },
+              p: 0.5
+            }}
+            size="small"
+          >
+            <SwapHorizIcon sx={{ fontSize: { xs: 20, sm: 24 } }} />
+          </IconButton>
+        </div>
+      </div>
 
       {alert.show && (
         <div className="mb-4">

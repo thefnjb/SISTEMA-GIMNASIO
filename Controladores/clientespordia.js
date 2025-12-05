@@ -352,3 +352,112 @@ exports.obtenerHistorialMisClientes = async (req, res) => {
     return res.status(500).json({ error: "Error al obtener historial", detalles: error.message });
   }
 };
+
+// ---------- GET: todos los clientes (historial completo) ----------
+exports.getAllClientesHistorial = async (req, res) => {
+  try {
+    if (!req.usuario || !req.usuario.id) {
+      return res.status(401).json({ error: "Usuario no autenticado" });
+    }
+    const { id: userId, rol } = req.usuario;
+
+    if (!mongoose.connection.readyState) {
+      return res.status(500).json({ error: "No conectado a la base de datos" });
+    }
+
+    // Obtener todos los clientes (sin filtro de fecha)
+    let filtro = {};
+    if (rol === "trabajador") filtro.creadorId = userId;
+
+    const clientesDocs = await ClientesPorDia.find(filtro)
+      .sort({ fecha: -1, createdAt: -1 })
+      .lean();
+
+    // Agregar nombre del creador
+    const clientes = await Promise.all(
+      clientesDocs.map(async (cliente) => {
+        if (cliente.creadoPor === "admin") {
+          cliente.creadorNombre = "Administrador";
+        } else if (cliente.creadoPor === "trabajador" && cliente.creadorId) {
+          const trabajador = await Trabajador.findById(cliente.creadorId).select("nombre").lean();
+          cliente.creadorNombre = trabajador ? trabajador.nombre : "Trabajador desconocido";
+        } else {
+          cliente.creadorNombre = "Desconocido";
+        }
+        return cliente;
+      })
+    );
+
+    // Normalizar fotocomprobante para el frontend
+    const clientesParaFront = clientes.map((c) => {
+      try {
+        if (c && c.fotocomprobante && c.fotocomprobante.data) {
+          const fc = c.fotocomprobante;
+          let dataUrl = null;
+          
+          if (Buffer.isBuffer(fc.data)) {
+            dataUrl = `data:${fc.contentType || 'image/jpeg'};base64,${fc.data.toString('base64')}`;
+          } else if (fc.data && typeof fc.data === 'object') {
+            if (fc.data.type === 'Buffer' && Array.isArray(fc.data.data)) {
+              const buf = Buffer.from(fc.data.data);
+              dataUrl = `data:${fc.contentType || 'image/jpeg'};base64,${buf.toString('base64')}`;
+            } else if (Array.isArray(fc.data)) {
+              const buf = Buffer.from(fc.data);
+              dataUrl = `data:${fc.contentType || 'image/jpeg'};base64,${buf.toString('base64')}`;
+            }
+          } else if (typeof fc.data === 'string') {
+            dataUrl = fc.data.startsWith('data:') ? fc.data : `data:${fc.contentType || 'image/jpeg'};base64,${fc.data}`;
+          }
+          
+          if (dataUrl) {
+            c.fotocomprobante = { data: dataUrl, contentType: fc.contentType };
+            c.comprobante = dataUrl;
+          }
+        }
+      } catch (err) {
+        console.error('Error normalizando fotocomprobante:', err.message);
+      }
+      return c;
+    });
+
+    // Agrupar clientes por nombre y documento para identificar repetidos
+    // Usar nombre + documento como clave única
+    const clientesAgrupados = {};
+    clientesParaFront.forEach((cliente) => {
+      const clave = cliente.numeroDocumento 
+        ? `${cliente.nombre.toLowerCase().trim()}_${cliente.tipoDocumento}_${cliente.numeroDocumento.trim()}`
+        : `${cliente.nombre.toLowerCase().trim()}_sin_doc`;
+      
+      if (!clientesAgrupados[clave]) {
+        clientesAgrupados[clave] = {
+          nombre: cliente.nombre,
+          tipoDocumento: cliente.tipoDocumento,
+          numeroDocumento: cliente.numeroDocumento,
+          visitas: [],
+          totalVisitas: 0,
+          esRepetido: false
+        };
+      }
+      
+      clientesAgrupados[clave].visitas.push(cliente);
+      clientesAgrupados[clave].totalVisitas++;
+    });
+
+    // Marcar como repetidos los que tienen más de 1 visita
+    Object.keys(clientesAgrupados).forEach((clave) => {
+      if (clientesAgrupados[clave].totalVisitas > 1) {
+        clientesAgrupados[clave].esRepetido = true;
+      }
+    });
+
+    return res.status(200).json({ 
+      clientes: clientesParaFront,
+      clientesAgrupados: Object.values(clientesAgrupados),
+      totalClientes: clientesParaFront.length,
+      clientesRepetidos: Object.values(clientesAgrupados).filter(c => c.esRepetido).length
+    });
+  } catch (err) {
+    console.error("❌ Error en getAllClientesHistorial:", err);
+    return res.status(500).json({ error: "Error al obtener el historial de clientes", detalles: err.message });
+  }
+};
