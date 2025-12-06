@@ -61,12 +61,12 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
         {(modalClose) => (
           <div className="text-white bg-neutral-600 rounded-xl">
             <ModalHeader>
-              <div className="w-full text-xl sm:text-2xl font-bold text-center text-red-500">
+              <div className="w-full text-lg xs:text-xl sm:text-2xl font-bold text-center text-red-500 px-2">
                 Seleccionar Membresía
               </div>
             </ModalHeader>
 
-            <ModalBody className="space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-3 sm:px-6">
+            <ModalBody className="space-y-2 xs:space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-2 xs:px-3 sm:px-6">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
                   <CircularProgress size="lg" color="default" aria-label="Cargando..." />
@@ -121,22 +121,22 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
                   </div>
 
                   {/* Vista de cards para móvil */}
-                  <div className="md:hidden space-y-3">
+                  <div className="md:hidden space-y-2 xs:space-y-3">
                     {data.map((m) => (
                       <div
                         key={m._id}
                         onClick={() => onSeleccionar(m)}
-                        className="flex items-center justify-between p-4 transition-all duration-200 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 active:scale-95 border border-gray-600"
+                        className="flex items-center justify-between p-2 xs:p-3 sm:p-4 transition-all duration-200 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 active:scale-95 border border-gray-600"
                       >
-                        <div className="flex flex-col gap-1">
-                          <span className="text-base font-semibold text-white">
+                        <div className="flex flex-col gap-0.5 xs:gap-1 min-w-0 flex-1">
+                          <span className="text-sm xs:text-base font-semibold text-white truncate">
                             {m.duracion === 12 ? "1 Año" : `${m.duracion} Mes${m.duracion > 1 ? 'es' : ''}`}
                           </span>
-                          <span className="text-lg font-bold text-green-400">
+                          <span className="text-base xs:text-lg font-bold text-green-400">
                             S/ {Number(m.precio).toFixed(2)}
                           </span>
                         </div>
-                        <div className="text-white text-xl font-bold">→</div>
+                        <div className="text-white text-lg xs:text-xl font-bold ml-2 flex-shrink-0">→</div>
                       </div>
                     ))}
                   </div>
@@ -148,10 +148,10 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
               )}
             </ModalBody>
 
-            <ModalFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+            <ModalFooter className="flex-col sm:flex-row gap-2 px-2 xs:px-4 sm:px-6">
               <Button
                 onPress={modalClose}
-                className="w-full sm:w-auto text-white border-white"
+                className="w-full sm:w-auto text-white border-white text-sm xs:text-base"
                 variant="light"
                 color="danger"
               >

@@ -24,13 +24,13 @@ const Barralateral = ({ active, setActive }) => {
   return (
     <div className="flex">
       <aside
-        className="flex flex-col items-center min-h-screen p-4 sm:p-6 text-white shadow-2xl w-full md:w-72"
+        className="flex flex-col items-center min-h-screen p-2 xs:p-3 sm:p-4 md:p-6 text-white shadow-2xl w-full md:w-72"
         style={{
           background: 'linear-gradient(to bottom, #D72838 0%, #2E2E2E 40%, #1B1B1B 80%, #000 100%)', 
         }}
       >
-        <div className="w-full mb-4 sm:mb-8 text-center">
-          <h1 className="mb-2 text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide text-white">
+        <div className="w-full mb-2 xs:mb-3 sm:mb-6 md:mb-8 text-center">
+          <h1 className="mb-1 xs:mb-2 text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold tracking-wide text-white px-2">
             <SplitText
               text="Gimnasio Terrones"
               tag="span"
@@ -39,8 +39,10 @@ const Barralateral = ({ active, setActive }) => {
             />
           </h1>
         </div>
-        <Admin />
-        <nav className="flex flex-col flex-1 w-full gap-2 sm:gap-4 mt-4 sm:mt-8">
+        <div className="scale-75 xs:scale-90 sm:scale-100">
+          <Admin />
+        </div>
+        <nav className="flex flex-col flex-1 w-full gap-1.5 xs:gap-2 sm:gap-3 md:gap-4 mt-2 xs:mt-3 sm:mt-6 md:mt-8 px-1 xs:px-2">
           <SidebarItem
             icon={<HomeIcon />}
             label="INICIO"

@@ -13,11 +13,11 @@ export const CustomCardMobile = ({ imageUrl, title, description, children, class
       className={`w-full bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 ${className}`}
       radius="lg"
     >
-      <div className="flex flex-row items-center justify-between gap-4 p-4">
+      <div className="flex flex-row items-center justify-between gap-2 xs:gap-3 sm:gap-4 p-2 xs:p-3 sm:p-4">
         {/* Lado izquierdo: Imagen y título */}
-        <div className="flex flex-row items-center gap-4 flex-1 min-w-0">
+        <div className="flex flex-row items-center gap-2 xs:gap-3 sm:gap-4 flex-1 min-w-0">
           {/* Imagen más grande */}
-          <div className="flex-shrink-0 w-30 h-30 sm:w-32 sm:h-32 md:w-36 md:h-36 rounded-xl overflow-hidden bg-gray-100 shadow-sm">
+          <div className="flex-shrink-0 w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-lg xs:rounded-xl overflow-hidden bg-gray-100 shadow-sm">
             {imageUrl && !imageError ? (
               <img
                 src={imageUrl}
@@ -26,7 +26,7 @@ export const CustomCardMobile = ({ imageUrl, title, description, children, class
                 onError={handleImageError}
               />
             ) : (
-              <div className="flex items-center justify-center w-full h-full text-xs text-gray-400">
+              <div className="flex items-center justify-center w-full h-full text-[10px] xs:text-xs text-gray-400">
                 Sin img
               </div>
             )}
@@ -34,7 +34,7 @@ export const CustomCardMobile = ({ imageUrl, title, description, children, class
           
           {/* Título */}
           {title && (
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
+            <h3 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900 truncate">
               {title}
             </h3>
           )}
@@ -42,7 +42,7 @@ export const CustomCardMobile = ({ imageUrl, title, description, children, class
         
         {/* Lado derecho: Botones */}
         {children && (
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-1.5 xs:gap-2 flex-shrink-0">
             {children}
           </div>
         )}

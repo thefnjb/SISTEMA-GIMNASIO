@@ -15,12 +15,15 @@ import {
   ModalHeader,
   ModalBody,
   ModalFooter,
+  Chip,
 } from "@heroui/react";
 import EditIcon from "@mui/icons-material/Edit";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import IconButton from "@mui/material/IconButton";
 import ReporteClientesDia from "../../Pdf/BotonpdfClientesdia";
 import ModalEditarClienteDia from "../../Modal/ModalEditarClienteDia";
+import TodosClientes from "./TodosClientes";
 import api from "../../../utils/axiosInstance";
 
 // 🔹 Formatear hora en 12 horas
@@ -36,6 +39,7 @@ const formatTime12Hour = (timeString) => {
 };
 
 export default function ClientesDiaTrabajador({ refresh }) {
+  const [mostrarTodos, setMostrarTodos] = useState(false);
   const [clientes, setClientes] = useState([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
@@ -211,9 +215,51 @@ export default function ClientesDiaTrabajador({ refresh }) {
 
   if (!Array.isArray(clientes)) return null;
 
+  // Si mostrarTodos es true, mostrar el componente TodosClientes
+  if (mostrarTodos) {
+    return (
+      <div className="p-2 xs:p-3 sm:p-4 md:p-6 bg-gray-100 rounded-xl">
+        <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base xs:text-lg sm:text-xl font-bold text-black">Clientes Constantes</h2>
+            <IconButton
+              aria-label="Cambiar a clientes de hoy"
+              onClick={() => setMostrarTodos(false)}
+              sx={{ 
+                color: "#d32f2f", 
+                "&:hover": { color: "#9a1b1b", backgroundColor: "rgba(211, 47, 47, 0.1)" },
+                p: 0.5
+              }}
+              size="small"
+            >
+              <SwapHorizIcon sx={{ fontSize: { xs: 18, sm: 20, md: 24 } }} />
+            </IconButton>
+          </div>
+        </div>
+        <TodosClientes refresh={refresh} mostrarTitulo={false} />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-3 sm:p-4 md:p-6 bg-gray-100 rounded-xl">
-      <h2 className="mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-black">Clientes de Hoy</h2>
+    <div className="p-2 xs:p-3 sm:p-4 md:p-6 bg-gray-100 rounded-xl">
+      <div className="flex items-center justify-between mb-2 xs:mb-3 sm:mb-4">
+        <div className="flex items-center gap-2">
+          <h2 className="text-base xs:text-lg sm:text-xl font-bold text-black">Clientes de Hoy</h2>
+          <IconButton
+            aria-label="Cambiar a clientes constantes"
+            onClick={() => setMostrarTodos(true)}
+            sx={{ 
+              color: "#d32f2f", 
+              "&:hover": { color: "#9a1b1b", backgroundColor: "rgba(211, 47, 47, 0.1)" },
+              p: 0.5
+            }}
+            size="small"
+          >
+            <SwapHorizIcon sx={{ fontSize: { xs: 18, sm: 20, md: 24 } }} />
+          </IconButton>
+        </div>
+      </div>
 
       {alert.show && (
         <div className="mb-4">
@@ -276,9 +322,23 @@ export default function ClientesDiaTrabajador({ refresh }) {
             <TableRow key={cliente._id || cliente.nombre}>
               <TableCell className="font-medium">{cliente.nombre || "Sin nombre"}</TableCell>
               <TableCell>
-                {cliente.tipoDocumento && cliente.numeroDocumento 
-                  ? `${cliente.tipoDocumento}: ${cliente.numeroDocumento}` 
-                  : "-"}
+                {cliente.tipoDocumento && cliente.numeroDocumento ? (
+                  <div className="flex flex-col gap-0.5">
+                    <Chip 
+                      color={cliente.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                      variant="flat"
+                      size="sm"
+                      className="text-[10px] xs:text-[11px] h-5 w-fit"
+                    >
+                      {cliente.tipoDocumento === "CE" ? "CE" : cliente.tipoDocumento || "DNI"}
+                    </Chip>
+                    <span className="text-[9px] xs:text-[10px] text-gray-600">
+                      {cliente.numeroDocumento}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
               </TableCell>
               <TableCell className="hidden sm:table-cell">
                 {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString() : "Sin fecha"}
@@ -363,7 +423,7 @@ export default function ClientesDiaTrabajador({ refresh }) {
       <Modal 
         isOpen={isImageModalOpen} 
         onOpenChange={(val) => { if (!val) closeImageModal(); setIsImageModalOpen(val); }} 
-        size={{ base: "full", sm: "lg" }}
+        size={{ base: "full", sm: "lg", md: "xl" }}
         backdrop="blur"
       >
         <ModalContent>

@@ -37,33 +37,33 @@ function Panel() {
     switch (active) {
       case "INICIO":
         return (
-          <div className="p-4 sm:p-6">
-            <div className="flex justify-end mb-4 sm:mb-6">
+          <div className="p-2 xs:p-3 sm:p-4 md:p-6">
+            <div className="flex justify-end mb-3 xs:mb-4 sm:mb-6">
               <Button
-                className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base font-bold text-white bg-red-800 rounded shadow hover:bg-red-800"
+                className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 text-xs xs:text-sm sm:text-base font-bold text-white bg-red-800 rounded shadow hover:bg-red-800"
               >
                 <span
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowAgregar(true);
                   }}
-                  className="text-lg sm:text-xl cursor-pointer"
+                  className="text-base xs:text-lg sm:text-xl cursor-pointer"
                   title="Agregar membresía"
                 >
-                  <AddCircleOutlineRoundedIcon />
+                  <AddCircleOutlineRoundedIcon fontSize="inherit" />
                 </span>
                 <span
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowVer(true);
                   }}
-                  className="text-lg sm:text-xl cursor-pointer"
+                  className="text-base xs:text-lg sm:text-xl cursor-pointer"
                   title="Ver membresías"
                 >
-                  <RemoveRedEyeRoundedIcon />
+                  <RemoveRedEyeRoundedIcon fontSize="inherit" />
                 </span>
+                <span className="hidden xs:inline sm:hidden">MEMB.</span>
                 <span className="hidden sm:inline">MEMBRESÍAS</span>
-                <span className="sm:hidden">MEMB.</span>
               </Button>
             </div>
 
@@ -157,7 +157,7 @@ function Panel() {
 
       case "CLIENTES":
         return (
-          <div className="w-full p-3 sm:p-4 md:p-6 overflow-x-auto">
+          <div className="w-full p-2 xs:p-3 sm:p-4 md:p-6 overflow-x-auto">
             <TablaClientesAdmin refresh={refreshClientes} />
           </div>
         );
@@ -194,15 +194,15 @@ function Panel() {
           <div className="md:hidden" role="dialog" aria-modal="true">
             <div className="fixed inset-0 z-40 flex">
               <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)}></div>
-              <div className="relative flex flex-col flex-1 w-full max-w-xs bg-white">
-                <div className="absolute top-0 right-0 pt-2 -mr-12">
+              <div className="relative flex flex-col flex-1 w-full max-w-[280px] xs:max-w-xs bg-white">
+                <div className="absolute top-0 right-0 pt-1 xs:pt-2 -mr-10 xs:-mr-12">
                   <button
                     type="button"
-                    className="flex items-center justify-center w-10 h-10 ml-1 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-black"
+                    className="flex items-center justify-center w-8 h-8 xs:w-10 xs:h-10 ml-1 rounded-full focus:outline-none focus:ring-2 focus:ring-inset focus:ring-black"
                     onClick={() => setSidebarOpen(false)}
                   >
                     <span className="sr-only">Close sidebar</span>
-                    <svg className="w-6 h-6 text-black" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 xs:w-6 xs:h-6 text-black" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -211,7 +211,7 @@ function Panel() {
                   <Barralateral active={active} setActive={setActive} />
                 </div>
               </div>
-              <div className="flex-shrink-0 w-14"></div>
+              <div className="flex-shrink-0 w-10 xs:w-14"></div>
             </div>
           </div>
         )}
@@ -219,18 +219,18 @@ function Panel() {
         {/* Main content */}
         <div className="flex flex-col flex-1 w-0 overflow-hidden">
           {/* Mobile header with hamburger button */}
-          <div className="flex items-center pt-3 pl-3 md:hidden">
+          <div className="flex items-center pt-2 xs:pt-3 pl-2 xs:pl-3 md:hidden">
             <button
               type="button"
-              className="-ml-0.5 -mt-0.5 h-12 w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+              className="-ml-0.5 -mt-0.5 h-10 w-10 xs:h-12 xs:w-12 inline-flex items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
               onClick={() => setSidebarOpen(true)}
             >
               <span className="sr-only">Open sidebar</span>
-              <svg className="w-6 h-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 xs:w-6 xs:h-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <h1 className="ml-4 text-xl font-bold">{active}</h1>
+            <h1 className="ml-2 xs:ml-4 text-base xs:text-lg sm:text-xl font-bold truncate">{active}</h1>
           </div>
 
           {/* Content area */}

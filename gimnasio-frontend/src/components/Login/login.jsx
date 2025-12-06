@@ -78,7 +78,7 @@ function Login() {
   return (
     <div className="flex flex-col min-h-screen text-white bg-black lg:flex-row">
       {/* Imagen lateral - Banner en móvil, panel lateral en desktop */}
-      <div className="relative w-full h-48 sm:h-64 md:h-80 lg:h-auto lg:w-1/2 overflow-hidden">
+      <div className="relative w-full h-40 xs:h-48 sm:h-64 md:h-80 lg:h-auto lg:w-1/2 overflow-hidden">
         <div
           className="w-full h-full bg-center bg-cover bg-no-repeat animate-zoomImage grayscale lg:grayscale-0"
           style={{ 
@@ -90,11 +90,13 @@ function Login() {
       </div>
 
       {/* Formulario */}
-      <div className="flex items-center justify-center w-full px-4 sm:px-6 py-8 sm:py-10 shadow-inner bg-zinc-900 lg:w-1/2">
-        <div className="w-full max-w-md space-y-4 sm:space-y-6 animate-fadeInDown">
+      <div className="flex items-center justify-center w-full px-3 xs:px-4 sm:px-6 py-6 xs:py-8 sm:py-10 shadow-inner bg-zinc-900 lg:w-1/2">
+        <div className="w-full max-w-md space-y-3 xs:space-y-4 sm:space-y-6 animate-fadeInDown">
           <div className="text-center">
-            <AvatarGroup />
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-wide">
+            <div className="scale-75 xs:scale-90 sm:scale-100 inline-block">
+              <AvatarGroup />
+            </div>
+            <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide mt-2 xs:mt-3">
               <TextType 
                 text={["Gimnasio Terrones"]}
                 typingSpeed={75}
@@ -103,7 +105,7 @@ function Login() {
                 cursorCharacter="|"
               />
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-gray-400">Accede con tus credenciales</p>
+            <p className="mt-1 text-[10px] xs:text-xs sm:text-sm text-gray-400">Accede con tus credenciales</p>
           </div>
 
           {errorCredenciales && (
@@ -117,9 +119,9 @@ function Login() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className={`space-y-4 sm:space-y-5 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
+          <form onSubmit={handleSubmit} className={`space-y-3 xs:space-y-4 sm:space-y-5 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
             <div>
-              <label htmlFor="usuario" className="block mb-2 text-xs sm:text-sm font-semibold">
+              <label htmlFor="usuario" className="block mb-1.5 xs:mb-2 text-xs sm:text-sm font-semibold">
                 Usuario
               </label>
               <Input
@@ -127,13 +129,13 @@ function Login() {
                 type="text"
                 value={usuario}
                 onChange={(e) => setUsuario(e.target.value)}
-                className="w-full px-4 py-3 text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
+                className="w-full px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 text-sm xs:text-base text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block mb-2 text-xs sm:text-sm font-semibold">
+              <label htmlFor="password" className="block mb-1.5 xs:mb-2 text-xs sm:text-sm font-semibold">
                 Contraseña
               </label>
               <div className="relative">
@@ -142,26 +144,26 @@ function Login() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 pr-12 text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
+                  className="w-full px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 pr-10 xs:pr-12 text-sm xs:text-base text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute text-gray-400 transform -translate-y-1/2 right-3 top-1/2 hover:text-white"
+                  className="absolute text-gray-400 transform -translate-y-1/2 right-2 xs:right-3 top-1/2 hover:text-white text-sm xs:text-base"
                 >
                   {showPassword ? "🙈" : "👁️"}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-sm text-gray-400">
+            <div className="flex items-center justify-between text-xs xs:text-sm text-gray-400">
               <label className="flex items-center">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="mr-2 accent-red-600"
+                  className="mr-1.5 xs:mr-2 accent-red-600 w-3.5 h-3.5 xs:w-4 xs:h-4"
                 />
                 Recordarme
               </label>
@@ -170,7 +172,7 @@ function Login() {
             <Button
               type="submit"
               disabled={cargando}
-              className={`w-full py-3 font-semibold text-white rounded-lg transition-all duration-300 ${
+              className={`w-full py-2.5 xs:py-3 text-sm xs:text-base font-semibold text-white rounded-lg transition-all duration-300 ${
                 cargando 
                   ? 'bg-gray-600 cursor-not-allowed opacity-70' 
                   : 'bg-red-600 hover:bg-red-700 animate-pulse'
@@ -178,8 +180,8 @@ function Login() {
             >
               {cargando ? (
                 <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
-                  Iniciando sesión...
+                  <div className="w-4 h-4 xs:w-5 xs:h-5 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
+                  <span className="text-xs xs:text-sm">Iniciando sesión...</span>
                 </div>
               ) : (
                 'Iniciar Sesión'

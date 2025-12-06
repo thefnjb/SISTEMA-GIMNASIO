@@ -366,8 +366,9 @@ exports.getAllClientesHistorial = async (req, res) => {
     }
 
     // Obtener todos los clientes (sin filtro de fecha)
+    // Permitir que tanto admin como trabajador vean todos los clientes constantes
     let filtro = {};
-    if (rol === "trabajador") filtro.creadorId = userId;
+    // Removido el filtro por trabajador para que puedan ver todos los clientes constantes
 
     const clientesDocs = await ClientesPorDia.find(filtro)
       .sort({ fecha: -1, createdAt: -1 })

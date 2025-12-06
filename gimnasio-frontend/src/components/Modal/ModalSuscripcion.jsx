@@ -302,12 +302,12 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
           {(onClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500">
+                <div className="w-full text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500 px-2">
                   Nueva Suscripción
                 </div>
               </ModalHeader>
 
-              <ModalBody className="space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-3 sm:px-6">
+              <ModalBody className="space-y-2 xs:space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-2 xs:px-3 sm:px-6">
                 {/* 🔥 ALERTA INTERNA - Para validaciones y errores */}
                 {alertaInterna.show && (
                   <div className="mb-4">
@@ -324,7 +324,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                 )}
                 {/* Tipo de Documento */}
                 <div>
-                  <label className="block mb-2 text-xs sm:text-sm">Tipo de Documento</label>
+                  <label className="block mb-1.5 xs:mb-2 text-xs sm:text-sm">Tipo de Documento</label>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <button
                       type="button"
@@ -333,9 +333,9 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                         setNumeroDocumento("");
                         setOrigenNombre("reniec"); // Reset to default for DNI
                       }}
-                      className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                      className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                         tipoDocumento === "DNI"
-                          ? "bg-red-600 ring-4 ring-red-400"
+                          ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
                           : "bg-gray-700 hover:bg-gray-600"
                       }`}
                     >
@@ -348,9 +348,9 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                         setNumeroDocumento("");
                         setOrigenNombre("manual"); // Force manual for CE
                       }}
-                      className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                      className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                         tipoDocumento === "CE"
-                          ? "bg-red-600 ring-4 ring-red-400"
+                          ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
                           : "bg-gray-700 hover:bg-gray-600"
                       }`}
                     >
@@ -362,14 +362,14 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                 {/* Origen para completar el nombre: RENIEC (consulta) o MANUAL (ingresar nombre) */}
                 {tipoDocumento === 'DNI' && (
                   <div>
-                    <label className="block mb-2 text-xs sm:text-sm">Origen Nombre</label>
+                    <label className="block mb-1.5 xs:mb-2 text-xs sm:text-sm">Origen Nombre</label>
                     <div className="flex flex-col sm:flex-row gap-2">
                       <button
                         type="button"
                         onClick={() => setOrigenNombre('reniec')}
-                        className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                        className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                           origenNombre === 'reniec'
-                            ? "bg-red-600 ring-4 ring-red-400"
+                            ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
                             : "bg-gray-700 hover:bg-gray-600"
                         }`}
                       >
@@ -378,9 +378,9 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                       <button
                         type="button"
                         onClick={() => setOrigenNombre('manual')}
-                        className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                        className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                           origenNombre === 'manual'
-                            ? "bg-red-600 ring-4 ring-red-400"
+                            ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
                             : "bg-gray-700 hover:bg-gray-600"
                         }`}
                       >
@@ -388,10 +388,10 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                       </button>
                     </div>
                     {origenNombre === 'reniec' && (
-                      <span className="block mt-2 text-xs text-gray-300">La app consultará RENIEC al completar 8 dígitos.</span>
+                      <span className="block mt-1.5 xs:mt-2 text-[10px] xs:text-xs text-gray-300">La app consultará RENIEC al completar 8 dígitos.</span>
                     )}
                     {origenNombre === 'manual' && (
-                      <span className="block mt-2 text-xs text-gray-300">Modo manual: escribe el nombre directamente.</span>
+                      <span className="block mt-1.5 xs:mt-2 text-[10px] xs:text-xs text-gray-300">Modo manual: escribe el nombre directamente.</span>
                     )}
                   </div>
                 )}
@@ -442,14 +442,14 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
 
                 {/* Membresía */}
                 <div>
-                  <label className="block mb-2 text-sm">Membresía</label>
+                  <label className="block mb-1.5 xs:mb-2 text-xs xs:text-sm">Membresía</label>
                   <button
                     type="button"
                     onClick={() => setMembresiaOpen(true)}
-                    className="flex items-center w-full gap-3 p-3 text-white transition-all duration-200 bg-black border border-red-500 rounded-lg hover:bg-gray-900 hover:scale-105 hover:shadow-lg hover:border-red-400"
+                    className="flex items-center w-full gap-2 xs:gap-3 p-2 xs:p-2.5 sm:p-3 text-white transition-all duration-200 bg-black border border-red-500 rounded-lg hover:bg-gray-900 hover:scale-105 hover:shadow-lg hover:border-red-400"
                   >
-                    <DateRangeOutlinedIcon className="text-red-500" />
-                    <span className="text-lg font-medium">
+                    <DateRangeOutlinedIcon className="text-red-500 text-base xs:text-lg sm:text-xl flex-shrink-0" />
+                    <span className="text-sm xs:text-base sm:text-lg font-medium truncate">
                       {membresia
                         ? `${membresia.duracion === 12 ? "1 Año" : `${membresia.duracion} Mes${membresia.duracion > 1 ? 'es' : ''}`} - S/ ${Number(membresia.precio).toFixed(2)}`
                         : "Selecciona una membresía"
@@ -460,14 +460,14 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
 
                 {/* Entrenador */}
                 <div>
-                  <label className="block mb-2 text-sm">Entrenador</label>
+                  <label className="block mb-1.5 xs:mb-2 text-xs xs:text-sm">Entrenador</label>
                   <button
                     type="button"
                     onClick={() => setEntrenadorModalOpen(true)}
-                    className="flex items-center w-full gap-3 p-3 text-white transition-all duration-200 bg-red-600 border border-black rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg hover:border-gray-800"
+                    className="flex items-center w-full gap-2 xs:gap-3 p-2 xs:p-2.5 sm:p-3 text-white transition-all duration-200 bg-red-600 border border-black rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg hover:border-gray-800"
                   >
-                    <FitnessCenterOutlinedIcon className="text-white" />
-                    <span className="text-lg font-medium">
+                    <FitnessCenterOutlinedIcon className="text-white text-base xs:text-lg sm:text-xl flex-shrink-0" />
+                    <span className="text-sm xs:text-base sm:text-lg font-medium truncate">
                       {entrenador ? entrenador.nombre : "Selecciona un entrenador"}
                     </span>
                   </button>
@@ -485,13 +485,13 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
 
                 {/* Método de pago */}
                 <div>
-                  <label className="block mb-1 text-xs sm:text-sm">Método de Pago</label>
+                  <label className="block mb-1.5 xs:mb-2 text-xs sm:text-sm">Método de Pago</label>
                   <div className="flex flex-col gap-2">
                     {Object.entries(metodosPago).map(([key, metodo]) => (
                       <button
                         key={key}
                         type="button"
-                        className={`w-full p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${metodoSeleccionado === key ? "ring-4 ring-red-400" : ""}`}
+                        className={`w-full p-2 xs:p-2.5 sm:p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${metodoSeleccionado === key ? "ring-2 xs:ring-4 ring-red-400" : ""}`}
                         onClick={() => {
                           setMetodoSeleccionado(key);
                           // Abrir modal de comprobante automáticamente para Yape o Plin
@@ -503,19 +503,19 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                           }
                         }}
                       >
-                        <div className="flex items-center gap-3">
-                          <img src={metodo.icono} alt={metodo.nombre} className="w-6 h-6" />
-                          <span className="text-lg font-medium">{metodo.nombre}</span>
+                        <div className="flex items-center gap-2 xs:gap-3 min-w-0 flex-1">
+                          <img src={metodo.icono} alt={metodo.nombre} className="w-5 h-5 xs:w-6 xs:h-6 flex-shrink-0" />
+                          <span className="text-sm xs:text-base sm:text-lg font-medium truncate">{metodo.nombre}</span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 xs:gap-2 flex-shrink-0">
                           {/* 🔥 Indicador de comprobante subido para Yape/Plin */}
                           {(key === 'yape' || key === 'plin') && metodoSeleccionado === key && comprobantePreview && (
-                            <span className="px-2 py-1 text-xs font-semibold text-green-600 bg-green-100 rounded">
-                              ✓ Comprobante
+                            <span className="px-1.5 xs:px-2 py-0.5 xs:py-1 text-[10px] xs:text-xs font-semibold text-green-600 bg-green-100 rounded whitespace-nowrap">
+                              ✓ Comp.
                             </span>
                           )}
                           {metodoSeleccionado === key && (
-                            <span className="text-sm font-semibold">Seleccionado</span>
+                            <span className="text-xs xs:text-sm font-semibold whitespace-nowrap">Seleccionado</span>
                           )}
                         </div>
                       </button>
@@ -527,7 +527,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                     <button
                       type="button"
                       onClick={() => setPagoModalOpen(true)}
-                      className="w-full p-2 mt-2 text-sm text-white transition-all duration-200 bg-gray-700 rounded hover:bg-gray-600"
+                      className="w-full p-1.5 xs:p-2 mt-2 text-xs xs:text-sm text-white transition-all duration-200 bg-gray-700 rounded hover:bg-gray-600"
                     >
                       📷 Ver/Cambiar comprobante
                     </button>
@@ -535,7 +535,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                 </div>
               </ModalBody>
 
-              <ModalFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+              <ModalFooter className="flex-col sm:flex-row gap-2 px-2 xs:px-4 sm:px-6">
                 <Button
                   color="danger"
                   variant="light"
@@ -543,14 +543,14 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                     limpiarCampos();
                     onClose();
                   }}
-                  className="w-full sm:w-auto text-white border-white"
+                  className="w-full sm:w-auto text-white border-white text-sm xs:text-base"
                 >
                   Cerrar
                 </Button>
                 <Button
                   color="primary"
                   onPress={() => guardarSuscripcion(onClose)}
-                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700"
+                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700 text-sm xs:text-base"
                 >
                   Guardar
                 </Button>

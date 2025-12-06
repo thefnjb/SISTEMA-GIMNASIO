@@ -227,12 +227,12 @@ const ModalDia = ({
           {(onClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500">
+                <div className="w-full text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500 px-2">
                   {title}
                 </div>
               </ModalHeader>
 
-              <ModalBody className="space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-3 sm:px-6">
+              <ModalBody className="space-y-2 xs:space-y-3 sm:space-y-4 max-h-[70vh] overflow-y-auto px-2 xs:px-3 sm:px-6">
                 {/* 🔥 ALERTA INTERNA - Para validaciones y errores */}
                 {alertaInterna.show && (
                   <div className="mb-4">
@@ -250,7 +250,7 @@ const ModalDia = ({
 
                 {/* Tipo de Documento */}
                 <div>
-                  <label className="block mb-2 text-xs sm:text-sm">Tipo de Documento (Opcional)</label>
+                  <label className="block mb-1.5 xs:mb-2 text-xs sm:text-sm">Tipo de Documento (Opcional)</label>
                   <div className="flex gap-2">
                     <button
                       type="button"
@@ -259,9 +259,9 @@ const ModalDia = ({
                         setNumeroDocumento("");
                         setOrigenNombre("reniec");
                       }}
-                      className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                      className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                         tipoDocumento === "DNI"
-                          ? "bg-red-600 ring-4 ring-red-400"
+                          ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
                           : "bg-gray-700 hover:bg-gray-600"
                       }`}
                     >
@@ -274,9 +274,9 @@ const ModalDia = ({
                         setNumeroDocumento("");
                         setOrigenNombre("manual");
                       }}
-                      className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
+                      className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                         tipoDocumento === "CE"
-                          ? "bg-red-600 ring-4 ring-red-400"
+                          ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
                           : "bg-gray-700 hover:bg-gray-600"
                       }`}
                     >
@@ -287,14 +287,14 @@ const ModalDia = ({
                 {/* Origen para completar el nombre */}
                 {tipoDocumento === "DNI" && (
                   <div>
-                    <label className="block mb-2 text-xs sm:text-sm">Origen del nombre</label>
+                    <label className="block mb-1.5 xs:mb-2 text-xs sm:text-sm">Origen del nombre</label>
                     <div className="flex gap-2">
                       <button
                         type="button"
                         onClick={() => setOrigenNombre('reniec')}
-                        className={`flex-1 p-2 rounded text-white transition-all ${
+                        className={`flex-1 p-2 xs:p-2.5 rounded text-white transition-all text-sm xs:text-base ${
                           origenNombre === 'reniec'
-                            ? "bg-red-600 ring-4 ring-red-400"
+                            ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
                             : "bg-gray-700 hover:bg-gray-600"
                         }`}
                       >
@@ -303,9 +303,9 @@ const ModalDia = ({
                       <button
                         type="button"
                         onClick={() => setOrigenNombre('manual')}
-                        className={`flex-1 p-2 rounded text-white transition-all ${
+                        className={`flex-1 p-2 xs:p-2.5 rounded text-white transition-all text-sm xs:text-base ${
                           origenNombre === 'manual'
-                            ? "bg-red-600 ring-4 ring-red-400"
+                            ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
                             : "bg-gray-700 hover:bg-gray-600"
                         }`}
                       >
@@ -313,7 +313,7 @@ const ModalDia = ({
                       </button>
                     </div>
                     {origenNombre === 'reniec' && (
-                      <span className="block mt-2 text-xs text-gray-300">La app consultará RENIEC al completar 8 dígitos.</span>
+                      <span className="block mt-1.5 xs:mt-2 text-[10px] xs:text-xs text-gray-300">La app consultará RENIEC al completar 8 dígitos.</span>
                     )}
                   </div>
                 )}
@@ -365,14 +365,14 @@ const ModalDia = ({
 
                 {/* Método de pago */}
                 <div>
-                  <label className="block mb-1 text-xs sm:text-sm">Método de Pago</label>
+                  <label className="block mb-1.5 xs:mb-2 text-xs sm:text-sm">Método de Pago</label>
                   <div className="flex flex-col gap-2">
                     {Object.entries(metodosPago).map(([key, metodo]) => (
                       <button
                         key={key}
                         type="button"
-                        className={`w-full p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${
-                          metodoSeleccionado === key ? "ring-4 ring-red-400" : ""
+                        className={`w-full p-2 xs:p-2.5 sm:p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${
+                          metodoSeleccionado === key ? "ring-2 xs:ring-4 ring-red-400" : ""
                         }`}
                         onClick={() => {
                           setMetodoSeleccionado(key);
@@ -382,25 +382,25 @@ const ModalDia = ({
                           }
                         }}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 xs:gap-3 min-w-0 flex-1">
                           <img
                             src={metodo.icono}
                             alt={metodo.nombre}
-                            className="w-6 h-6"
+                            className="w-5 h-5 xs:w-6 xs:h-6 flex-shrink-0"
                           />
-                          <span className="text-lg font-medium">
+                          <span className="text-sm xs:text-base sm:text-lg font-medium truncate">
                             {metodo.nombre}
                           </span>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 xs:gap-2 flex-shrink-0">
                           {/* 🔥 Indicador de comprobante subido para Yape/Plin */}
                           {(key === 'yape' || key === 'plin') && metodoSeleccionado === key && comprobantePreview && (
-                            <span className="px-2 py-1 text-xs font-semibold text-green-600 bg-green-100 rounded">
-                              ✓ Comprobante
+                            <span className="px-1.5 xs:px-2 py-0.5 xs:py-1 text-[10px] xs:text-xs font-semibold text-green-600 bg-green-100 rounded whitespace-nowrap">
+                              ✓ Comp.
                             </span>
                           )}
                           {metodoSeleccionado === key && (
-                            <span className="text-sm font-semibold">
+                            <span className="text-xs xs:text-sm font-semibold whitespace-nowrap">
                               Seleccionado
                             </span>
                           )}
@@ -412,7 +412,7 @@ const ModalDia = ({
                     <button
                       type="button"
                       onClick={() => setPagoModalOpen(true)}
-                      className="w-full p-2 mt-2 text-sm text-white transition-all duration-200 bg-gray-700 rounded hover:bg-gray-600"
+                      className="w-full p-1.5 xs:p-2 mt-2 text-xs xs:text-sm text-white transition-all duration-200 bg-gray-700 rounded hover:bg-gray-600"
                     >
                       📷 Ver/Cambiar comprobante
                     </button>
@@ -421,7 +421,7 @@ const ModalDia = ({
 
               </ModalBody>
 
-              <ModalFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+              <ModalFooter className="flex-col sm:flex-row gap-2 px-2 xs:px-4 sm:px-6">
                 <Button
                   color="danger"
                   variant="light"
@@ -429,14 +429,14 @@ const ModalDia = ({
                     limpiarCampos();
                     onClose();
                   }}
-                  className="w-full sm:w-auto text-white border-white"
+                  className="w-full sm:w-auto text-white border-white text-sm xs:text-base"
                 >
                   Cerrar
                 </Button>
                 <Button
                   color="primary"
                   onPress={() => guardarCliente(onClose)}
-                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700"
+                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700 text-sm xs:text-base"
                 >
                   Guardar
                 </Button>

@@ -10,11 +10,46 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevenir zoom en iOS al enfocar inputs */
+  -webkit-text-size-adjust: 100%;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Mejoras para móvil */
+@media (max-width: 375px) {
+  /* Asegurar que los elementos no se desborden */
+  * {
+    box-sizing: border-box;
+  }
+  
+  /* Mejorar el touch target para botones pequeños */
+  button, a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Scrollbar personalizado para webkit (opcional) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 

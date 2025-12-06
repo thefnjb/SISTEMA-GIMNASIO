@@ -21,6 +21,12 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import RepeatIcon from "@mui/icons-material/Repeat";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ViewListIcon from "@mui/icons-material/ViewList";
+import ViewModuleIcon from "@mui/icons-material/ViewModule";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import TableChartIcon from "@mui/icons-material/TableChart";
 import IconButton from "@mui/material/IconButton";
 import ModalEditarClienteDia from "../../Modal/ModalEditarClienteDia";
 import api from "../../../utils/axiosInstance";
@@ -42,6 +48,9 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
   const [clientesAgrupados, setClientesAgrupados] = useState([]);
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRol, setUserRol] = useState(null);
+  const [vistaAgrupada, setVistaAgrupada] = useState(true); // Nueva opción para vista agrupada
+  const [clientesExpandidos, setClientesExpandidos] = useState(new Set()); // Clientes con detalles expandidos
   const [sortDescriptor, setSortDescriptor] = useState({
     column: "fecha",
     direction: "descending",
@@ -219,6 +228,60 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
     }
   };
 
+  // 🔹 Descargar reporte PDF de clientes constantes
+  const descargarReportePDF = async () => {
+    try {
+      showAlert("info", "Generando reporte PDF...");
+      const response = await api.get("/pdfdia/reporte-clientes-constantes-pdf", {
+        responseType: "blob",
+        withCredentials: true,
+        headers: { Accept: "application/pdf" },
+      });
+
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `reporte_clientes_constantes.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showAlert("success", "Reporte PDF descargado exitosamente.");
+    } catch (error) {
+      console.error("Error al descargar reporte PDF:", error);
+      showAlert("danger", "No se pudo generar el reporte PDF.");
+    }
+  };
+
+  // 🔹 Descargar reporte Excel de clientes constantes
+  const descargarReporteExcel = async () => {
+    try {
+      showAlert("info", "Generando reporte Excel...");
+      const response = await api.get("/pdfdia/reporte-clientes-constantes-excel", {
+        responseType: "blob",
+        withCredentials: true,
+        headers: { 
+          Accept: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+        },
+      });
+
+      const blob = response.data;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `reporte_clientes_constantes.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      showAlert("success", "Reporte Excel descargado exitosamente.");
+    } catch (error) {
+      console.error("Error al descargar reporte Excel:", error);
+      showAlert("danger", "No se pudo generar el reporte Excel.");
+    }
+  };
+
   // 🔹 Obtener todos los clientes
   const fetchClientes = useCallback(async () => {
     try {
@@ -233,6 +296,18 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
       setIsLoading(false);
     }
   }, [showAlert]);
+
+  // Obtener rol del usuario
+  useEffect(() => {
+    const rol = sessionStorage.getItem('rol');
+    setUserRol(rol);
+  }, []);
+
+  // Resetear página y clientes expandidos al cambiar de vista
+  useEffect(() => {
+    setPage(1);
+    setClientesExpandidos(new Set());
+  }, [vistaAgrupada]);
 
   useEffect(() => {
     fetchClientes();
@@ -274,31 +349,133 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
     return clientes;
   }, [clientes, filtroRepetidos, esClienteRepetido]);
 
-  const pages = Math.ceil(clientesFiltrados.length / rowsPerPage);
-  const items = useMemo(() => {
-    const start = (page - 1) * rowsPerPage;
-    return clientesFiltrados.slice(start, start + rowsPerPage);
-  }, [page, clientesFiltrados]);
-
-  const sortedItems = useMemo(() => {
-    const column = sortDescriptor?.column || "fecha";
-    const directionFactor = sortDescriptor?.direction === "descending" ? -1 : 1;
-    return [...items].sort((a, b) => {
-      let first, second;
+  // 🔹 Agrupar clientes por nombre/documento para vista agrupada
+  const clientesAgrupadosVista = useMemo(() => {
+    if (!vistaAgrupada) return null;
+    
+    const grupos = {};
+    
+    clientesFiltrados.forEach(cliente => {
+      const clave = cliente.numeroDocumento 
+        ? `${cliente.nombre.toLowerCase().trim()}_${cliente.tipoDocumento}_${cliente.numeroDocumento.trim()}`
+        : `${cliente.nombre.toLowerCase().trim()}_sin_doc`;
       
-      if (column === "fecha") {
-        first = new Date(a[column] || 0).getTime();
-        second = new Date(b[column] || 0).getTime();
-        return (first - second) * directionFactor;
-      } else {
-        first = (a[column] ?? "").toString().toLowerCase();
-        second = (b[column] ?? "").toString().toLowerCase();
-        if (first < second) return -1 * directionFactor;
-        if (first > second) return 1 * directionFactor;
-        return 0;
+      if (!grupos[clave]) {
+        grupos[clave] = {
+          clave,
+          nombre: cliente.nombre,
+          tipoDocumento: cliente.tipoDocumento,
+          numeroDocumento: cliente.numeroDocumento,
+          visitas: [],
+          totalVisitas: 0,
+          totalMonto: 0,
+          ultimaVisita: null,
+          primerVisita: null,
+          metodosPago: new Set(),
+          esRepetido: false
+        };
+      }
+      
+      grupos[clave].visitas.push(cliente);
+      grupos[clave].totalVisitas++;
+      grupos[clave].totalMonto += (cliente.monto ?? 7);
+      if (cliente.metododePago) grupos[clave].metodosPago.add(cliente.metododePago);
+      
+      const fechaCliente = new Date(cliente.fecha || cliente.createdAt);
+      if (!grupos[clave].ultimaVisita || fechaCliente > grupos[clave].ultimaVisita.fecha) {
+        grupos[clave].ultimaVisita = { ...cliente, fecha: fechaCliente };
+      }
+      if (!grupos[clave].primerVisita || fechaCliente < grupos[clave].primerVisita.fecha) {
+        grupos[clave].primerVisita = { ...cliente, fecha: fechaCliente };
       }
     });
-  }, [sortDescriptor, items]);
+    
+    // Marcar como repetidos y ordenar visitas dentro de cada grupo (más reciente primero)
+    Object.keys(grupos).forEach(clave => {
+      if (grupos[clave].totalVisitas > 1) {
+        grupos[clave].esRepetido = true;
+      }
+      // Ordenar visitas por fecha (más reciente primero)
+      grupos[clave].visitas.sort((a, b) => {
+        const fechaA = new Date(a.fecha || a.createdAt || 0);
+        const fechaB = new Date(b.fecha || b.createdAt || 0);
+        return fechaB - fechaA;
+      });
+    });
+    
+    return Object.values(grupos);
+  }, [clientesFiltrados, vistaAgrupada]);
+
+  // Función para expandir/colapsar cliente
+  const toggleExpandirCliente = (clave) => {
+    const nuevosExpandidos = new Set(clientesExpandidos);
+    if (nuevosExpandidos.has(clave)) {
+      nuevosExpandidos.delete(clave);
+    } else {
+      nuevosExpandidos.add(clave);
+    }
+    setClientesExpandidos(nuevosExpandidos);
+  };
+
+  // Items para mostrar: agrupados o individuales
+  const itemsParaMostrar = vistaAgrupada ? clientesAgrupadosVista : clientesFiltrados;
+  const pages = Math.ceil((itemsParaMostrar?.length || 0) / rowsPerPage);
+  const items = useMemo(() => {
+    if (!itemsParaMostrar) return [];
+    const start = (page - 1) * rowsPerPage;
+    return itemsParaMostrar.slice(start, start + rowsPerPage);
+  }, [page, itemsParaMostrar]);
+
+  const sortedItems = useMemo(() => {
+    if (vistaAgrupada) {
+      // Ordenar grupos por última visita (más reciente primero)
+      const gruposOrdenados = [...items].sort((a, b) => {
+        const fechaA = a.ultimaVisita?.fecha || new Date(0);
+        const fechaB = b.ultimaVisita?.fecha || new Date(0);
+        return fechaB - fechaA; // Más reciente primero
+      });
+      
+      // Expandir grupos para incluir filas expandidas
+      const itemsExpandidos = [];
+      gruposOrdenados.forEach((grupo) => {
+        // Agregar la fila principal del grupo
+        itemsExpandidos.push({ ...grupo, esGrupoPrincipal: true });
+        
+        // Si el grupo está expandido, agregar las visitas como filas separadas
+        if (clientesExpandidos.has(grupo.clave)) {
+          grupo.visitas.forEach((visita, idx) => {
+            itemsExpandidos.push({
+              ...visita,
+              esVisitaExpandida: true,
+              grupoPadre: grupo.clave,
+              indiceVisita: idx
+            });
+          });
+        }
+      });
+      
+      return itemsExpandidos;
+    } else {
+      // Ordenar visitas individuales
+      const column = sortDescriptor?.column || "fecha";
+      const directionFactor = sortDescriptor?.direction === "descending" ? -1 : 1;
+      return [...items].sort((a, b) => {
+        let first, second;
+        
+        if (column === "fecha") {
+          first = new Date(a[column] || 0).getTime();
+          second = new Date(b[column] || 0).getTime();
+          return (first - second) * directionFactor;
+        } else {
+          first = (a[column] ?? "").toString().toLowerCase();
+          second = (b[column] ?? "").toString().toLowerCase();
+          if (first < second) return -1 * directionFactor;
+          if (first > second) return 1 * directionFactor;
+          return 0;
+        }
+      });
+    }
+  }, [sortDescriptor, items, vistaAgrupada, clientesExpandidos]);
 
   const loadingState = isLoading ? "loading" : "idle";
 
@@ -309,6 +486,11 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
     },
     [clientesFiltrados]
   );
+
+  // Calcular total de clientes únicos cuando está en vista agrupada
+  const totalClientesUnicos = vistaAgrupada 
+    ? (clientesAgrupadosVista?.length || 0)
+    : clientesFiltrados.length;
 
   const clientesRepetidosCount = useMemo(
     () => {
@@ -326,6 +508,42 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3 sm:mb-4">
           <h2 className="text-lg sm:text-xl font-bold text-black">Todos los Clientes</h2>
           <div className="flex flex-wrap items-center gap-2">
+          {userRol === 'admin' && (
+            <>
+              <Button
+                size="sm"
+                variant="solid"
+                color="danger"
+                onPress={descargarReportePDF}
+                className="text-xs sm:text-sm"
+                startContent={<PictureAsPdfIcon sx={{ fontSize: 16 }} />}
+              >
+                <span className="hidden sm:inline">Descargar PDF</span>
+                <span className="sm:hidden">PDF</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="solid"
+                color="success"
+                onPress={descargarReporteExcel}
+                className="text-xs sm:text-sm"
+                startContent={<TableChartIcon sx={{ fontSize: 16 }} />}
+              >
+                <span className="hidden sm:inline">Descargar Excel</span>
+                <span className="sm:hidden">Excel</span>
+              </Button>
+            </>
+          )}
+          <Button
+            size="sm"
+            variant={vistaAgrupada ? "solid" : "flat"}
+            color={vistaAgrupada ? "secondary" : "default"}
+            onPress={() => setVistaAgrupada(!vistaAgrupada)}
+            className="text-xs sm:text-sm"
+            startContent={vistaAgrupada ? <ViewModuleIcon sx={{ fontSize: 16 }} /> : <ViewListIcon sx={{ fontSize: 16 }} />}
+          >
+            {vistaAgrupada ? "Vista Agrupada" : "Vista Detallada"}
+          </Button>
           <Button
             size="sm"
             variant={filtroRepetidos === "todos" ? "solid" : "flat"}
@@ -358,6 +576,42 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+          {userRol === 'admin' && (
+            <>
+              <Button
+                size="sm"
+                variant="solid"
+                color="danger"
+                onPress={descargarReportePDF}
+                className="text-xs sm:text-sm"
+                startContent={<PictureAsPdfIcon sx={{ fontSize: 16 }} />}
+              >
+                <span className="hidden sm:inline">Descargar PDF</span>
+                <span className="sm:hidden">PDF</span>
+              </Button>
+              <Button
+                size="sm"
+                variant="solid"
+                color="success"
+                onPress={descargarReporteExcel}
+                className="text-xs sm:text-sm"
+                startContent={<TableChartIcon sx={{ fontSize: 16 }} />}
+              >
+                <span className="hidden sm:inline">Descargar Excel</span>
+                <span className="sm:hidden">Excel</span>
+              </Button>
+            </>
+          )}
+          <Button
+            size="sm"
+            variant={vistaAgrupada ? "solid" : "flat"}
+            color={vistaAgrupada ? "secondary" : "default"}
+            onPress={() => setVistaAgrupada(!vistaAgrupada)}
+            className="text-xs sm:text-sm"
+            startContent={vistaAgrupada ? <ViewModuleIcon sx={{ fontSize: 16 }} /> : <ViewListIcon sx={{ fontSize: 16 }} />}
+          >
+            {vistaAgrupada ? "Vista Agrupada" : "Vista Detallada"}
+          </Button>
           <Button
             size="sm"
             variant={filtroRepetidos === "todos" ? "solid" : "flat"}
@@ -427,15 +681,30 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
         }}
       >
         <TableHeader>
-          <TableColumn key="nombre" allowsSorting className="min-w-[120px]">Nombre</TableColumn>
-          <TableColumn key="documento" allowsSorting className="min-w-[120px]">Documento</TableColumn>
-          <TableColumn key="fecha" allowsSorting className="min-w-[100px]">Fecha</TableColumn>
-          <TableColumn key="horaInicio" allowsSorting className="min-w-[100px]">Hora</TableColumn>
-          <TableColumn key="metododePago" allowsSorting className="text-center">PAGO</TableColumn>
-          <TableColumn key="precio" className="text-right min-w-[80px]" allowsSorting>Monto</TableColumn>
-          <TableColumn key="visitas" className="text-center min-w-[80px]">Visitas</TableColumn>
-          <TableColumn key="cambios" className="text-center hidden md:table-cell">Cambios</TableColumn>
-          <TableColumn key="acciones" className="text-center min-w-[120px]">Acciones</TableColumn>
+          {vistaAgrupada ? (
+            <>
+              <TableColumn className="min-w-[50px]"></TableColumn>
+              <TableColumn key="nombre" allowsSorting className="min-w-[120px]">Nombre</TableColumn>
+              <TableColumn key="documento" allowsSorting className="min-w-[120px]">Documento</TableColumn>
+              <TableColumn key="visitas" className="text-center min-w-[80px]">Visitas</TableColumn>
+              <TableColumn className="min-w-[100px]">Última Visita</TableColumn>
+              <TableColumn className="text-right min-w-[80px]">Total Gastado</TableColumn>
+              <TableColumn className="text-center">Métodos de Pago</TableColumn>
+              <TableColumn key="acciones" className="text-center min-w-[120px]">Acciones</TableColumn>
+            </>
+          ) : (
+            <>
+              <TableColumn key="nombre" allowsSorting className="min-w-[120px]">Nombre</TableColumn>
+              <TableColumn key="documento" allowsSorting className="min-w-[120px]">Documento</TableColumn>
+              <TableColumn key="fecha" allowsSorting className="min-w-[100px]">Fecha</TableColumn>
+              <TableColumn key="horaInicio" allowsSorting className="min-w-[100px]">Hora</TableColumn>
+              <TableColumn key="metododePago" allowsSorting className="text-center">PAGO</TableColumn>
+              <TableColumn key="precio" className="text-right min-w-[80px]" allowsSorting>Monto</TableColumn>
+              <TableColumn key="visitas" className="text-center min-w-[80px]">Visitas</TableColumn>
+              <TableColumn key="cambios" className="text-center hidden md:table-cell">Cambios</TableColumn>
+              <TableColumn key="acciones" className="text-center min-w-[120px]">Acciones</TableColumn>
+            </>
+          )}
         </TableHeader>
 
         <TableBody
@@ -448,121 +717,379 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
           }
           emptyContent={"No hay clientes registrados"}
         >
-          {(cliente) => {
-            const esRepetido = esClienteRepetido(cliente);
-            const numVisitas = obtenerNumeroVisitas(cliente);
-            return (
-              <TableRow 
-                key={cliente._id || cliente.nombre}
-                className={esRepetido ? "bg-yellow-50 hover:bg-yellow-100" : ""}
-              >
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    {cliente.nombre || "Sin nombre"}
-                    {esRepetido && (
+          {vistaAgrupada ? (
+            // Vista Agrupada: mostrar cada cliente una vez con resumen
+            (item) => {
+              // Determinar si es una fila principal o una fila expandida
+              if (item.esVisitaExpandida) {
+                // Renderizar fila expandida (visita individual)
+                const puedeEliminar = userRol === 'admin';
+                return (
+                  <TableRow 
+                    key={`${item.grupoPadre}-${item.indiceVisita}`}
+                    className="bg-gray-50"
+                  >
+                    <TableCell></TableCell>
+                    <TableCell className="text-xs text-gray-600 pl-6">
+                      <div className="flex items-center gap-1">
+                        <span className="font-medium">{item.nombre}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell></TableCell>
+                    <TableCell className="text-center">
                       <Chip
                         size="sm"
-                        color="warning"
+                        color="secondary"
                         variant="flat"
-                        startContent={<RepeatIcon sx={{ fontSize: 14 }} />}
+                        className="text-[10px] xs:text-[11px]"
                       >
-                        {numVisitas}x
+                        #{item.indiceVisita + 1}
                       </Chip>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {cliente.tipoDocumento && cliente.numeroDocumento 
-                    ? `${cliente.tipoDocumento}: ${cliente.numeroDocumento}` 
-                    : "-"}
-                </TableCell>
-                <TableCell>
-                  {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE") : "Sin fecha"}
-                </TableCell>
-                <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
-                <TableCell className="text-center capitalize">
-                  <div className="flex items-center justify-center gap-2">
-                    {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] && (
-                      <>
-                        {cliente.metododePago.toLowerCase() === 'efectivo' ? (
-                          <div className="p-1 cursor-default">
-                            <img
-                              src={metodosPago[cliente.metododePago.toLowerCase()].icono}
-                              alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                              className="object-contain w-6 h-6 opacity-80"
-                            />
-                          </div>
-                        ) : (
-                          <Button
-                            isIconOnly
-                            size="sm"
-                            onClick={() => openComprobanteModal(cliente)}
-                            className="p-1 bg-transparent hover:opacity-80"
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      <div className="flex flex-col gap-0.5">
+                        <span>{item.fecha ? new Date(item.fecha).toLocaleDateString("es-PE") : "Sin fecha"}</span>
+                        <span className="text-gray-500">{formatTime12Hour(item.horaInicio)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right text-xs font-semibold">
+                      S/ {item.monto ?? 7}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {item.metododePago && metodosPago[item.metododePago.toLowerCase()] && (
+                        <img
+                          src={metodosPago[item.metododePago.toLowerCase()].icono}
+                          alt={item.metododePago}
+                          className="object-contain w-5 h-5 mx-auto"
+                          title={item.metododePago}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1">
+                        <IconButton
+                          aria-label="Descargar voucher"
+                          onClick={() => descargarVoucher(item)}
+                          sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                          size="small"
+                        >
+                          <AdfScannerRoundedIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                        <IconButton
+                          aria-label="Editar cliente"
+                          onClick={() => openModalEditar(item)}
+                          sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                          size="small"
+                        >
+                          <EditIcon sx={{ fontSize: 18 }} />
+                        </IconButton>
+                        {puedeEliminar && (
+                          <IconButton
+                            aria-label="Eliminar cliente"
+                            color="error"
+                            onClick={() => handleDeleteConfirm(item)}
+                            sx={{ p: 0.5 }}
+                            size="small"
                           >
-                            <img
-                              src={metodosPago[cliente.metododePago.toLowerCase()].icono}
-                              alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                              className="object-contain w-6 h-6"
-                            />
-                          </Button>
+                            <DeleteIcon sx={{ fontSize: 18 }} />
+                          </IconButton>
                         )}
-                      </>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              }
+              
+              // Renderizar fila principal del grupo
+              const grupo = item;
+              const estaExpandido = clientesExpandidos.has(grupo.clave);
+              const puedeEliminar = userRol === 'admin';
+              
+              return (
+                <TableRow 
+                  key={grupo.clave}
+                  className={grupo.esRepetido ? "bg-yellow-50 hover:bg-yellow-100" : ""}
+                >
+                  {/* Botón expandir/colapsar */}
+                  <TableCell>
+                    {grupo.totalVisitas > 1 && (
+                      <IconButton
+                        onClick={() => toggleExpandirCliente(grupo.clave)}
+                        sx={{ p: 0.5 }}
+                        size="small"
+                      >
+                        {estaExpandido ? 
+                          <ExpandLessIcon sx={{ fontSize: 20, color: "#d32f2f" }} /> : 
+                          <ExpandMoreIcon sx={{ fontSize: 20, color: "#d32f2f" }} />
+                        }
+                      </IconButton>
                     )}
-                  </div>
-                </TableCell>
-                <TableCell className="text-right font-semibold">{cliente.monto ?? 7}</TableCell>
-                <TableCell className="text-center">
-                  <Chip
-                    size="sm"
-                    color={numVisitas > 1 ? "warning" : "default"}
-                    variant={numVisitas > 1 ? "flat" : "flat"}
-                  >
-                    {numVisitas}
-                  </Chip>
-                </TableCell>
-                <TableCell className="text-center hidden md:table-cell">
-                  <span className="text-xs sm:text-sm font-normal text-black">
-                    {cliente.creadoPor === "admin"
-                      ? "Administrador"
-                      : cliente.creadoPor === "trabajador"
-                      ? cliente.creadorNombre || "Trabajador"
-                      : "Desconocido"}
-                  </span>
-                </TableCell>
-                <TableCell className="text-center">
-                  <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
-                    <IconButton
-                      aria-label="Descargar voucher"
-                      onClick={() => descargarVoucher(cliente)}
-                      sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
-                      size="small"
+                  </TableCell>
+                  
+                  {/* Nombre */}
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {grupo.nombre || "Sin nombre"}
+                      {grupo.esRepetido && (
+                        <Chip
+                          size="sm"
+                          color="warning"
+                          variant="flat"
+                          startContent={<RepeatIcon sx={{ fontSize: 14 }} />}
+                        >
+                          {grupo.totalVisitas}x
+                        </Chip>
+                      )}
+                    </div>
+                  </TableCell>
+                  
+                  {/* Documento */}
+                  <TableCell>
+                    {grupo.tipoDocumento && grupo.numeroDocumento ? (
+                      <div className="flex flex-col gap-0.5">
+                        <Chip 
+                          color={grupo.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                          variant="flat"
+                          size="sm"
+                          className="text-[10px] xs:text-[11px] h-5 w-fit"
+                        >
+                          {grupo.tipoDocumento === "CE" ? "CE" : grupo.tipoDocumento || "DNI"}
+                        </Chip>
+                        <span className="text-[9px] xs:text-[10px] text-gray-600">
+                          {grupo.numeroDocumento}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </TableCell>
+                  
+                  {/* Total Visitas */}
+                  <TableCell className="text-center">
+                    <Chip
+                      size="sm"
+                      color={grupo.totalVisitas > 1 ? "warning" : "default"}
+                      variant="flat"
                     >
-                      <AdfScannerRoundedIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
-                    </IconButton>
+                      {grupo.totalVisitas}
+                    </Chip>
+                  </TableCell>
+                  
+                  {/* Última Visita */}
+                  <TableCell>
+                    {grupo.ultimaVisita ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-xs">
+                          {grupo.ultimaVisita.fecha ? new Date(grupo.ultimaVisita.fecha).toLocaleDateString("es-PE") : "Sin fecha"}
+                        </span>
+                        <span className="text-[10px] text-gray-500">
+                          {formatTime12Hour(grupo.ultimaVisita.horaInicio)}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </TableCell>
+                  
+                  {/* Total Gastado */}
+                  <TableCell className="text-right font-semibold">
+                    S/ {grupo.totalMonto.toFixed(2)}
+                  </TableCell>
+                  
+                  {/* Métodos de Pago */}
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1 flex-wrap">
+                      {Array.from(grupo.metodosPago).slice(0, 3).map((metodo) => (
+                        metodosPago[metodo.toLowerCase()] && (
+                          <img
+                            key={metodo}
+                            src={metodosPago[metodo.toLowerCase()].icono}
+                            alt={metodo}
+                            className="object-contain w-5 h-5 xs:w-6 xs:h-6"
+                            title={metodo}
+                          />
+                        )
+                      ))}
+                      {grupo.metodosPago.size > 3 && (
+                        <span className="text-[9px] text-gray-500">+{grupo.metodosPago.size - 3}</span>
+                      )}
+                    </div>
+                  </TableCell>
+                  
+                  {/* Acciones */}
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1 sm:gap-2">
+                      {grupo.ultimaVisita && (
+                        <>
+                          <IconButton
+                            aria-label="Descargar voucher"
+                            onClick={() => descargarVoucher(grupo.ultimaVisita)}
+                            sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                            size="small"
+                          >
+                            <AdfScannerRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                          </IconButton>
+                          <IconButton
+                            aria-label="Editar cliente"
+                            onClick={() => openModalEditar(grupo.ultimaVisita)}
+                            sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                            size="small"
+                          >
+                            <EditIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                          </IconButton>
+                          {puedeEliminar && (
+                            <IconButton
+                              aria-label="Eliminar cliente"
+                              color="error"
+                              onClick={() => handleDeleteConfirm(grupo.ultimaVisita)}
+                              sx={{ p: 0.5 }}
+                              size="small"
+                            >
+                              <DeleteIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                            </IconButton>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            }
+          ) : (
+            // Vista Detallada: mostrar todas las visitas individuales (código original)
+            (cliente) => {
+              const esRepetido = esClienteRepetido(cliente);
+              const numVisitas = obtenerNumeroVisitas(cliente);
+              const puedeEliminar = userRol === 'admin';
+              return (
+                <TableRow 
+                  key={cliente._id || cliente.nombre}
+                  className={esRepetido ? "bg-yellow-50 hover:bg-yellow-100" : ""}
+                >
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {cliente.nombre || "Sin nombre"}
+                      {esRepetido && (
+                        <Chip
+                          size="sm"
+                          color="warning"
+                          variant="flat"
+                          startContent={<RepeatIcon sx={{ fontSize: 14 }} />}
+                        >
+                          {numVisitas}x
+                        </Chip>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {cliente.tipoDocumento && cliente.numeroDocumento ? (
+                      <div className="flex flex-col gap-0.5">
+                        <Chip 
+                          color={cliente.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                          variant="flat"
+                          size="sm"
+                          className="text-[10px] xs:text-[11px] h-5 w-fit"
+                        >
+                          {cliente.tipoDocumento === "CE" ? "CE" : cliente.tipoDocumento || "DNI"}
+                        </Chip>
+                        <span className="text-[9px] xs:text-[10px] text-gray-600">
+                          {cliente.numeroDocumento}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE") : "Sin fecha"}
+                  </TableCell>
+                  <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
+                  <TableCell className="text-center capitalize">
+                    <div className="flex items-center justify-center gap-2">
+                      {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] && (
+                        <>
+                          {cliente.metododePago.toLowerCase() === 'efectivo' ? (
+                            <div className="p-1 cursor-default">
+                              <img
+                                src={metodosPago[cliente.metododePago.toLowerCase()].icono}
+                                alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
+                                className="object-contain w-6 h-6 opacity-80"
+                              />
+                            </div>
+                          ) : (
+                            <Button
+                              isIconOnly
+                              size="sm"
+                              onClick={() => openComprobanteModal(cliente)}
+                              className="p-1 bg-transparent hover:opacity-80"
+                            >
+                              <img
+                                src={metodosPago[cliente.metododePago.toLowerCase()].icono}
+                                alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
+                                className="object-contain w-6 h-6"
+                              />
+                            </Button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">{cliente.monto ?? 7}</TableCell>
+                  <TableCell className="text-center">
+                    <Chip
+                      size="sm"
+                      color={numVisitas > 1 ? "warning" : "default"}
+                      variant={numVisitas > 1 ? "flat" : "flat"}
+                    >
+                      {numVisitas}
+                    </Chip>
+                  </TableCell>
+                  <TableCell className="text-center hidden md:table-cell">
+                    <span className="text-xs sm:text-sm font-normal text-black">
+                      {cliente.creadoPor === "admin"
+                        ? "Administrador"
+                        : cliente.creadoPor === "trabajador"
+                        ? cliente.creadorNombre || "Trabajador"
+                        : "Desconocido"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
+                      <IconButton
+                        aria-label="Descargar voucher"
+                        onClick={() => descargarVoucher(cliente)}
+                        sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                        size="small"
+                      >
+                        <AdfScannerRoundedIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
+                      </IconButton>
 
-                    <IconButton
-                      aria-label="Editar cliente"
-                      onClick={() => openModalEditar(cliente)}
-                      sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
-                      size="small"
-                    >
-                      <EditIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
-                    </IconButton>
+                      <IconButton
+                        aria-label="Editar cliente"
+                        onClick={() => openModalEditar(cliente)}
+                        sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                        size="small"
+                      >
+                        <EditIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
+                      </IconButton>
 
-                    <IconButton
-                      aria-label="Eliminar cliente"
-                      color="error"
-                      onClick={() => handleDeleteConfirm(cliente)}
-                      sx={{ p: 0.5 }}
-                      size="small"
-                    >
-                      <DeleteIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
-                    </IconButton>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          }}
+                      {puedeEliminar && (
+                        <IconButton
+                          aria-label="Eliminar cliente"
+                          color="error"
+                          onClick={() => handleDeleteConfirm(cliente)}
+                          sx={{ p: 0.5 }}
+                          size="small"
+                        >
+                          <DeleteIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
+                        </IconButton>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            }
+          )}
         </TableBody>
       </Table>
 
@@ -571,7 +1098,11 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
           Total Recaudado: <span className="text-red-600">S/ {totalMonto.toFixed(2)}</span>
         </div>
         <div className="text-sm text-gray-600">
-          Mostrando {clientesFiltrados.length} de {clientes.length} clientes
+          {vistaAgrupada ? (
+            <>Mostrando {totalClientesUnicos} {totalClientesUnicos === 1 ? 'cliente único' : 'clientes únicos'} de {clientes.length} {clientes.length === 1 ? 'visita total' : 'visitas totales'}</>
+          ) : (
+            <>Mostrando {clientesFiltrados.length} de {clientes.length} clientes</>
+          )}
         </div>
       </div>
 

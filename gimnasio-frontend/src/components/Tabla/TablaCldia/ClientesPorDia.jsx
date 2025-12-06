@@ -21,6 +21,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import IconButton from "@mui/material/IconButton";
+import { Chip } from "@heroui/react";
 import ReporteClientesDia from "../../Pdf/BotonpdfClientesdia";
 import ModalEditarClienteDia from "../../Modal/ModalEditarClienteDia";
 import TodosClientes from "./TodosClientes";
@@ -353,12 +354,26 @@ export default function TablaClientesHoy({ refresh }) {
         >
            {(cliente) => (
     <TableRow key={cliente._id || cliente.nombre}>
-      <TableCell className="font-medium">{cliente.nombre || "Sin nombre"}</TableCell>
-      <TableCell>
-        {cliente.tipoDocumento && cliente.numeroDocumento 
-          ? `${cliente.tipoDocumento}: ${cliente.numeroDocumento}` 
-          : "-"}
-      </TableCell>
+              <TableCell className="font-medium">{cliente.nombre || "Sin nombre"}</TableCell>
+              <TableCell>
+                {cliente.tipoDocumento && cliente.numeroDocumento ? (
+                  <div className="flex flex-col gap-0.5">
+                    <Chip 
+                      color={cliente.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                      variant="flat"
+                      size="sm"
+                      className="text-[10px] xs:text-[11px] h-5 w-fit"
+                    >
+                      {cliente.tipoDocumento === "CE" ? "CE" : cliente.tipoDocumento || "DNI"}
+                    </Chip>
+                    <span className="text-[9px] xs:text-[10px] text-gray-600">
+                      {cliente.numeroDocumento}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </TableCell>
       <TableCell className="hidden sm:table-cell">
         {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString() : "Sin fecha"}
       </TableCell>

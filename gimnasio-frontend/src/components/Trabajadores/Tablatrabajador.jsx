@@ -168,10 +168,24 @@ export default function TablaTrabajadores({ refresh }) {
                       <span className="text-xs sm:text-sm">{trab.nombre}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="text-center text-xs sm:text-sm">
-                    {trab.tipoDocumento && trab.numeroDocumento 
-                      ? `${trab.tipoDocumento}: ${trab.numeroDocumento}` 
-                      : "-"}
+                  <TableCell className="text-center">
+                    {trab.tipoDocumento && trab.numeroDocumento ? (
+                      <div className="flex flex-col items-center gap-0.5">
+                        <Chip 
+                          color={trab.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                          variant="flat"
+                          size="sm"
+                          className="text-[10px] xs:text-[11px] h-5 w-fit"
+                        >
+                          {trab.tipoDocumento === "CE" ? "CE" : trab.tipoDocumento || "DNI"}
+                        </Chip>
+                        <span className="text-[9px] xs:text-[10px] text-gray-600">
+                          {trab.numeroDocumento}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center hidden sm:table-cell text-xs sm:text-sm">{trab.nombreUsuario}</TableCell>
                   <TableCell className="text-center hidden md:table-cell">

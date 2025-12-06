@@ -385,17 +385,18 @@ export default function TablaClientesAdmin({ refresh }) {
   }, [miembros, sortDescriptor, calcularEstado, filtroEstado]);
 
   return (
-    <div className="max-w-full p-3 sm:p-4 md:p-6">
-      <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-1">
+    <div className="max-w-full p-2 xs:p-3 sm:p-4 md:p-6">
+      <div className="flex flex-col gap-2 xs:gap-3 mb-3 xs:mb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 xs:gap-3 sm:flex-row sm:items-center sm:flex-1">
           <Input
             type="text"
             placeholder="Buscar por DNI, CE o nombre completo"
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="w-full sm:max-w-md"
-            startContent={<SearchIcon className="text-gray-500" />}
+            className="w-full sm:max-w-md text-sm"
+            startContent={<SearchIcon className="text-gray-500 text-base xs:text-lg" />}
             aria-label="Buscar por DNI, CE o nombre completo"
+            size="sm"
           />
           
           <Dropdown>
@@ -447,38 +448,39 @@ export default function TablaClientesAdmin({ refresh }) {
       ) : (
         <>
         {/* Vista de Cards para móvil */}
-        <div className="md:hidden space-y-3 mb-4">
+        <div className="md:hidden space-y-2 xs:space-y-3 mb-4">
           {miembrosOrdenados.map((miembro) => (
-            <div key={miembro._id} className="bg-white rounded-lg shadow-md p-3 border border-gray-200">
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center gap-2 flex-1 min-w-0">
-                  <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 20 }} />
+            <div key={miembro._id} className="bg-white rounded-lg shadow-md p-2 xs:p-3 border border-gray-200">
+              <div className="flex items-start justify-between mb-1.5 xs:mb-2">
+                <div className="flex items-center gap-1.5 xs:gap-2 flex-1 min-w-0">
+                  <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 18 }} className="flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm text-gray-800 truncate">{miembro.nombreCompleto}</p>
-                    <p className="text-xs text-gray-500">{miembro.telefono}</p>
+                    <p className="font-semibold text-xs xs:text-sm text-gray-800 truncate">{miembro.nombreCompleto}</p>
+                    <p className="text-[10px] xs:text-xs text-gray-500 truncate">{miembro.telefono}</p>
                   </div>
                 </div>
-                <Chip color={calcularEstado(miembro).color} variant="flat" size="sm" className="text-[10px]">
+                <Chip color={calcularEstado(miembro).color} variant="flat" size="sm" className="text-[9px] xs:text-[10px] flex-shrink-0">
                   {calcularEstado(miembro).etiqueta}
                 </Chip>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 text-xs mb-2">
-                <div>
+              <div className="grid grid-cols-2 gap-1.5 xs:gap-2 text-[10px] xs:text-xs mb-1.5 xs:mb-2">
+                <div className="min-w-0">
                   <span className="text-gray-500">Vence:</span>
-                  <span className="ml-1 font-medium">{mostrarVencimiento(miembro)}</span>
+                  <span className="ml-1 font-medium truncate block">{mostrarVencimiento(miembro)}</span>
                 </div>
-                <div>
+                <div className="min-w-0">
                   <span className="text-gray-500">Mensualidad:</span>
-                  <span className="ml-1 font-medium">{formatearMensualidadNumero(miembro)}</span>
+                  <span className="ml-1 font-medium truncate block">{formatearMensualidadNumero(miembro)}</span>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between pt-1.5 xs:pt-2 border-t border-gray-200">
+                <div className="flex items-center gap-1.5 xs:gap-2">
                   <AdfScannerRoundedIcon
                     onClick={() => descargarVoucher(miembro)}
-                    sx={{ color: "#555555", fontSize: 18, cursor: "pointer" }}
+                    sx={{ color: "#555555", fontSize: 16, cursor: "pointer" }}
+                    className="flex-shrink-0"
                   />
                   <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
                   <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
@@ -487,7 +489,7 @@ export default function TablaClientesAdmin({ refresh }) {
             </div>
           ))}
           {miembrosOrdenados.length === 0 && (
-            <div className="text-center py-8 text-gray-500">No hay miembros encontrados.</div>
+            <div className="text-center py-6 xs:py-8 text-gray-500 text-xs xs:text-sm">No hay miembros encontrados.</div>
           )}
         </div>
 
