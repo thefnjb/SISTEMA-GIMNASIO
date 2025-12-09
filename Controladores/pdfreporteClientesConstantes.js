@@ -23,11 +23,11 @@ const PDF_CONFIG = {
     oddRow: "#f8f9fa"
   },
   table: {
-    rowHeight: 40, // Aumentado de 30 a 40 para más espacio
-    maxRowsPerPage: 10, // Reducido porque las filas son más altas
+    rowHeight: 40, // Aumentado para mejor legibilidad
+    maxRowsPerPage: 12, // Filas por página
     // Anchos ajustados para A4 vertical (ancho disponible: ~515 puntos)
-    columnWidths: [32, 125, 90, 38, 82, 88, 60], // Suma: ~515 puntos
-    headers: ["N°", "Nombre", "Documento", "Visitas", "Última Visita", "Total Gastado", "Métodos"]
+    columnWidths: [35, 180, 100, 80, 120], // Suma: ~515 puntos
+    headers: ["N°", "Nombre Cliente", "Documento", "Días Ingresados", "Última Visita (Hora)"]
   },
   text: {
     title: 16, // Reducido para mejor proporción
@@ -78,6 +78,30 @@ function formatDate(date, format = "short") {
  */
 function formatCurrency(amount) {
   return `S/ ${(amount || 0).toFixed(2)}`;
+}
+
+/**
+ * Convierte hora de formato 24h a formato 12h (AM/PM)
+ */
+function formatHora12(hora24) {
+  if (!hora24 || hora24 === "-") return "-";
+  
+  try {
+    const [horas, minutos] = hora24.split(":");
+    if (!horas || !minutos) return hora24;
+    
+    const h = parseInt(horas, 10);
+    const m = minutos;
+    
+    if (isNaN(h) || h < 0 || h > 23) return hora24;
+    
+    const periodo = h >= 12 ? "PM" : "AM";
+    const hora12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+    
+    return `${hora12}:${m} ${periodo}`;
+  } catch {
+    return hora24;
+  }
 }
 
 /**
@@ -201,25 +225,54 @@ async function obtenerDatosClientes() {
 }
 
 /**
- * Prepara los datos para la tabla del PDF
+ * Prepara los datos para la tabla del PDF - muestra resumen por cliente constante
  */
 function prepararDatosTabla(grupos) {
-  return grupos.map((grupo, index) => {
-    const ultimaFecha = formatDate(grupo.ultimaVisita?.fecha);
-    const metodos = Array.from(grupo.metodosPago).join(", ");
-    const documento = `${grupo.tipoDocumento}: ${grupo.numeroDocumento}`;
+  const datos = [];
+  
+  grupos.forEach((grupo, index) => {
+    // Calcular días diferentes que ingresó
+    const diasUnicos = new Set();
+    let ultimaHora = null;
+    let ultimaFecha = null;
     
-    // Aumentar límites de truncado para aprovechar el mayor espacio
-    return [
+    grupo.visitas.forEach((visita) => {
+      const fecha = visita.fecha || visita.createdAt;
+      if (fecha) {
+        const fechaStr = new Date(fecha).toISOString().split('T')[0]; // YYYY-MM-DD
+        diasUnicos.add(fechaStr);
+        
+        // Obtener la hora de la última visita
+        const fechaVisita = new Date(fecha);
+        const fechaUltima = ultimaFecha ? new Date(ultimaFecha) : null;
+        
+        if (!fechaUltima || fechaVisita > fechaUltima) {
+          ultimaFecha = fecha;
+          ultimaHora = visita.horaInicio || null;
+        } else if (fechaVisita.getTime() === fechaUltima.getTime()) {
+          // Si es el mismo día, tomar la hora más reciente
+          const horaActual = visita.horaInicio || null;
+          if (horaActual && (!ultimaHora || horaActual > ultimaHora)) {
+            ultimaHora = horaActual;
+          }
+        }
+      }
+    });
+    
+    const documento = `${grupo.tipoDocumento || "DNI"}: ${grupo.numeroDocumento || "-"}`;
+    const diasIngresados = diasUnicos.size;
+    const horaFormato12 = formatHora12(ultimaHora);
+    
+    datos.push([
       index + 1,
-      truncateText(grupo.nombre, 30), // Aumentado de 25 a 30
-      truncateText(documento, 22), // Aumentado de 18 a 22
-      grupo.totalVisitas,
-      ultimaFecha,
-      formatCurrency(grupo.totalMonto),
-      truncateText(metodos, 15) // Aumentado de 12 a 15
-    ];
+      truncateText(grupo.nombre, 30),
+      truncateText(documento, 20),
+      diasIngresados,
+      horaFormato12
+    ]);
   });
+  
+  return datos;
 }
 
 // ===========================
@@ -489,11 +542,9 @@ function dibujarTabla(doc, x, y, headers, data, columnWidths) {
            .stroke();
       }
       
-      const alignment = cellIndex === 0 
+      const alignment = cellIndex === 0 || cellIndex === 1 || cellIndex === 2
         ? "left" 
-        : cellIndex === 5 
-          ? "right" 
-          : "center";
+        : "center";
       
       const cellX = currentX + 12; // Más padding horizontal
       const cellY = currentY + 12; // Más padding vertical  
@@ -502,9 +553,9 @@ function dibujarTabla(doc, x, y, headers, data, columnWidths) {
       // Estilo de texto según columna
       doc.fontSize(PDF_CONFIG.text.tableContent);
       
-      if (cellIndex === 5) {
-        // Columna de Total Gastado
-        doc.font("Helvetica-Bold").fillColor(PDF_CONFIG.colors.success);
+      if (cellIndex === 3) {
+        // Columna de Días Ingresados
+        doc.font("Helvetica-Bold").fillColor(PDF_CONFIG.colors.primary);
       } else {
         // Texto normal
         doc.font("Helvetica").fillColor(PDF_CONFIG.colors.black);
@@ -538,6 +589,146 @@ function dibujarTabla(doc, x, y, headers, data, columnWidths) {
 }
 
 /**
+ * Dibuja una tabla detallada de visitas para un cliente específico
+ */
+function dibujarTablaDetalleVisitas(doc, x, y, grupo, pageWidth) {
+  const tableStartX = x;
+  const tableWidth = pageWidth - 80;
+  const rowHeight = 30;
+  const detailHeaders = ["N°", "Fecha", "Hora", "Método Pago", "Monto"];
+  const detailColumnWidths = [30, 100, 80, 100, 80]; // Suma: ~390 puntos
+  
+  // Ordenar visitas por fecha (más reciente primero)
+  const visitasOrdenadas = [...grupo.visitas].sort((a, b) => {
+    const fechaA = new Date(a.fecha || a.createdAt || 0);
+    const fechaB = new Date(b.fecha || b.createdAt || 0);
+    return fechaB - fechaA;
+  });
+  
+  // Título de la sección del cliente - con más espacio
+  let currentY = y + 50; // Más espacio desde arriba
+  doc.fontSize(PDF_CONFIG.text.subtitle)
+     .font("Helvetica-Bold")
+     .fillColor(PDF_CONFIG.colors.primary)
+     .text(`${grupo.nombre} - ${grupo.tipoDocumento || "DNI"}: ${grupo.numeroDocumento || "-"}`, 
+            tableStartX, currentY);
+  
+  currentY += 35; // Más espacio entre el título y la tabla
+  
+  // Dibujar cabecera de tabla detallada
+  doc.rect(tableStartX, currentY, tableWidth, rowHeight)
+     .fillColor(PDF_CONFIG.colors.primary)
+     .fill();
+  
+  let currentX = tableStartX;
+  detailHeaders.forEach((header, index) => {
+    doc.fillColor(PDF_CONFIG.colors.white)
+       .fontSize(9)
+       .font("Helvetica-Bold");
+    
+    const cellX = currentX + 8;
+    const cellY = currentY + 8;
+    const cellWidth = Math.max(0, detailColumnWidths[index] - 16);
+    
+    if (index > 0) {
+      doc.moveTo(currentX, currentY)
+         .lineTo(currentX, currentY + rowHeight)
+         .strokeColor(PDF_CONFIG.colors.white)
+         .lineWidth(1)
+         .opacity(0.4)
+         .stroke();
+      doc.opacity(1);
+    }
+    
+    doc.text(header, cellX, cellY, {
+      width: cellWidth,
+      align: index === 0 ? "left" : "center"
+    });
+    
+    currentX += detailColumnWidths[index];
+  });
+  
+  doc.moveTo(tableStartX, currentY + rowHeight)
+     .lineTo(tableStartX + tableWidth, currentY + rowHeight)
+     .strokeColor(PDF_CONFIG.colors.white)
+     .lineWidth(2)
+     .stroke();
+  
+  currentY += rowHeight;
+  
+  // Dibujar filas de visitas
+  visitasOrdenadas.forEach((visita, index) => {
+    const fillColor = index % 2 === 0 
+      ? PDF_CONFIG.colors.evenRow 
+      : PDF_CONFIG.colors.oddRow;
+    
+    currentX = tableStartX;
+    
+    doc.rect(tableStartX, currentY, tableWidth, rowHeight)
+       .fillColor(fillColor)
+       .fill();
+    
+    const fechaVisita = formatDate(visita.fecha || visita.createdAt);
+    const hora = formatHora12(visita.horaInicio || "-");
+    const metodoPago = visita.metododePago || "Efectivo";
+    const monto = formatCurrency(visita.monto || 7);
+    
+    const rowData = [index + 1, fechaVisita, hora, metodoPago, monto];
+    
+    rowData.forEach((cell, cellIndex) => {
+      if (cellIndex > 0) {
+        doc.moveTo(currentX, currentY)
+           .lineTo(currentX, currentY + rowHeight)
+           .strokeColor(PDF_CONFIG.colors.border)
+           .lineWidth(0.5)
+           .stroke();
+      }
+      
+      const alignment = cellIndex === 0 || cellIndex === 1
+        ? "left" 
+        : cellIndex === 4
+          ? "right"
+          : "center";
+      
+      const cellX = currentX + 8;
+      const cellY = currentY + 8;
+      const cellWidth = Math.max(0, detailColumnWidths[cellIndex] - 16);
+      
+      doc.fontSize(8)
+         .font("Helvetica")
+         .fillColor(PDF_CONFIG.colors.black);
+      
+      if (cellIndex === 4) {
+        doc.font("Helvetica-Bold").fillColor(PDF_CONFIG.colors.success);
+      }
+      
+      doc.text(cell.toString(), cellX, cellY, {
+        width: cellWidth,
+        align: alignment
+      });
+      
+      currentX += detailColumnWidths[cellIndex];
+    });
+    
+    doc.moveTo(tableStartX, currentY + rowHeight)
+       .lineTo(tableStartX + tableWidth, currentY + rowHeight)
+       .strokeColor(PDF_CONFIG.colors.border)
+       .lineWidth(0.5)
+       .stroke();
+    
+    currentY += rowHeight;
+  });
+  
+  // Borde exterior - ajustado para incluir el título con más espacio
+  doc.rect(tableStartX, y + 30, tableWidth, currentY - (y + 30))
+     .strokeColor(PDF_CONFIG.colors.border)
+     .lineWidth(1.5)
+     .stroke();
+  
+  return currentY + 30; // Más espacio después de la tabla
+}
+
+/**
  * Dibuja el pie de página
  */
 function dibujarPieDePagina(doc, tableStartX, tableWidth, startIndex, endIndex, total) {
@@ -549,14 +740,14 @@ function dibujarPieDePagina(doc, tableStartX, tableWidth, startIndex, endIndex, 
   
   if (endIndex < total) {
     doc.text(
-      `Mostrando ${startIndex + 1} - ${endIndex} de ${total} clientes`,
+      `Mostrando ${startIndex + 1} - ${endIndex} de ${total} clientes constantes`,
       tableStartX,
       pageHeight - 50,
       { width: tableWidth, align: "center" }
     );
   } else {
     doc.text(
-      `Total: ${total} clientes únicos`,
+      `Total: ${total} clientes constantes`,
       tableStartX,
       pageHeight - 50,
       { width: tableWidth, align: "center" }
@@ -593,6 +784,13 @@ exports.generarReporteClientesConstantesPDF = async (req, res) => {
 
     const grupos = agruparClientes(clientes);
     const datos = prepararDatosTabla(grupos);
+    
+    // Si no hay datos, retornar error
+    if (datos.length === 0) {
+      return res.status(404).json({ 
+        error: "No se encontraron visitas registradas" 
+      });
+    }
 
     // Obtener nombre del generador
     let generadoPor = "Administrador";
@@ -627,7 +825,7 @@ exports.generarReporteClientesConstantesPDF = async (req, res) => {
     let currentY = dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, true);
     currentY = dibujarEstadisticas(doc, pageWidth, currentY, grupos, clientes.length);
 
-    // Dibujar tabla con paginación
+    // Dibujar tabla resumen con paginación
     const tableStartX = 40;
     const tableWidth = pageWidth - 80;
     let startIndex = 0;
@@ -641,6 +839,7 @@ exports.generarReporteClientesConstantesPDF = async (req, res) => {
       return res.status(500).json({ error: "Error en configuración del PDF" });
     }
 
+    // Dibujar tabla resumen
     while (startIndex < datos.length) {
       // Nueva página si no es la primera
       if (pageNum > 1) {
@@ -679,6 +878,32 @@ exports.generarReporteClientesConstantesPDF = async (req, res) => {
       startIndex = endIndex;
       pageNum++;
     }
+
+    // Dibujar tablas detalladas solo para clientes constantes (más de 1 día de ingreso)
+    const gruposConstantes = grupos.filter((grupo) => {
+      const diasUnicos = new Set();
+      grupo.visitas.forEach((visita) => {
+        const fecha = visita.fecha || visita.createdAt;
+        if (fecha) {
+          const fechaStr = new Date(fecha).toISOString().split('T')[0];
+          diasUnicos.add(fechaStr);
+        }
+      });
+      return diasUnicos.size > 1; // Solo clientes con más de 1 día de ingreso
+    });
+
+    gruposConstantes.forEach((grupo, index) => {
+      const pageHeight = doc.page.height;
+      
+      // Verificar si necesitamos nueva página
+      if (currentY > pageHeight - 200) {
+        doc.addPage();
+        currentY = dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, false);
+      }
+      
+      // Dibujar tabla detallada del cliente
+      currentY = dibujarTablaDetalleVisitas(doc, tableStartX, currentY, grupo, pageWidth);
+    });
 
     // Finalizar documento
     doc.end();

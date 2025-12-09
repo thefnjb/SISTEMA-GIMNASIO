@@ -268,7 +268,11 @@ export default function TablaClientesHoy({ refresh }) {
             </IconButton>
           </div>
         </div>
-        <TodosClientes refresh={refresh} mostrarTitulo={false} />
+        <TodosClientes 
+          refresh={refresh} 
+          mostrarTitulo={false}
+          onClienteEliminado={fetchClientes}
+        />
       </div>
     );
   }
@@ -306,40 +310,45 @@ export default function TablaClientesHoy({ refresh }) {
         </div>
       )}
 
-      <Table
-        aria-label="Tabla de clientes de hoy"
-        sortDescriptor={sortDescriptor}
-        onSortChange={handleSortChange}
-        bottomContent={
-          pages > 1 && (
-            <div className="flex justify-center mt-3">
-              <Pagination
-                isCompact
-                showControls
-                color="primary"
-                page={page}
-                total={pages}
-                onChange={(p) => setPage(p)}
-              />
-            </div>
-          )
-        }
-        classNames={{
-          base: "bg-white rounded-lg shadow overflow-x-auto",
-          th: "text-red-600 font-bold bg-gray-200 text-xs sm:text-sm",
-          td: "text-black text-xs sm:text-sm",
-        }}
-      >
-        <TableHeader>
-        <TableColumn key="nombre" allowsSorting className="min-w-[120px]">Nombre</TableColumn>
-        <TableColumn key="documento" allowsSorting className="min-w-[120px]">Documento</TableColumn>
-        <TableColumn key="fecha" allowsSorting className="hidden sm:table-cell">Fecha</TableColumn>
-        <TableColumn key="horaInicio" allowsSorting className="min-w-[100px]">Hora</TableColumn>
-        <TableColumn key="metododePago" allowsSorting className="text-center">PAGO</TableColumn>
-        <TableColumn key="precio" className="text-right min-w-[80px]" allowsSorting>Monto</TableColumn>
-        <TableColumn key="cambios" className="text-center hidden md:table-cell">Cambios</TableColumn>
-        <TableColumn key="acciones" className="text-center min-w-[120px]">Acciones</TableColumn>
-      </TableHeader>
+      <div className="w-full overflow-x-auto -mx-3 sm:-mx-4 md:mx-0 px-3 sm:px-4 md:px-0">
+        <Table
+          aria-label="Tabla de clientes de hoy"
+          sortDescriptor={sortDescriptor}
+          onSortChange={handleSortChange}
+          removeWrapper
+          bottomContent={
+            pages > 1 && (
+              <div className="flex justify-center mt-3">
+                <Pagination
+                  isCompact
+                  showControls
+                  color="primary"
+                  page={page}
+                  total={pages}
+                  onChange={(p) => setPage(p)}
+                />
+              </div>
+            )
+          }
+          classNames={{
+            base: "min-w-full",
+            wrapper: "bg-white rounded-lg shadow",
+            table: "min-w-full",
+            th: "text-red-600 font-bold bg-gray-200 text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap",
+            td: "text-black text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3",
+            tr: "hover:bg-gray-50 transition-colors",
+          }}
+        >
+          <TableHeader>
+            <TableColumn key="nombre" allowsSorting className="min-w-[100px] sm:min-w-[120px]">Nombre</TableColumn>
+            <TableColumn key="documento" allowsSorting className="min-w-[90px] sm:min-w-[120px]">Documento</TableColumn>
+            <TableColumn key="fecha" allowsSorting className="hidden sm:table-cell min-w-[90px]">Fecha</TableColumn>
+            <TableColumn key="horaInicio" allowsSorting className="min-w-[70px] sm:min-w-[100px]">Hora</TableColumn>
+            <TableColumn key="metododePago" allowsSorting className="text-center min-w-[60px] sm:min-w-[80px]">PAGO</TableColumn>
+            <TableColumn key="precio" className="text-right min-w-[60px] sm:min-w-[80px]" allowsSorting>Monto</TableColumn>
+            <TableColumn key="cambios" className="text-center hidden lg:table-cell min-w-[100px]">Cambios</TableColumn>
+            <TableColumn key="acciones" className="text-center min-w-[100px] sm:min-w-[120px]">Acciones</TableColumn>
+          </TableHeader>
 
 
         <TableBody
@@ -354,7 +363,11 @@ export default function TablaClientesHoy({ refresh }) {
         >
            {(cliente) => (
     <TableRow key={cliente._id || cliente.nombre}>
-              <TableCell className="font-medium">{cliente.nombre || "Sin nombre"}</TableCell>
+              <TableCell className="font-medium whitespace-nowrap">
+                <div className="truncate max-w-[100px] sm:max-w-none" title={cliente.nombre || "Sin nombre"}>
+                  {cliente.nombre || "Sin nombre"}
+                </div>
+              </TableCell>
               <TableCell>
                 {cliente.tipoDocumento && cliente.numeroDocumento ? (
                   <div className="flex flex-col gap-0.5">
@@ -362,101 +375,100 @@ export default function TablaClientesHoy({ refresh }) {
                       color={cliente.tipoDocumento === "DNI" ? "primary" : "secondary"} 
                       variant="flat"
                       size="sm"
-                      className="text-[10px] xs:text-[11px] h-5 w-fit"
+                      className="text-[9px] xs:text-[10px] h-4 sm:h-5 w-fit"
                     >
                       {cliente.tipoDocumento === "CE" ? "CE" : cliente.tipoDocumento || "DNI"}
                     </Chip>
-                    <span className="text-[9px] xs:text-[10px] text-gray-600">
+                    <span className="text-[8px] xs:text-[9px] text-gray-600 truncate max-w-[80px] sm:max-w-none">
                       {cliente.numeroDocumento}
                     </span>
                   </div>
                 ) : (
-                  <span className="text-gray-400">-</span>
+                  <span className="text-gray-400 text-[10px]">-</span>
                 )}
               </TableCell>
-      <TableCell className="hidden sm:table-cell">
-        {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString() : "Sin fecha"}
-      </TableCell>
-      <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
-      <TableCell className="text-center capitalize">
-        <div className="flex items-center justify-center gap-2">
-          {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] && (
-            <>
-              {cliente.metododePago.toLowerCase() === 'efectivo' ? (
-                <div className="p-1 cursor-default">
-                  <img
-                    src={metodosPago[cliente.metododePago.toLowerCase()].icono}
-                    alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                    className="object-contain w-6 h-6 opacity-80"
-                  />
+              <TableCell className="hidden sm:table-cell whitespace-nowrap">
+                {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "Sin fecha"}
+              </TableCell>
+              <TableCell className="whitespace-nowrap text-[9px] xs:text-[10px] sm:text-xs">
+                {formatTime12Hour(cliente.horaInicio)}
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="flex items-center justify-center">
+                  {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] && (
+                    <>
+                      {cliente.metododePago.toLowerCase() === 'efectivo' ? (
+                        <div className="p-0.5 sm:p-1 cursor-default">
+                          <img
+                            src={metodosPago[cliente.metododePago.toLowerCase()].icono}
+                            alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
+                            className="object-contain w-5 h-5 sm:w-6 sm:h-6 opacity-80"
+                          />
+                        </div>
+                      ) : (
+                        <Button
+                          isIconOnly
+                          size="sm"
+                          onClick={() => openComprobanteModal(cliente)}
+                          className="p-0.5 sm:p-1 bg-transparent hover:opacity-80 min-w-0 w-auto h-auto"
+                        >
+                          <img
+                            src={metodosPago[cliente.metododePago.toLowerCase()].icono}
+                            alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
+                            className="object-contain w-5 h-5 sm:w-6 sm:h-6"
+                          />
+                        </Button>
+                      )}
+                    </>
+                  )}
                 </div>
-              ) : (
-                <Button
-                  isIconOnly
-                  size="sm"
-                  onClick={() => openComprobanteModal(cliente)}
-                  className="p-1 bg-transparent hover:opacity-80"
-                >
-                  <img
-                    src={metodosPago[cliente.metododePago.toLowerCase()].icono}
-                    alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                    className="object-contain w-6 h-6"
-                  />
-                </Button>
-              )}
-            </>
-          )}
-        </div>
-      </TableCell>
-      <TableCell className="text-center font-semibold">{cliente.monto ?? 7}</TableCell>
-
-      <TableCell className="text-center hidden md:table-cell">
-  <span className="text-xs sm:text-sm font-normal text-black">
-    {cliente.creadoPor === "admin"
-      ? "Administrador"
-      : cliente.creadoPor === "trabajador"
-      ? cliente.creadorNombre || "Trabajador"
-      : "Desconocido"}
-  </span>
-</TableCell>
-
-
-
-      <TableCell className="text-center">
-        <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
-          <IconButton
-            aria-label="Descargar voucher"
-            onClick={() => descargarVoucher(cliente)}
-            sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
-            size="small"
-          >
-            <AdfScannerRoundedIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
-          </IconButton>
-
-          <IconButton
-            aria-label="Editar cliente"
-            onClick={() => openModalEditar(cliente)}
-            sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
-            size="small"
-          >
-            <EditIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
-          </IconButton>
-
-          <IconButton
-            aria-label="Eliminar cliente"
-            color="error"
-            onClick={() => handleDeleteConfirm(cliente)}
-            sx={{ p: 0.5 }}
-            size="small"
-          >
-            <DeleteIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
-          </IconButton>
-        </div>
-      </TableCell>
+              </TableCell>
+              <TableCell className="text-right font-semibold whitespace-nowrap text-[10px] xs:text-xs sm:text-sm">
+                S/ {cliente.monto ?? 7}
+              </TableCell>
+              <TableCell className="text-center hidden lg:table-cell whitespace-nowrap">
+                <span className="text-[9px] xs:text-[10px] sm:text-xs font-normal text-black">
+                  {cliente.creadoPor === "admin"
+                    ? "Admin"
+                    : cliente.creadoPor === "trabajador"
+                    ? (cliente.creadorNombre || "Trabajador").substring(0, 10)
+                    : "Desconocido"}
+                </span>
+              </TableCell>
+              <TableCell className="text-center">
+                <div className="flex items-center justify-center gap-0.5 sm:gap-1 md:gap-2">
+                  <IconButton
+                    aria-label="Descargar voucher"
+                    onClick={() => descargarVoucher(cliente)}
+                    sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                    size="small"
+                  >
+                    <AdfScannerRoundedIcon sx={{ fontSize: { xs: 18, sm: 20, md: 24 } }} />
+                  </IconButton>
+                  <IconButton
+                    aria-label="Editar cliente"
+                    onClick={() => openModalEditar(cliente)}
+                    sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                    size="small"
+                  >
+                    <EditIcon sx={{ fontSize: { xs: 18, sm: 20, md: 24 } }} />
+                  </IconButton>
+                  <IconButton
+                    aria-label="Eliminar cliente"
+                    color="error"
+                    onClick={() => handleDeleteConfirm(cliente)}
+                    sx={{ p: 0.5 }}
+                    size="small"
+                  >
+                    <DeleteIcon sx={{ fontSize: { xs: 18, sm: 20, md: 24 } }} />
+                  </IconButton>
+                </div>
+              </TableCell>
     </TableRow>
   )}
 </TableBody>
-      </Table>
+        </Table>
+      </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4">
         <div className="text-base sm:text-lg font-bold text-black">

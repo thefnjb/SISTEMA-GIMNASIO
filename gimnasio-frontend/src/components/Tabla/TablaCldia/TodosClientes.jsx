@@ -27,7 +27,10 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import TableChartIcon from "@mui/icons-material/TableChart";
+import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import PersonIcon from "@mui/icons-material/Person";
 import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import ModalEditarClienteDia from "../../Modal/ModalEditarClienteDia";
 import api from "../../../utils/axiosInstance";
 
@@ -43,7 +46,7 @@ const formatTime12Hour = (timeString) => {
   });
 };
 
-export default function TodosClientes({ refresh, mostrarTitulo = true }) {
+export default function TodosClientes({ refresh, mostrarTitulo = true, onClienteEliminado }) {
   const [clientes, setClientes] = useState([]);
   const [clientesAgrupados, setClientesAgrupados] = useState([]);
   const [page, setPage] = useState(1);
@@ -326,6 +329,10 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
       await api.delete(`/visits/eliminarcliente/${confirmModal.clienteId}`);
       setConfirmModal({ show: false, clienteId: null, clienteNombre: "" });
       await fetchClientes();
+      // Si hay callback para refrescar clientes de hoy, ejecutarlo
+      if (onClienteEliminado && typeof onClienteEliminado === 'function') {
+        onClienteEliminado();
+      }
       showAlert("success", "Cliente eliminado exitosamente");
     } catch (err) {
       console.error("Error al eliminar cliente:", err);
@@ -656,53 +663,59 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
         </div>
       )}
 
-      <Table
-        aria-label="Tabla de todos los clientes"
-        sortDescriptor={sortDescriptor}
-        onSortChange={handleSortChange}
-        bottomContent={
-          pages > 1 && (
-            <div className="flex justify-center mt-3">
-              <Pagination
-                isCompact
-                showControls
-                color="primary"
-                page={page}
-                total={pages}
-                onChange={(p) => setPage(p)}
-              />
-            </div>
-          )
-        }
-        classNames={{
-          base: "bg-white rounded-lg shadow overflow-x-auto",
-          th: "text-red-600 font-bold bg-gray-200 text-xs sm:text-sm",
-          td: "text-black text-xs sm:text-sm",
-        }}
-      >
+      <div className="w-full overflow-x-auto -mx-3 sm:-mx-4 md:mx-0 px-3 sm:px-4 md:px-0">
+        <Table
+          aria-label="Tabla de todos los clientes"
+          sortDescriptor={sortDescriptor}
+          onSortChange={handleSortChange}
+          removeWrapper
+          bottomContent={
+            pages > 1 && (
+              <div className="flex justify-center mt-3">
+                <Pagination
+                  isCompact
+                  showControls
+                  color="primary"
+                  page={page}
+                  total={pages}
+                  onChange={(p) => setPage(p)}
+                />
+              </div>
+            )
+          }
+          classNames={{
+            base: "min-w-full",
+            wrapper: "bg-white rounded-lg shadow",
+            table: "min-w-full",
+            th: "text-red-600 font-bold bg-gray-200 text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap",
+            td: "text-black text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3",
+            tr: "hover:bg-gray-50 transition-colors",
+          }}
+        >
         <TableHeader>
           {vistaAgrupada ? (
             <>
-              <TableColumn className="min-w-[50px]"></TableColumn>
-              <TableColumn key="nombre" allowsSorting className="min-w-[120px]">Nombre</TableColumn>
-              <TableColumn key="documento" allowsSorting className="min-w-[120px]">Documento</TableColumn>
-              <TableColumn key="visitas" className="text-center min-w-[80px]">Visitas</TableColumn>
-              <TableColumn className="min-w-[100px]">Última Visita</TableColumn>
-              <TableColumn className="text-right min-w-[80px]">Total Gastado</TableColumn>
-              <TableColumn className="text-center">Métodos de Pago</TableColumn>
-              <TableColumn key="acciones" className="text-center min-w-[120px]">Acciones</TableColumn>
+              <TableColumn className="min-w-[40px] sm:min-w-[50px]"></TableColumn>
+              <TableColumn key="nombre" allowsSorting className="min-w-[100px] sm:min-w-[120px]">Nombre</TableColumn>
+              <TableColumn key="documento" allowsSorting className="min-w-[90px] sm:min-w-[120px]">Documento</TableColumn>
+              <TableColumn key="visitas" className="text-center min-w-[60px] sm:min-w-[80px]">Visitas</TableColumn>
+              <TableColumn className="min-w-[80px] sm:min-w-[100px] hidden xs:table-cell">Última Visita</TableColumn>
+              <TableColumn className="text-right min-w-[70px] sm:min-w-[80px]">Total</TableColumn>
+              <TableColumn className="text-center min-w-[80px] hidden sm:table-cell">Métodos</TableColumn>
+              <TableColumn key="cambios" className="text-center min-w-[90px] sm:min-w-[110px] hidden xs:table-cell">Ingresado Por</TableColumn>
+              <TableColumn key="acciones" className="text-center min-w-[100px] sm:min-w-[120px]">Acciones</TableColumn>
             </>
           ) : (
             <>
-              <TableColumn key="nombre" allowsSorting className="min-w-[120px]">Nombre</TableColumn>
-              <TableColumn key="documento" allowsSorting className="min-w-[120px]">Documento</TableColumn>
-              <TableColumn key="fecha" allowsSorting className="min-w-[100px]">Fecha</TableColumn>
-              <TableColumn key="horaInicio" allowsSorting className="min-w-[100px]">Hora</TableColumn>
-              <TableColumn key="metododePago" allowsSorting className="text-center">PAGO</TableColumn>
-              <TableColumn key="precio" className="text-right min-w-[80px]" allowsSorting>Monto</TableColumn>
-              <TableColumn key="visitas" className="text-center min-w-[80px]">Visitas</TableColumn>
-              <TableColumn key="cambios" className="text-center hidden md:table-cell">Cambios</TableColumn>
-              <TableColumn key="acciones" className="text-center min-w-[120px]">Acciones</TableColumn>
+              <TableColumn key="nombre" allowsSorting className="min-w-[100px] sm:min-w-[120px]">Nombre</TableColumn>
+              <TableColumn key="documento" allowsSorting className="min-w-[90px] sm:min-w-[120px]">Documento</TableColumn>
+              <TableColumn key="fecha" allowsSorting className="min-w-[80px] sm:min-w-[100px] hidden xs:table-cell">Fecha</TableColumn>
+              <TableColumn key="horaInicio" allowsSorting className="min-w-[70px] sm:min-w-[100px]">Hora</TableColumn>
+              <TableColumn key="metododePago" allowsSorting className="text-center min-w-[60px] sm:min-w-[80px]">PAGO</TableColumn>
+              <TableColumn key="precio" className="text-right min-w-[60px] sm:min-w-[80px]" allowsSorting>Monto</TableColumn>
+              <TableColumn key="visitas" className="text-center min-w-[60px] sm:min-w-[80px] hidden sm:table-cell">Visitas</TableColumn>
+              <TableColumn key="cambios" className="text-center min-w-[90px] sm:min-w-[110px] hidden xs:table-cell">Ingresado Por</TableColumn>
+              <TableColumn key="acciones" className="text-center min-w-[100px] sm:min-w-[120px]">Acciones</TableColumn>
             </>
           )}
         </TableHeader>
@@ -763,6 +776,23 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
                           className="object-contain w-5 h-5 mx-auto"
                           title={item.metododePago}
                         />
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center hidden xs:table-cell">
+                      {item.creadoPor === "admin" ? (
+                        <Tooltip title="Administrador" arrow>
+                          <IconButton size="small" sx={{ p: 0.5, color: "#d32f2f" }}>
+                            <AdminPanelSettingsIcon sx={{ fontSize: 20 }} />
+                          </IconButton>
+                        </Tooltip>
+                      ) : item.creadoPor === "trabajador" ? (
+                        <Tooltip title={item.creadorNombre || "Trabajador"} arrow>
+                          <IconButton size="small" sx={{ p: 0.5, color: "#1976d2" }}>
+                            <PersonIcon sx={{ fontSize: 20 }} />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <span className="text-[9px] xs:text-[10px] text-gray-400">-</span>
                       )}
                     </TableCell>
                     <TableCell className="text-center">
@@ -916,6 +946,25 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
                     </div>
                   </TableCell>
                   
+                  {/* Ingresado Por */}
+                  <TableCell className="text-center hidden xs:table-cell">
+                    {grupo.ultimaVisita?.creadoPor === "admin" ? (
+                      <Tooltip title="Administrador" arrow>
+                        <IconButton size="small" sx={{ p: 0.5, color: "#d32f2f" }}>
+                          <AdminPanelSettingsIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                      </Tooltip>
+                    ) : grupo.ultimaVisita?.creadoPor === "trabajador" ? (
+                      <Tooltip title={grupo.ultimaVisita?.creadorNombre || "Trabajador"} arrow>
+                        <IconButton size="small" sx={{ p: 0.5, color: "#1976d2" }}>
+                          <PersonIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-[9px] xs:text-[10px] text-gray-400">-</span>
+                    )}
+                  </TableCell>
+                  
                   {/* Acciones */}
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1 sm:gap-2">
@@ -1044,14 +1093,22 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
                       {numVisitas}
                     </Chip>
                   </TableCell>
-                  <TableCell className="text-center hidden md:table-cell">
-                    <span className="text-xs sm:text-sm font-normal text-black">
-                      {cliente.creadoPor === "admin"
-                        ? "Administrador"
-                        : cliente.creadoPor === "trabajador"
-                        ? cliente.creadorNombre || "Trabajador"
-                        : "Desconocido"}
-                    </span>
+                  <TableCell className="text-center hidden xs:table-cell">
+                    {cliente.creadoPor === "admin" ? (
+                      <Tooltip title="Administrador" arrow>
+                        <IconButton size="small" sx={{ p: 0.5, color: "#d32f2f" }}>
+                          <AdminPanelSettingsIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                      </Tooltip>
+                    ) : cliente.creadoPor === "trabajador" ? (
+                      <Tooltip title={cliente.creadorNombre || "Trabajador"} arrow>
+                        <IconButton size="small" sx={{ p: 0.5, color: "#1976d2" }}>
+                          <PersonIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <span className="text-[9px] xs:text-[10px] text-gray-400">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-center">
                     <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
@@ -1091,7 +1148,8 @@ export default function TodosClientes({ refresh, mostrarTitulo = true }) {
             }
           )}
         </TableBody>
-      </Table>
+        </Table>
+      </div>
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4">
         <div className="text-base sm:text-lg font-bold text-black">
