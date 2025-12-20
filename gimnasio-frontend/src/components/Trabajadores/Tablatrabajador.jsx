@@ -144,7 +144,7 @@ export default function TablaTrabajadores({ refresh }) {
             isStriped
             classNames={{
               table: "bg-white min-w-full overflow-x-auto",
-              th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] sm:text-xs font-semibold text-center px-2 sm:px-3 py-1 sm:py-2",
+              th: "bg-gradient-tabla-header text-white text-[10px] sm:text-xs font-semibold text-center px-2 sm:px-3 py-1 sm:py-2",
               td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] sm:text-sm px-2 sm:px-3 py-1 sm:py-2",
               tr: "hover:bg-gray-50 transition-colors",
             }}

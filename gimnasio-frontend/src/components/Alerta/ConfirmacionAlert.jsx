@@ -38,7 +38,7 @@ const ConfirmacionAlert = ({
         {(modalClose) => (
           <>
             <ModalHeader>
-              <div className="w-full text-xl font-bold text-center text-red-500">
+              <div className="w-full text-xl font-bold text-center text-color-acentos">
                 {title}
               </div>
             </ModalHeader>

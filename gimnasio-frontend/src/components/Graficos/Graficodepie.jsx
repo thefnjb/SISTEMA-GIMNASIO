@@ -66,8 +66,11 @@ function ChartPieInteractive() {
 
       const totalClientes = clientesFiltrados.length;
 
+      // Obtener color del sistema desde CSS variable
+      const colorAcentos = getComputedStyle(document.documentElement).getPropertyValue('--color-acentos').trim() || '#D72838';
+      
       setData([
-        { name: "Ganancia", value: ganancia, fill: "#dc2626" },
+        { name: "Ganancia", value: ganancia, fill: colorAcentos },
         { name: "Clientes", value: totalClientes, fill: "#000000" },
       ]);
     } catch (err) {
@@ -127,7 +130,7 @@ function ChartPieInteractive() {
         {/* Leyenda izquierda */}
         <div className="flex flex-col justify-center gap-4 md:w-1/4">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-600 rounded-sm" />
+            <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: 'var(--color-acentos, #D72838)' }} />
             <span className="font-medium text-gray-700">Ganancia</span>
           </div>
           <div className="flex items-center gap-2">
@@ -143,7 +146,7 @@ function ChartPieInteractive() {
           {loading ? (
             <p className="text-center text-gray-600">Cargando...</p>
           ) : error ? (
-            <p className="text-red-500">Error: {error}</p>
+            <p className="text-color-acentos">Error: {error}</p>
           ) : data.length === 0 ? (
             <p className="text-center text-gray-500">No hay datos para este mes</p>
           ) : (

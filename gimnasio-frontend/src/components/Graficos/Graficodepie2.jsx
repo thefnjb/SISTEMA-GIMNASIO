@@ -62,9 +62,12 @@ function ChartPieInteractive2() {
       const precioDia = 7;
       const ganancia = totalClientesPorDia * precioDia;
 
+      // Obtener color del sistema desde CSS variable
+      const colorAcentos = getComputedStyle(document.documentElement).getPropertyValue('--color-acentos').trim() || '#D72838';
+      
       setData([
-        { name: "Ganancia", value: ganancia, fill: "#000000" }, // negro
-        { name: "Clientes por Día", value: totalClientesPorDia, fill: "#dc2626" }, // rojo
+        { name: "Ganancia", value: ganancia, fill: "#000000" },
+        { name: "Clientes por Día", value: totalClientesPorDia, fill: colorAcentos },
       ]);
     } catch (err) {
       console.error("Error fetching pie chart data:", err);
@@ -94,7 +97,7 @@ function ChartPieInteractive2() {
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-red-600 text-white border border-red-700 rounded-lg"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-color-botones text-white border rounded-lg"
           >
             {meses.map((m) => (
               <option key={m.value} value={m.value}>
@@ -107,7 +110,7 @@ function ChartPieInteractive2() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-red-600 text-white border border-red-700 rounded-lg"
+            className="px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm bg-color-botones text-white border rounded-lg"
           >
             {years.map((y) => (
               <option key={y} value={y}>
@@ -127,7 +130,7 @@ function ChartPieInteractive2() {
             <span className="text-gray-700 font-medium">Ganancia</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-red-600 rounded-sm" />
+            <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: 'var(--color-acentos, #D72838)' }} />
             <span className="text-gray-700 font-medium">Clientes por Día</span>
           </div>
         </div>
@@ -137,7 +140,7 @@ function ChartPieInteractive2() {
           {loading ? (
             <p className="text-center text-gray-600">Cargando...</p>
           ) : error ? (
-            <p className="text-red-500">Error: {error}</p>
+            <p className="text-color-acentos">Error: {error}</p>
           ) : data.length === 0 ? (
             <p className="text-gray-500 text-center">No hay datos</p>
           ) : (

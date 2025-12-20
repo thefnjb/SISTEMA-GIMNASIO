@@ -4,18 +4,21 @@ import { ChartAreaInteractive } from "../../components/Graficos/Graficodelineas"
 import { ChartPieInteractive } from "../../components/Graficos/Graficodepie"
 import ChartPieInteractive2 from "../../components/Graficos/Graficodepie2" 
 import Añosselector from "../../components/Pdf/BotonpdfMensual"
+import { useColoresSistema } from "../../hooks/useColoresSistema"
 
 function Ingresos() {
+  useColoresSistema();
+  
   return (
     <div
       className="min-h-screen p-3 sm:p-4 md:p-6"
       style={{
-        backgroundColor: "#ffffff", // blanco
+        backgroundColor: "#ffffff",
         backgroundImage: `
           linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px)
         `,
-        backgroundSize: "40px 40px", // tamaño de los cuadritos
+        backgroundSize: "40px 40px",
       }}
     >
       <div className="flex items-center justify-between mb-4 sm:mb-6">

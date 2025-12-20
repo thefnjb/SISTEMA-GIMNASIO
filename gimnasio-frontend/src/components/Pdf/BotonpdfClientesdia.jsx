@@ -29,12 +29,10 @@ const ReporteClientesDia = () => {
 
   return (
     <Button
-      color="danger"
-      style={{ backgroundColor: "#7a0f16" }}
       variant="solid"
       onPress={descargarPDF}
       size="sm"
-      className="text-xs sm:text-sm"
+      className="text-xs sm:text-sm text-white bg-color-botones"
     >
       <CloudDownloadRoundedIcon className="text-base sm:text-lg" />
       <span className="hidden sm:inline ml-1">Descargar PDF</span>

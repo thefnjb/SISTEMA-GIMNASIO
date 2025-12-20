@@ -266,8 +266,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
       {/* Botón para abrir modal */}
       <Button
         onPress={handleOpenModal}
-        className="text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
-        style={{ backgroundColor: "#7a0f16" }}
+        className="text-white transition-all duration-200 hover:scale-105 hover:shadow-lg bg-color-botones"
       >
         {triggerText}
       </Button>
@@ -302,7 +301,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
           {(onClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500 px-2">
+                <div className="w-full text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-center text-color-acentos px-2">
                   Nueva Suscripción
                 </div>
               </ModalHeader>
@@ -335,7 +334,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                       }}
                       className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                         tipoDocumento === "DNI"
-                          ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
+                          ? "bg-color-botones ring-2 xs:ring-4 ring-color-acentos"
                           : "bg-gray-700 hover:bg-gray-600"
                       }`}
                     >
@@ -350,7 +349,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                       }}
                       className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                         tipoDocumento === "CE"
-                          ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
+                          ? "bg-color-botones ring-2 xs:ring-4 ring-color-acentos"
                           : "bg-gray-700 hover:bg-gray-600"
                       }`}
                     >
@@ -369,7 +368,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                         onClick={() => setOrigenNombre('reniec')}
                         className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                           origenNombre === 'reniec'
-                            ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
+                            ? "bg-color-botones ring-2 xs:ring-4 ring-color-acentos"
                             : "bg-gray-700 hover:bg-gray-600"
                         }`}
                       >
@@ -380,7 +379,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                         onClick={() => setOrigenNombre('manual')}
                         className={`flex-1 p-2 xs:p-2.5 sm:p-3 rounded-lg text-white transition-all duration-200 text-sm xs:text-base ${
                           origenNombre === 'manual'
-                            ? "bg-red-600 ring-2 xs:ring-4 ring-red-400"
+                            ? "bg-color-botones ring-2 xs:ring-4 ring-color-acentos"
                             : "bg-gray-700 hover:bg-gray-600"
                         }`}
                       >
@@ -446,9 +445,10 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                   <button
                     type="button"
                     onClick={() => setMembresiaOpen(true)}
-                    className="flex items-center w-full gap-2 xs:gap-3 p-2 xs:p-2.5 sm:p-3 text-white transition-all duration-200 bg-black border border-red-500 rounded-lg hover:bg-gray-900 hover:scale-105 hover:shadow-lg hover:border-red-400"
+                    className="flex items-center w-full gap-2 xs:gap-3 p-2 xs:p-2.5 sm:p-3 text-white transition-all duration-200 bg-black border rounded-lg hover:bg-gray-900 hover:scale-105 hover:shadow-lg"
+                    style={{ borderColor: 'var(--color-acentos, #D72838)' }}
                   >
-                    <DateRangeOutlinedIcon className="text-red-500 text-base xs:text-lg sm:text-xl flex-shrink-0" />
+                    <DateRangeOutlinedIcon className="text-color-acentos text-base xs:text-lg sm:text-xl flex-shrink-0" />
                     <span className="text-sm xs:text-base sm:text-lg font-medium truncate">
                       {membresia
                         ? `${membresia.duracion === 12 ? "1 Año" : `${membresia.duracion} Mes${membresia.duracion > 1 ? 'es' : ''}`} - S/ ${Number(membresia.precio).toFixed(2)}`
@@ -464,7 +464,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                   <button
                     type="button"
                     onClick={() => setEntrenadorModalOpen(true)}
-                    className="flex items-center w-full gap-2 xs:gap-3 p-2 xs:p-2.5 sm:p-3 text-white transition-all duration-200 bg-red-600 border border-black rounded-lg hover:bg-red-700 hover:scale-105 hover:shadow-lg hover:border-gray-800"
+                    className="flex items-center w-full gap-2 xs:gap-3 p-2 xs:p-2.5 sm:p-3 text-white transition-all duration-200 bg-color-botones border border-black rounded-lg hover:scale-105 hover:shadow-lg hover:border-gray-800"
                   >
                     <FitnessCenterOutlinedIcon className="text-white text-base xs:text-lg sm:text-xl flex-shrink-0" />
                     <span className="text-sm xs:text-base sm:text-lg font-medium truncate">
@@ -491,7 +491,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                       <button
                         key={key}
                         type="button"
-                        className={`w-full p-2 xs:p-2.5 sm:p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${metodoSeleccionado === key ? "ring-2 xs:ring-4 ring-red-400" : ""}`}
+                        className={`w-full p-2 xs:p-2.5 sm:p-3 rounded text-white flex items-center justify-between transition-all duration-200 hover:scale-105 ${metodo.color} ${metodoSeleccionado === key ? "ring-2 xs:ring-4 ring-color-acentos" : ""}`}
                         onClick={() => {
                           setMetodoSeleccionado(key);
                           // Abrir modal de comprobante automáticamente para Yape o Plin
@@ -550,7 +550,7 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                 <Button
                   color="primary"
                   onPress={() => guardarSuscripcion(onClose)}
-                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700 text-sm xs:text-base"
+                  className="w-full sm:w-auto text-white bg-color-botones text-sm xs:text-base"
                 >
                   Guardar
                 </Button>

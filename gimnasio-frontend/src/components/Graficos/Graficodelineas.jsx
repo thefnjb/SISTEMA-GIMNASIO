@@ -4,6 +4,14 @@ import { useState, useMemo, useEffect, useCallback } from "react"
 import { AreaChart, Area, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import api from "../../utils/axiosInstance" // Importar la instancia de axios
 
+// Función para obtener color del sistema
+const getColorSistema = () => {
+  if (typeof window !== 'undefined') {
+    return getComputedStyle(document.documentElement).getPropertyValue('--color-acentos').trim() || '#D72838';
+  }
+  return '#D72838';
+};
+
 const chartConfig = {
   clientesPorDia: {
     label: "Clientes por Día",
@@ -11,7 +19,7 @@ const chartConfig = {
   },
   clientesPorMensualidad: {
     label: "Clientes Mensualidad",
-    color: "#dc2626", // Rojo/granate como color principal del panel
+    color: getColorSistema(), // Color del sistema
   },
 }
 
@@ -36,8 +44,8 @@ const AreaChartComponent = ({ data }) => {
       >
         <defs>
           <linearGradient id="colorMensualidad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.8} />
-            <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1} />
+            <stop offset="5%" stopColor={chartConfig.clientesPorMensualidad.color} stopOpacity={0.8} />
+            <stop offset="95%" stopColor={chartConfig.clientesPorMensualidad.color} stopOpacity={0.1} />
           </linearGradient>
           <linearGradient id="colorDia" x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor="#1f2937" stopOpacity={0.8} />
@@ -90,7 +98,7 @@ const AreaChartComponent = ({ data }) => {
                       key={index}
                       style={{
                         margin: "4px 0",
-                        color: entry.dataKey === "clientesPorMensualidad" ? "#dc2626" : "#1f2937",
+                        color: entry.dataKey === "clientesPorMensualidad" ? chartConfig.clientesPorMensualidad.color : "#1f2937",
                       }}
                     >
                       {chartConfig[entry.dataKey]?.label || entry.dataKey} : {entry.value}
@@ -107,7 +115,7 @@ const AreaChartComponent = ({ data }) => {
           type="monotone"
           dataKey="clientesPorMensualidad"
           stackId="1"
-          stroke="#dc2626"
+          stroke={chartConfig.clientesPorMensualidad.color}
           fill="url(#colorMensualidad)"
           name="Clientes Mensualidad"
         />

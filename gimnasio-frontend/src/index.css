@@ -52,4 +52,70 @@ code {
   background: #555;
 }
 
+/* Variables CSS globales para colores del sistema */
+:root {
+  --color-sistema: #D72838;
+  --color-botones: #D72838;
+  --color-cards: #ffffff;
+  --color-tablas: #D72838;
+  --color-acentos: #D72838;
+}
+
+/* Clases utilitarias para usar las variables CSS */
+.color-tabla-header {
+  color: var(--color-tablas) !important;
+}
+
+.bg-color-tabla-header {
+  background-color: var(--color-tablas) !important;
+}
+
+.bg-gradient-tabla-header {
+  background: linear-gradient(to right, #000000 0%, #1f2937 30%, var(--color-tablas) 100%) !important;
+}
+
+.text-color-acentos {
+  color: var(--color-acentos) !important;
+}
+
+.bg-color-botones {
+  background-color: var(--color-botones) !important;
+}
+
+.bg-color-botones:hover {
+  background-color: var(--color-botones) !important;
+  opacity: 0.9;
+}
+
+.bg-color-cards {
+  background-color: var(--color-cards) !important;
+}
+
+/* Clases para botones con colores del sistema */
+.btn-color-botones {
+  background-color: var(--color-botones) !important;
+  color: white !important;
+}
+
+.btn-color-botones:hover {
+  background-color: var(--color-botones) !important;
+  opacity: 0.9;
+}
+
+/* Clases para textos con color de acentos */
+.text-color-acentos-bold {
+  color: var(--color-acentos) !important;
+  font-weight: bold;
+}
+
+/* Clase para focus ring con color de acentos */
+.focus\:ring-color-acentos:focus {
+  --tw-ring-color: var(--color-acentos) !important;
+}
+
+/* Utilidad para usar en Tailwind */
+.ring-color-acentos {
+  --tw-ring-color: var(--color-acentos) !important;
+}
+
 

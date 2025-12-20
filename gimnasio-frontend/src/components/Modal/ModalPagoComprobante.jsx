@@ -226,7 +226,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
                   </div>
                   <Button
                     onPress={capture}
-                    className="w-full text-white bg-red-600 hover:bg-red-700"
+                    className="w-full text-white bg-color-botones"
                   >
                     Capturar Foto
                   </Button>
@@ -275,7 +275,7 @@ const ModalPagoComprobante = ({ isOpen, onOpenChange, onUploadComplete }) => {
                     if (onOpenChange) onOpenChange(false);
                   }
                 }}
-                className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-500"
+                className="w-full sm:w-auto text-white bg-color-botones disabled:bg-gray-500"
                 isDisabled={!preview || isProcessing}
               >
                 Confirmar y subir

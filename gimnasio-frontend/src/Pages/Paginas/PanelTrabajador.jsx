@@ -7,8 +7,11 @@ import ModalSuscripcion from "../../components/Modal/ModalSuscripcion";
 import ModalDia from "../../components/Modal/ModalDia";
 import TablaClientesDiaTrabajador from "../../components/Tabla/TablaCldia/ClientesDiaTrabajador"; // ✅ Import corregido
 import GetAppRoundedIcon from "@mui/icons-material/GetAppRounded";
+import { useColoresSistema } from "../../hooks/useColoresSistema";
+import SkeletonLoader from "../../components/Skeleton/SkeletonLoader";
 
 const PanelTrabajador = () => {
+  const coloresCargados = useColoresSistema();
   const [active, setActive] = useState("INICIO");
   const [refreshClientes, setRefreshClientes] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -27,14 +30,14 @@ const PanelTrabajador = () => {
             {/* 🧩 Cards principales */}
             {/* Cards para móvil/tablet */}
             <div className="flex flex-col gap-3 xs:gap-4 md:hidden max-w-4xl mx-auto">
-              <CustomCardMobile imageUrl="/images/suscripcion.png">
+              <CustomCardMobile title="Membresías" description="Inscribir clientes por membresías - Clientes que se inscriben con una suscripción">
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCardMobile>
 
-              <CustomCardMobile imageUrl="/images/clientespordiaa.png">
+              <CustomCardMobile title="Clientes por Día" description="Registra clientes que entrenan por día">
                 <ModalDia
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   title="Clientes por Día"
@@ -45,14 +48,14 @@ const PanelTrabajador = () => {
 
             {/* Cards para desktop */}
             <div className="hidden md:grid md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
-              <CustomCard imageUrl="/images/suscripcion.png" className="w-full max-w-xs sm:max-w-sm mx-auto">
+              <CustomCard title="Membresías" description="Inscribir clientes por membresías - Clientes que se inscriben con una suscripción" className="w-full max-w-xs sm:max-w-sm mx-auto">
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCard>
 
-              <CustomCard imageUrl="/images/clientespordiaa.png" className="w-full max-w-xs sm:max-w-sm mx-auto">
+              <CustomCard title="Clientes por Día" description="Registra clientes que entrenan por día" className="w-full max-w-xs sm:max-w-sm mx-auto">
                 <div className="flex justify-center">
                   <ModalDia
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -81,6 +84,11 @@ const PanelTrabajador = () => {
         return null;
     }
   };
+
+  // Mostrar skeleton mientras se cargan los colores
+  if (!coloresCargados) {
+    return <SkeletonLoader />;
+  }
 
   return (
     <div className="relative w-full min-h-screen bg-white">

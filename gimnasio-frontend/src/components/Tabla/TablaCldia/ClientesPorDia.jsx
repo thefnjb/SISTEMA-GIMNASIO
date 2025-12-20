@@ -334,7 +334,7 @@ export default function TablaClientesHoy({ refresh }) {
             base: "min-w-full",
             wrapper: "bg-white rounded-lg shadow",
             table: "min-w-full",
-            th: "text-red-600 font-bold bg-gray-200 text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap",
+            th: "font-bold bg-gradient-tabla-header text-white text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap",
             td: "text-black text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3",
             tr: "hover:bg-gray-50 transition-colors",
           }}

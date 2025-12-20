@@ -17,7 +17,8 @@ function IncribirTrabajador() {
     <div className="p-3 sm:p-4 md:p-6">
       <div className="flex justify-end mb-4 sm:mb-6">
         <Button
-          className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base font-bold text-white bg-red-800 rounded shadow hover:bg-red-800"
+          className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 text-sm sm:text-base font-bold text-white bg-color-botones rounded shadow"
+          style={{ backgroundColor: 'var(--color-botones)' }}
           onClick={() => setShowAgregar(true)}
         >
           <AddCircleOutlineRoundedIcon className="text-lg sm:text-xl" />

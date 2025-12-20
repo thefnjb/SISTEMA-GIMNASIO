@@ -271,7 +271,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
       <Button
         onPress={onOpen}
         className="text-white transition-all"
-        style={{ backgroundColor: "#7a0f16" }}
+        style={{ backgroundColor: 'var(--color-botones)' }}
       >
         {triggerText}
       </Button>
@@ -285,7 +285,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
       >
         <ModalContent>
           <ModalHeader>
-            <div className="w-full text-2xl font-bold text-center text-red-500">
+            <div className="w-full text-2xl font-bold text-center text-color-acentos">
               Lista de Entrenadores
             </div>
           </ModalHeader>
@@ -335,14 +335,20 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
                     <div className="flex gap-2">
                       <IconButton
                         onClick={() => abrirEdicion(entrenador)}
-                        sx={{ color: "#ef4444", "&:hover": { color: "#dc2626" } }}
+                        sx={{ 
+                          color: "var(--color-acentos)", 
+                          "&:hover": { opacity: 0.7 } 
+                        }}
                       >
                         <EditIcon />
                       </IconButton>
 
                       <IconButton
                         onClick={() => abrirConfirmacionEliminar(entrenador)}
-                        sx={{ color: "#ef4444", "&:hover": { color: "#dc2626" } }}
+                        sx={{ 
+                          color: "var(--color-acentos)", 
+                          "&:hover": { opacity: 0.7 } 
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -441,7 +447,7 @@ const ModalVerEntrenadores = ({ triggerText, refresh }) => {
       >
         <ModalContent>
           <ModalHeader>
-            <div className="w-full text-2xl font-bold text-center text-red-500">
+            <div className="w-full text-2xl font-bold text-center text-color-acentos">
               Editar Entrenador
             </div>
           </ModalHeader>

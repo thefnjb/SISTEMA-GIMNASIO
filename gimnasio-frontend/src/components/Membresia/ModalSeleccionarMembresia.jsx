@@ -61,7 +61,7 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
         {(modalClose) => (
           <div className="text-white bg-neutral-600 rounded-xl">
             <ModalHeader>
-              <div className="w-full text-lg xs:text-xl sm:text-2xl font-bold text-center text-red-500 px-2">
+              <div className="w-full text-lg xs:text-xl sm:text-2xl font-bold text-center text-color-acentos px-2">
                 Seleccionar Membresía
               </div>
             </ModalHeader>
@@ -87,7 +87,7 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
                         classNames={{
                           base: "bg-transparent",
                           wrapper: "bg-transparent",
-                          th: "text-red-500 font-bold bg-gray-900 text-xs sm:text-sm border-b border-gray-700",
+                          th: "bg-gradient-tabla-header text-white font-bold text-xs sm:text-sm border-b border-gray-700",
                           td: "text-white text-xs sm:text-sm bg-gray-800 border-b border-gray-700",
                           tr: "hover:bg-gray-700 cursor-pointer transition-colors",
                         }}

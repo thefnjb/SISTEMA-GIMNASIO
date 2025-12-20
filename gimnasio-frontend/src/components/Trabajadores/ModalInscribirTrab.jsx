@@ -178,7 +178,7 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
                     }}
                     className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
                       tipoDocumento === "DNI"
-                        ? "bg-red-600 ring-4 ring-red-400"
+                        ? "bg-color-botones ring-4 ring-color-acentos"
                         : "bg-gray-700 hover:bg-gray-600"
                     }`}
                     disabled={isLoading}
@@ -194,7 +194,7 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
                     }}
                     className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
                       tipoDocumento === "CE"
-                        ? "bg-red-600 ring-4 ring-red-400"
+                        ? "bg-color-botones ring-4 ring-color-acentos"
                         : "bg-gray-700 hover:bg-gray-600"
                     }`}
                     disabled={isLoading}
@@ -214,7 +214,7 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
                       onClick={() => setOrigenNombre('reniec')}
                       className={`flex-1 p-2 rounded text-white transition-all ${
                         origenNombre === 'reniec'
-                          ? "bg-red-600 ring-4 ring-red-400"
+                          ? "bg-color-botones ring-4 ring-color-acentos"
                           : "bg-gray-700 hover:bg-gray-600"
                       }`}
                       disabled={isLoading}
@@ -226,7 +226,7 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
                       onClick={() => setOrigenNombre('manual')}
                       className={`flex-1 p-2 rounded text-white transition-all ${
                         origenNombre === 'manual'
-                          ? "bg-red-600 ring-4 ring-red-400"
+                          ? "bg-color-botones ring-4 ring-color-acentos"
                           : "bg-gray-700 hover:bg-gray-600"
                       }`}
                       disabled={isLoading}
@@ -330,7 +330,7 @@ const ModalInscribirTrab = ({ isOpen, onClose }) => {
               <Button
                 color="primary"
                 onPress={inscribirTrabajador}
-                className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700"
+                className="w-full sm:w-auto text-white bg-color-botones"
                 disabled={isLoading}
                 isLoading={isLoading}
               >

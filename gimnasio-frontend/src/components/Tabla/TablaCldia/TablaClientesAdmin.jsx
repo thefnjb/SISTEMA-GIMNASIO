@@ -546,7 +546,7 @@ export default function TablaClientesAdmin({ refresh }) {
                 base: "min-w-full",
                 table: "bg-white w-full table-auto text-[11px]",
                 td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] px-1.5 py-0.5",
-                th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] font-semibold px-1.5 py-1 text-center",
+                th: "bg-gradient-tabla-header text-white text-[10px] font-semibold px-1.5 py-1 text-center",
                 tr: "hover:bg-gray-50 transition-colors",
               }}
             >
@@ -762,7 +762,7 @@ export default function TablaClientesAdmin({ refresh }) {
                 )}
               </ModalBody>
               <ModalFooter>
-                <Button onClick={() => { closeImageModal(); onClose(); }} className="text-white bg-red-600 hover:bg-red-700">Cerrar</Button>
+                <Button onClick={() => { closeImageModal(); onClose(); }} className="text-white hover:opacity-90" style={{ backgroundColor: 'var(--color-botones)' }}>Cerrar</Button>
               </ModalFooter>
             </div>
           )}

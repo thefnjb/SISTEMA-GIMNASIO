@@ -1,42 +1,34 @@
 import { Card } from "@heroui/react";
-import { useState } from "react";
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import GlitchText from '../TextAnimation/GlitchText';
 
-export const CustomCardMobile = ({ imageUrl, title, description, children, className = "" }) => {
-  const [imageError, setImageError] = useState(false);
-
-  const handleImageError = () => {
-    setImageError(true);
-  };
-
+export const CustomCardMobile = ({ title, description, children, className = "" }) => {
   return (
     <Card
-      className={`w-full bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 ${className}`}
+      className={`w-full bg-color-cards rounded-xl shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 ${className}`}
       radius="lg"
     >
       <div className="flex flex-row items-center justify-between gap-2 xs:gap-3 sm:gap-4 p-2 xs:p-3 sm:p-4">
-        {/* Lado izquierdo: Imagen y título */}
+        {/* Lado izquierdo: Icono y título */}
         <div className="flex flex-row items-center gap-2 xs:gap-3 sm:gap-4 flex-1 min-w-0">
-          {/* Imagen más grande */}
-          <div className="flex-shrink-0 w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-lg xs:rounded-xl overflow-hidden bg-gray-100 shadow-sm">
-            {imageUrl && !imageError ? (
-              <img
-                src={imageUrl}
-                alt={title || "Imagen"}
-                className="object-cover w-full h-full"
-                onError={handleImageError}
-              />
-            ) : (
-              <div className="flex items-center justify-center w-full h-full text-[10px] xs:text-xs text-gray-400">
-                Sin img
-              </div>
-            )}
+          {/* Icono FitnessCenter */}
+          <div className="flex-shrink-0 w-16 h-16 xs:w-20 xs:h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--color-botones)' }}>
+            <FitnessCenterIcon sx={{ fontSize: { xs: 28, sm: 32, md: 36 }, color: 'white' }} />
           </div>
           
-          {/* Título */}
+          {/* Título con efecto Glitch */}
           {title && (
-            <h3 className="text-sm xs:text-base sm:text-lg font-semibold text-gray-900 truncate">
-              {title}
-            </h3>
+            <div className="flex-1 min-w-0">
+              <GlitchText
+                speed={1}
+                enableShadows={true}
+                enableOnHover={true}
+                textSize="lg"
+                className="text-base xs:text-lg sm:text-xl md:text-2xl truncate"
+              >
+                {title}
+              </GlitchText>
+            </div>
           )}
         </div>
         

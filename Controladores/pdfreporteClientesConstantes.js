@@ -283,7 +283,10 @@ function prepararDatosTabla(grupos) {
  * Dibuja el logo del gimnasio en el PDF
  */
 function dibujarLogo(doc, logoPath) {
-  if (!imageExists(logoPath)) {
+  // Si logoPath es un Buffer, usarlo directamente
+  const isBuffer = Buffer.isBuffer(logoPath);
+  
+  if (!isBuffer && !imageExists(logoPath)) {
     console.log("Logo no encontrado, continuando sin logo");
     return;
   }
@@ -310,7 +313,7 @@ function dibujarLogo(doc, logoPath) {
 /**
  * Dibuja el encabezado principal del PDF
  */
-function dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, esPortada = true) {
+function dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, esPortada = true, nombreEmpresa = "GIMNASIO TERRONES") {
   const headerHeight = esPortada ? 140 : 110; // Aumentado para más espacio
   
   // Fondo del encabezado
@@ -338,7 +341,7 @@ function dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, esPortada = tr
   doc.fontSize(PDF_CONFIG.text.subtitle)
      .font("Helvetica")
      .fillColor(PDF_CONFIG.colors.white)
-     .text("GIMNASIO TERRONES", 0, 68, { 
+     .text(nombreEmpresa.toUpperCase(), 0, 68, { 
        align: "center", 
        width: pageWidth,
        lineGap: 3
@@ -764,7 +767,7 @@ function dibujarPieDePagina(doc, tableStartX, tableWidth, startIndex, endIndex, 
  */
 exports.generarReporteClientesConstantesPDF = async (req, res) => {
   try {
-    const { rol, id } = req.usuario;
+    const { rol, id, gym_id } = req.usuario;
 
     // Validar datos del usuario
     if (!rol || !id) {
@@ -772,6 +775,11 @@ exports.generarReporteClientesConstantesPDF = async (req, res) => {
         error: "Usuario no autenticado correctamente" 
       });
     }
+
+    // Obtener datos de la empresa
+    const Gym = require('../Modelos/Gimnasio');
+    const gym = await Gym.findById(gym_id).select('nombreEmpresa');
+    const nombreEmpresa = gym?.nombreEmpresa || "GIMNASIO TERRONES";
 
     // Obtener y procesar datos
     const clientes = await obtenerDatosClientes();
@@ -819,10 +827,12 @@ exports.generarReporteClientesConstantesPDF = async (req, res) => {
     doc.pipe(res);
 
     const pageWidth = doc.page.width;
+    
+    // Logo por defecto
     const logoPath = path.join(__dirname, '..', 'gimnasio-frontend', 'public', 'images', 'logo.jpg');
 
     // Dibujar portada
-    let currentY = dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, true);
+    let currentY = dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, true, nombreEmpresa);
     currentY = dibujarEstadisticas(doc, pageWidth, currentY, grupos, clientes.length);
 
     // Dibujar tabla resumen con paginación
@@ -844,7 +854,7 @@ exports.generarReporteClientesConstantesPDF = async (req, res) => {
       // Nueva página si no es la primera
       if (pageNum > 1) {
         doc.addPage();
-        currentY = dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, false);
+        currentY = dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, false, nombreEmpresa);
       }
 
       // Dibujar chunk de datos
@@ -898,7 +908,7 @@ exports.generarReporteClientesConstantesPDF = async (req, res) => {
       // Verificar si necesitamos nueva página
       if (currentY > pageHeight - 200) {
         doc.addPage();
-        currentY = dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, false);
+        currentY = dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, false, nombreEmpresa);
       }
       
       // Dibujar tabla detallada del cliente

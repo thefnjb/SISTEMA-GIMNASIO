@@ -3,6 +3,7 @@ const ClientesPorDia = require("../Modelos/ClientesporDia");
 const mongoose = require("mongoose");
 const Trabajador = require('../Modelos/Trabajador');
 const path = require("path");
+const fs = require("fs");
 
 // Función para obtener el rango de la semana actual (Lunes a Domingo)
 function getWeekRange(date = new Date()) {
@@ -97,7 +98,7 @@ function drawTable(doc, x, y, headers, data, columnWidths, options = {}) {
 
 exports.generarReporteClientesPorDia = async (req, res) => {
   try {
-    const { rol, id } = req.usuario;
+    const { rol, id, gym_id } = req.usuario;
 
     // --- Datos ---
     const matchQuery = {};
@@ -161,22 +162,30 @@ exports.generarReporteClientesPorDia = async (req, res) => {
 
     const pageWidth = doc.page.width;
 
-    // Logo circular
+    // Logo - intentar cargar si existe
     const logoPath = path.join(__dirname, '..', 'gimnasio-frontend', 'public', 'images', 'logo.jpg');
+    
     const logoSize = 80;
     const logoX = 50;
     const logoY = 10;
 
-    doc.save();
-    doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2).clip();
-    doc.image(logoPath, logoX, logoY, { width: logoSize, height: logoSize });
-    doc.restore();
+    // Solo dibujar logo si existe el archivo
+    if (fs.existsSync(logoPath)) {
+      try {
+        doc.save();
+        doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2).clip();
+        doc.image(logoPath, logoX, logoY, { width: logoSize, height: logoSize });
+        doc.restore();
 
-    // Borde del logo
-    doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2)
-       .lineWidth(2)
-       .strokeColor("#fff")
-       .stroke();
+        // Borde del logo
+        doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2)
+           .lineWidth(2)
+           .strokeColor("#fff")
+           .stroke();
+      } catch (err) {
+        console.log("Error al cargar logo, continuando sin logo:", err.message);
+      }
+    }
 
     doc.fontSize(18).font("Helvetica-Bold").text("REPORTE DE INGRESOS DIARIOS", { align: "center" });
     doc.moveDown();

@@ -67,7 +67,8 @@ export default function ListaEntrenadores({ refresh }) {
           <div className="flex items-center gap-2">
             <button
               onClick={() => editarEntrenador(entrenador._id)}
-              className="p-2 text-red-500 transition rounded-full hover:bg-red-600/30"
+              className="p-2 transition rounded-full hover:opacity-70"
+              style={{ color: 'var(--color-acentos)' }}
               title="Editar entrenador"
             >
               <EditIcon />
@@ -75,7 +76,8 @@ export default function ListaEntrenadores({ refresh }) {
 
             <button
               onClick={() => eliminarEntrenador(entrenador._id)}
-              className="p-2 text-red-500 transition rounded-full hover:bg-red-600/30"
+              className="p-2 transition rounded-full hover:opacity-70"
+              style={{ color: 'var(--color-acentos)' }}
               title="Eliminar entrenador"
             >
               <DeleteIcon />

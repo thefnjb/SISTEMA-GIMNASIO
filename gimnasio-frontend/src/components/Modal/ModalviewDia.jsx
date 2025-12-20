@@ -62,7 +62,7 @@ const ModalviewDia = ({
           {(onClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-3xl font-bold text-left text-red-500">
+                <div className="w-full text-3xl font-bold text-left text-color-acentos">
                   {title}
                 </div>
               </ModalHeader>

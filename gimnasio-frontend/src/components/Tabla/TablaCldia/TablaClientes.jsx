@@ -450,7 +450,7 @@ export default function TablaClientesAdmin({ refresh }) {
         {/* Vista de Cards para móvil */}
         <div className="md:hidden space-y-2 xs:space-y-3 mb-4">
           {miembrosOrdenados.map((miembro) => (
-            <div key={miembro._id} className="bg-white rounded-lg shadow-md p-2 xs:p-3 border border-gray-200">
+            <div key={miembro._id} className="bg-color-cards rounded-lg shadow-md p-2 xs:p-3 border border-gray-200">
               <div className="flex items-start justify-between mb-1.5 xs:mb-2">
                 <div className="flex items-center gap-1.5 xs:gap-2 flex-1 min-w-0">
                   <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 18 }} className="flex-shrink-0" />
@@ -506,7 +506,7 @@ export default function TablaClientesAdmin({ refresh }) {
                 base: "min-w-full",
                 table: "bg-white w-full table-auto text-[11px]",
                 td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] px-1.5 py-0.5",
-                th: "bg-gradient-to-r from-gray-900 to-red-900 text-white text-[10px] font-semibold px-1.5 py-1 text-center",
+                th: "bg-gradient-tabla-header text-white text-[10px] font-semibold px-1.5 py-1 text-center",
                 tr: "hover:bg-gray-50 transition-colors",
               }}
             >

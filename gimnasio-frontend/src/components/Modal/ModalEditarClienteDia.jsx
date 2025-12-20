@@ -162,7 +162,7 @@ export default function ModalEditarClienteDia({
                       onPress={() => handleMetodoPagoChange(m)}
                       className={`capitalize transition-all ${
                         metodoPagoEdit === m
-                          ? "bg-red-600 text-white shadow-md"
+                          ? "bg-color-botones text-white shadow-md"
                           : "bg-[#2a2d36] text-gray-300 hover:bg-[#333641]"
                       }`}
                     >
@@ -221,7 +221,7 @@ export default function ModalEditarClienteDia({
               color="danger"
               onPress={handleGuardarEdicion}
               isDisabled={guardando}
-              className="text-white bg-red-600 hover:bg-red-700"
+              className="text-white bg-color-botones"
             >
               {guardando ? "Guardando..." : "Guardar Cambios"}
             </Button>

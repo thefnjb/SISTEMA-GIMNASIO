@@ -294,7 +294,7 @@ export default function ClientesDiaTrabajador({ refresh }) {
         }
         classNames={{
           base: "bg-white rounded-lg shadow overflow-x-auto",
-          th: "text-red-600 font-bold bg-gray-200 text-xs sm:text-sm",
+          th: "bg-gradient-tabla-header text-white font-bold text-xs sm:text-sm",
           td: "text-black text-xs sm:text-sm",
         }}
       >
@@ -405,7 +405,7 @@ export default function ClientesDiaTrabajador({ refresh }) {
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4">
         <div className="text-base sm:text-lg font-bold text-black">
-          Total Recaudado Hoy: <span className="text-red-600">S/ {totalMontoHoy.toFixed(2)}</span>
+          Total Recaudado Hoy: <span className="text-color-acentos">S/ {totalMontoHoy.toFixed(2)}</span>
         </div>
         <ReporteClientesDia />
       </div>

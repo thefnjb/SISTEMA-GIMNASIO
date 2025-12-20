@@ -687,7 +687,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
             base: "min-w-full",
             wrapper: "bg-white rounded-lg shadow",
             table: "min-w-full",
-            th: "text-red-600 font-bold bg-gray-200 text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap",
+            th: "bg-gradient-tabla-header text-white font-bold text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap",
             td: "text-black text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3",
             tr: "hover:bg-gray-50 transition-colors",
           }}
@@ -1153,7 +1153,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4">
         <div className="text-base sm:text-lg font-bold text-black">
-          Total Recaudado: <span className="text-red-600">S/ {totalMonto.toFixed(2)}</span>
+          Total Recaudado: <span className="text-color-acentos">S/ {totalMonto.toFixed(2)}</span>
         </div>
         <div className="text-sm text-gray-600">
           {vistaAgrupada ? (
@@ -1172,7 +1172,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
         backdrop="blur"
       >
         <ModalContent className="p-4 shadow-lg rounded-2xl">
-          <ModalHeader className="text-lg font-semibold text-red-600">
+          <ModalHeader className="text-lg font-semibold text-color-acentos">
             Confirmar eliminación
           </ModalHeader>
           <ModalBody className="text-sm text-gray-700">

@@ -1,38 +1,41 @@
 import { Card } from "@heroui/react";
-import { useState } from "react";
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import GlitchText from '../TextAnimation/GlitchText';
 
-export const CustomCard = ({ imageUrl, title, description, children, className = "" }) => {
-  const [imageError, setImageError] = useState(false);
-
-  const handleImageError = () => {
-    setImageError(true);
-  };
-
+export const CustomCard = ({ title, description, children, className = "" }) => {
   return (
     <Card
-      className={`h-auto p-3 sm:p-4 bg-gray-200 rounded-xl sm:rounded-2xl shadow-sm transition-all duration-200 ${className}`}
+      className={`h-auto p-3 sm:p-4 bg-color-cards rounded-xl sm:rounded-2xl shadow-sm transition-all duration-200 ${className}`}
       radius="xl"
     >
-      <div className="flex flex-col space-y-3 sm:space-y-4">
-        {imageUrl && !imageError ? (
-          <img
-            src={imageUrl}
-            alt={title || "Imagen"}
-            className="object-cover w-full h-auto max-h-48 sm:max-h-64"
-            onError={handleImageError}
-          />
-        ) : (
-          <div className="flex items-center justify-center w-full h-32 sm:h-48 text-xs text-gray-500 bg-gray-300 rounded">
-            {imageError ? "Imagen no disponible" : "Sin imagen"}
+      <div className="flex flex-col items-center space-y-3 sm:space-y-4">
+        {/* Icono FitnessCenter */}
+        <div className="flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full" style={{ backgroundColor: 'var(--color-botones)' }}>
+          <FitnessCenterIcon sx={{ fontSize: 40, color: 'white' }} />
+        </div>
+        
+        {/* Título con efecto Glitch */}
+        {title && (
+          <div className="text-center">
+            <GlitchText
+              speed={1}
+              enableShadows={true}
+              enableOnHover={true}
+              textSize="lg"
+              className="text-lg sm:text-xl md:text-2xl"
+            >
+              {title}
+            </GlitchText>
           </div>
         )}
-      </div>
-      <div className="flex flex-col mt-3 sm:mt-4 space-y-2">
-        <h3 className="text-sm sm:text-base font-semibold text-center text-black">
-          {title || ""}
-        </h3>
-        <p className="text-xs sm:text-sm text-default-500">{description || ""}</p>
-        {children && <div className="flex justify-center mt-3 sm:mt-4">{children}</div>}
+        
+        {/* Descripción */}
+        {description && (
+          <p className="text-xs sm:text-sm text-center text-gray-600">{description}</p>
+        )}
+        
+        {/* Botones/Acciones */}
+        {children && <div className="flex justify-center mt-2 sm:mt-3">{children}</div>}
       </div>
     </Card>
   );

@@ -87,7 +87,7 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
       <ModalContent>
         <div className="text-white bg-neutral-800 rounded-xl">
           <ModalHeader>
-            <div className="w-full text-3xl font-bold text-center text-red-500">
+            <div className="w-full text-3xl font-bold text-center text-color-acentos">
               Editar Trabajador
             </div>
           </ModalHeader>
@@ -117,7 +117,7 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
                   }}
                   className={`flex-1 p-2 rounded text-white transition-all ${
                     tipoDocumento === "DNI"
-                      ? "bg-red-600 ring-2 ring-red-400"
+                      ? "bg-color-botones ring-2 ring-color-acentos"
                       : "bg-gray-700 hover:bg-gray-600"
                   }`}
                   disabled={isLoading}
@@ -132,7 +132,7 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
                   }}
                   className={`flex-1 p-2 rounded text-white transition-all ${
                     tipoDocumento === "CE"
-                      ? "bg-red-600 ring-2 ring-red-400"
+                      ? "bg-color-botones ring-2 ring-color-acentos"
                       : "bg-gray-700 hover:bg-gray-600"
                   }`}
                   disabled={isLoading}
@@ -199,7 +199,7 @@ export default function ModalEditarTrabajador({ trabajador, onClose, onUpdate })
               Cancelar
             </Button>
             <Button
-              className="text-white bg-red-600 hover:bg-red-700"
+              className="text-white bg-color-botones"
               onPress={handleGuardar}
               disabled={isLoading}
               isLoading={isLoading}

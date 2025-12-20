@@ -234,7 +234,7 @@ const ModalviewMembresia = ({ onClose }) => {
         {modalClose => (
           <>
             <ModalHeader>
-              <div className="w-full text-2xl font-bold text-center text-red-500">
+              <div className="w-full text-2xl font-bold text-center text-color-acentos">
                 Membresías
               </div>
             </ModalHeader>

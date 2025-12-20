@@ -1,10 +1,11 @@
 const PDFDocument = require("pdfkit");
 const ClientesPorDia = require("../Modelos/ClientesporDia");
 const Trabajador = require("../Modelos/Trabajador");
+const Gym = require("../Modelos/Gimnasio");
 
 const generadoVoucherDIA = async (req, res) => {
   try {
-    const { rol, id } = req.usuario;
+    const { rol, id, gym_id } = req.usuario;
     const clienteId = req.params.miembroId || req.params.clienteId || req.params.id;
 
     const cliente = await ClientesPorDia.findById(clienteId);
@@ -64,12 +65,16 @@ const generadoVoucherDIA = async (req, res) => {
     const doc = new PDFDocument({ size: [210, 350], margin: 15 });
     doc.pipe(res);
 
+    // Obtener nombre de la empresa
+    const gym = await Gym.findById(gym_id).select('nombreEmpresa');
+    const nombreEmpresa = gym?.nombreEmpresa || "GYM TERRONES";
+
     // Fondo blanco y borde
     doc.rect(0, 0, doc.page.width, doc.page.height).fill("#ffffff");
     doc.strokeColor("#cccccc").lineWidth(1).rect(10, 10, doc.page.width - 20, doc.page.height - 20).stroke();
 
     // Encabezado centrado
-    doc.fontSize(14).fillColor("#d32f2f").text("GYM TERRONES", { align: "center" });
+    doc.fontSize(14).fillColor("#d32f2f").text(nombreEmpresa.toUpperCase(), { align: "center" });
 
     doc.moveDown(0.3);
     doc.strokeColor("#bbbbbb").moveTo(20, doc.y).lineTo(doc.page.width - 20, doc.y).stroke();

@@ -7,6 +7,7 @@ const path = require("path");
 
 exports.generarReporteMensual = async (req, res) => {
   try {
+    const { gym_id } = req.usuario || {};
     const añoActual = req.query.year ? parseInt(req.query.year, 10) : new Date().getFullYear();
 
     // === Clientes por día ===
@@ -94,28 +95,42 @@ exports.generarReporteMensual = async (req, res) => {
     // ===== Encabezado general =====
     doc.rect(0, 0, doc.page.width, 100).fill(headerColor);
 
-    // Logo circular
+    // Logo - intentar cargar si existe
     const logoPath = path.join(__dirname, '..', 'gimnasio-frontend', 'public', 'images', 'logo.jpg');
+    const fs = require('fs');
+    
     const logoSize = 80;
     const logoX = 50;
     const logoY = 10;
 
-    doc.save();
-    doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2).clip();
-    doc.image(logoPath, logoX, logoY, { width: logoSize, height: logoSize });
-    doc.restore();
+    // Solo dibujar logo si existe el archivo
+    if (fs.existsSync(logoPath)) {
+      try {
+        doc.save();
+        doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2).clip();
+        doc.image(logoPath, logoX, logoY, { width: logoSize, height: logoSize });
+        doc.restore();
 
-    // Borde del logo
-    doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2)
-       .lineWidth(2)
-       .strokeColor("#fff")
-       .stroke();
+        // Borde del logo
+        doc.circle(logoX + logoSize / 2, logoY + logoSize / 2, logoSize / 2)
+           .lineWidth(2)
+           .strokeColor("#fff")
+           .stroke();
+      } catch (err) {
+        console.log("Error al cargar logo, continuando sin logo:", err.message);
+      }
+    }
+
+    // Obtener nombre de la empresa
+    const Gym = require('../Modelos/Gimnasio');
+    const gym = gym_id ? await Gym.findById(gym_id).select('nombreEmpresa') : null;
+    const nombreEmpresa = gym?.nombreEmpresa || "GIMNASIO TERRONES";
 
     // Título centrado
     doc.fillColor("#FFFFFF")
        .fontSize(12)
        .font("Helvetica-Bold")
-       .text("REPORTE MENSUAL - GIMNASIO TERRONES", 0, 40, { align: "center" });
+       .text(`REPORTE MENSUAL - ${nombreEmpresa.toUpperCase()}`, 0, 40, { align: "center" });
 
     // Fecha arriba a la derecha
     doc.fontSize(10)

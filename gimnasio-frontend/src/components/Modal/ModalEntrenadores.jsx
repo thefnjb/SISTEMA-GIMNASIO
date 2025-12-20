@@ -241,7 +241,7 @@ const ModalEntrenadores = ({
       <Button
         onPress={onOpen}
         className="text-white transition-all"
-        style={{ backgroundColor: "#7a0f16" }}
+        style={{ backgroundColor: 'var(--color-botones)' }}
       >
         {triggerText}
       </Button>
@@ -270,7 +270,7 @@ const ModalEntrenadores = ({
             return (
               <div className="text-white bg-neutral-600 rounded-xl">
                 <ModalHeader>
-                  <div className="w-full text-3xl font-bold text-center text-red-500">
+                  <div className="w-full text-3xl font-bold text-center text-color-acentos">
                     {title}
                   </div>
                 </ModalHeader>
@@ -297,7 +297,7 @@ const ModalEntrenadores = ({
                         }}
                         className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
                           tipoDocumento === "DNI"
-                            ? "bg-red-600 ring-4 ring-red-400"
+                            ? "bg-color-botones ring-4 ring-color-acentos"
                             : "bg-gray-700 hover:bg-gray-600"
                         }`}
                       >
@@ -312,7 +312,7 @@ const ModalEntrenadores = ({
                         }}
                         className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
                           tipoDocumento === "CE"
-                            ? "bg-red-600 ring-4 ring-red-400"
+                            ? "bg-color-botones ring-4 ring-color-acentos"
                             : "bg-gray-700 hover:bg-gray-600"
                         }`}
                       >
@@ -336,7 +336,7 @@ const ModalEntrenadores = ({
                           }}
                           className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
                             origenNombre === 'reniec'
-                              ? "bg-red-600 ring-4 ring-red-400"
+                              ? "bg-color-botones ring-4 ring-color-acentos"
                               : "bg-gray-700 hover:bg-gray-600"
                           }`}
                         >
@@ -347,7 +347,7 @@ const ModalEntrenadores = ({
                           onClick={() => setOrigenNombre('manual')}
                           className={`flex-1 p-3 rounded-lg text-white transition-all duration-200 ${
                             origenNombre === 'manual'
-                              ? "bg-red-600 ring-4 ring-red-400"
+                              ? "bg-color-botones ring-4 ring-color-acentos"
                               : "bg-gray-700 hover:bg-gray-600"
                           }`}
                         >
@@ -465,7 +465,7 @@ const ModalEntrenadores = ({
                           autoFocus={false}
                           videoConstraints={{ width: 1280, height: 720, facingMode: "user" }}
                         />
-                        <Button onPress={capture} className="w-full text-white bg-red-600 hover:bg-red-700">
+                        <Button onPress={capture} className="w-full text-white" style={{ backgroundColor: 'var(--color-botones)' }}>
                           Capturar Foto
                         </Button>
                       </motion.div>
@@ -500,7 +500,8 @@ const ModalEntrenadores = ({
                     Cerrar
                   </Button>
                   <Button
-                    className="text-white bg-red-600 hover:bg-red-700 disabled:bg-gray-500"
+                    className="text-white disabled:bg-gray-500"
+                    style={{ backgroundColor: 'var(--color-botones)' }}
                     onPress={agregarEntrenador}
                     isDisabled={!fotoPerfil}
                   >

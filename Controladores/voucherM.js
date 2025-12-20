@@ -1,10 +1,11 @@
 const PDFDocument = require("pdfkit");
 const Miembro = require("../Modelos/Miembro");
 const Trabajador = require("../Modelos/Trabajador");
+const Gym = require("../Modelos/Gimnasio");
 
 const generarVoucherMiembro = async (req, res) => {
   try {
-    const { rol, id } = req.usuario;
+    const { rol, id, gym_id } = req.usuario;
     const { miembroId } = req.params;
 
     const miembro = await Miembro.findById(miembroId)
@@ -48,12 +49,16 @@ const generarVoucherMiembro = async (req, res) => {
       res.send(pdfData);
     });
 
+    // Obtener nombre de la empresa
+    const gym = await Gym.findById(gym_id).select('nombreEmpresa');
+    const nombreEmpresa = gym?.nombreEmpresa || "GYM TERRONES";
+
     // Fondo y borde
     doc.rect(0, 0, doc.page.width, doc.page.height).fill("#ffffff");
     doc.strokeColor("#cccccc").lineWidth(1).rect(10, 10, doc.page.width - 20, doc.page.height - 20).stroke();
 
     // Encabezado
-    doc.fontSize(14).fillColor("#d32f2f").text("GYM TERRONES", { align: "center" });
+    doc.fontSize(14).fillColor("#d32f2f").text(nombreEmpresa.toUpperCase(), { align: "center" });
     doc.moveDown(0.3);
     doc.strokeColor("#bbbbbb").moveTo(20, doc.y).lineTo(doc.page.width - 20, doc.y).stroke();
     doc.moveDown(0.5);

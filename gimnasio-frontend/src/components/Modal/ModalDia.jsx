@@ -192,8 +192,7 @@ const ModalDia = ({
     <>
       <Button
         onPress={onOpen}
-        className="text-white transition-all"
-        style={{ backgroundColor: "#7a0f16" }}
+        className="text-white transition-all bg-color-botones"
       >
         {triggerText}
       </Button>
@@ -227,7 +226,7 @@ const ModalDia = ({
           {(onClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500 px-2">
+                <div className="w-full text-lg xs:text-xl sm:text-2xl md:text-3xl font-bold text-center text-color-acentos px-2">
                   {title}
                 </div>
               </ModalHeader>

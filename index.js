@@ -7,7 +7,9 @@ require ('dotenv').config();
 const PORT = process.env.PORT;
 
 
-app.use(express.json());
+// Aumentar el límite para permitir imágenes en base64
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cookiesParser());
 app.use(cors({
     origin: 'http://localhost:3000',
@@ -16,6 +18,7 @@ app.use(cors({
 require('./DBconfig/config');
 
 const AuthController = require('./Routes/auth');
+const GymRoutes = require('./Routes/gym');
 const MembresiaRoutes = require('./Routes/membresias');
 const MiembrosRoutes = require('./Routes/miembros');
 const EntrenadoresRoutes = require('./Routes/entrenadores');
@@ -32,6 +35,7 @@ const ReniecRoutes = require("./Routes/reniec");
 
 
 app.use('/auth', AuthController);
+app.use('/gym', GymRoutes);
 app.use('/plans', MembresiaRoutes);
 app.use('/members', MiembrosRoutes);
 app.use('/trainers', EntrenadoresRoutes);

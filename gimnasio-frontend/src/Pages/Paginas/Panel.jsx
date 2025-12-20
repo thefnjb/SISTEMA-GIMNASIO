@@ -11,13 +11,17 @@ import ModalEntrenadores from "../../components/Modal/ModalEntrenadores";
 import Membresia from "../../components/Membresia/Membresia";
 import ModalviewMembresia from "../../components/Membresia/ModalviewMembresia";
 import ModalVerEntrenadores from "../../components/Modal/ModalVerEntrenadores";
+import ConfiguracionEmpresa from "../../components/Configuracion/ConfiguracionEmpresa";
 import { Button } from "@heroui/react";
 import TablaClientesDia from "../../components/Tabla/TablaCldia/ClientesPorDia";
 import RemoveRedEyeRoundedIcon from '@mui/icons-material/RemoveRedEyeRounded';
 import AddCircleOutlineRoundedIcon from '@mui/icons-material/AddCircleOutlineRounded';
 import GetAppRoundedIcon from '@mui/icons-material/GetAppRounded';
+import { useColoresSistema } from '../../hooks/useColoresSistema';
+import SkeletonLoader from '../../components/Skeleton/SkeletonLoader';
 
 function Panel() {
+  const coloresCargados = useColoresSistema();
   const [active, setActive] = useState("INICIO");
   const [showAgregar, setShowAgregar] = useState(false);
   const [showVer, setShowVer] = useState(false);
@@ -40,7 +44,7 @@ function Panel() {
           <div className="p-2 xs:p-3 sm:p-4 md:p-6">
             <div className="flex justify-end mb-3 xs:mb-4 sm:mb-6">
               <Button
-                className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 text-xs xs:text-sm sm:text-base font-bold text-white bg-red-800 rounded shadow hover:bg-red-800"
+                className="flex items-center gap-1.5 xs:gap-2 sm:gap-3 px-2 xs:px-3 sm:px-4 py-1.5 xs:py-2 text-xs xs:text-sm sm:text-base font-bold text-white bg-color-botones rounded shadow"
               >
                 <span
                   onClick={(e) => {
@@ -69,14 +73,14 @@ function Panel() {
 
             {/* Cards para móvil/tablet */}
             <div className="flex flex-col gap-4 md:hidden">
-              <CustomCardMobile imageUrl="/images/suscripcion.png">
+              <CustomCardMobile title="Membresías" description="Inscribir clientes por membresías - Clientes que se inscriben con una suscripción">
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCardMobile>
 
-              <CustomCardMobile imageUrl="/images/clientespordiaa.png">
+              <CustomCardMobile title="Clientes por Día" description="Registra clientes que entrenan por día">
                 <ModalDia
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   title="Clientes por Dia"
@@ -84,7 +88,7 @@ function Panel() {
                 />
               </CustomCardMobile>
 
-              <CustomCardMobile imageUrl="/images/entrenadores.PNG">
+              <CustomCardMobile title="Entrenadores" description="Administra los entrenadores del gimnasio">
                 <div className="flex gap-4">
                   <ModalEntrenadores
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -102,14 +106,14 @@ function Panel() {
 
             {/* Cards para desktop */}
             <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <CustomCard imageUrl="/images/suscripcion.png">
+              <CustomCard title="Membresías" description="Inscribir clientes por membresías - Clientes que se inscriben con una suscripción">
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCard>
 
-              <CustomCard imageUrl="/images/clientespordiaa.png">
+              <CustomCard title="Clientes por Día" description="Registra clientes que entrenan por día">
                 <div className="flex gap-10">
                   <ModalDia
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -119,7 +123,7 @@ function Panel() {
                 </div>
               </CustomCard>
 
-              <CustomCard imageUrl="/images/entrenadores.PNG">
+              <CustomCard title="Entrenadores" description="Administra los entrenadores del gimnasio">
                 <div className="flex gap-10">
                   <ModalEntrenadores
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -162,10 +166,18 @@ function Panel() {
           </div>
         );
 
+      case "CONFIGURACIÓN":
+        return <ConfiguracionEmpresa />;
+
       default:
         return null;
     }
   };
+
+  // Mostrar skeleton mientras se cargan los colores
+  if (!coloresCargados) {
+    return <SkeletonLoader />;
+  }
 
   return (
     <div className="relative w-full min-h-screen bg-white">
