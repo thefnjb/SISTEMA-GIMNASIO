@@ -4,6 +4,12 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import SaveIcon from '@mui/icons-material/Save';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BusinessIcon from '@mui/icons-material/Business';
+import EmailIcon from '@mui/icons-material/Email';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import PaletteIcon from '@mui/icons-material/Palette';
+import InfoIcon from '@mui/icons-material/Info';
 // eslint-disable-next-line no-unused-vars
 import TableChartIcon from '@mui/icons-material/TableChart';
 // eslint-disable-next-line no-unused-vars
@@ -12,8 +18,6 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 // eslint-disable-next-line no-unused-vars
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
-// eslint-disable-next-line no-unused-vars
-import PaletteIcon from '@mui/icons-material/Palette';
 
 function ConfiguracionEmpresa() {
   const [cargando, setCargando] = useState(false);
@@ -30,7 +34,10 @@ function ConfiguracionEmpresa() {
     colorCards: '#ffffff',
     colorTablas: '#D72838',
     colorAcentos: '#D72838',
-    precioClientePorDia: 7
+    precioClientePorDia: 7,
+    precioTurnoManana: 80,
+    precioTurnoTarde: 100,
+    precioTurnoNoche: 120
   });
   const [plantillas, setPlantillas] = useState([]);
 
@@ -67,7 +74,10 @@ function ConfiguracionEmpresa() {
           colorCards: empresa.colorCards || '#ffffff',
           colorTablas: empresa.colorTablas || '#D72838',
           colorAcentos: empresa.colorAcentos || '#D72838',
-          precioClientePorDia: empresa.precioClientePorDia || 7
+          precioClientePorDia: empresa.precioClientePorDia || 7,
+          precioTurnoManana: empresa.precioTurnoManana || 80,
+          precioTurnoTarde: empresa.precioTurnoTarde || 100,
+          precioTurnoNoche: empresa.precioTurnoNoche || 120
         });
         setPreviewLogo(empresa.logoEmpresa || null);
       }
@@ -180,7 +190,10 @@ function ConfiguracionEmpresa() {
         logoEmpresa: datosEmpresa.logoEmpresa && datosEmpresa.logoEmpresa.startsWith('data:') 
           ? datosEmpresa.logoEmpresa 
           : null,
-        precioClientePorDia: parseFloat(datosEmpresa.precioClientePorDia) || 7
+        precioClientePorDia: parseFloat(datosEmpresa.precioClientePorDia) || 7,
+        precioTurnoManana: parseFloat(datosEmpresa.precioTurnoManana) || 80,
+        precioTurnoTarde: parseFloat(datosEmpresa.precioTurnoTarde) || 100,
+        precioTurnoNoche: parseFloat(datosEmpresa.precioTurnoNoche) || 120
       };
 
       const response = await api.put('/gym/datos-empresa', datosEnviar);
@@ -266,7 +279,7 @@ function ConfiguracionEmpresa() {
   }
 
   return (
-    <div className="w-full p-4 xs:p-6 sm:p-8 relative">
+    <div className="w-full p-4 xs:p-6 sm:p-8 lg:p-10 relative bg-gray-50 min-h-screen">
       {/* Overlay de carga completo */}
       {guardando && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[9999] flex items-center justify-center backdrop-blur-sm">
@@ -284,156 +297,334 @@ function ConfiguracionEmpresa() {
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="mb-6 flex items-center gap-3">
-          <SettingsIcon className="text-red-600" fontSize="large" />
-          <h1 className="text-2xl xs:text-3xl font-bold text-gray-800">
-            Configuración de Empresa
-          </h1>
+      <div className="max-w-6xl mx-auto">
+        {/* Header mejorado */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-2">
+            <div 
+              className="p-3 rounded-xl shadow-lg"
+              style={{ 
+                background: 'linear-gradient(135deg, var(--color-botones, #D72838) 0%, #DC2626 100%)'
+              }}
+            >
+              <SettingsIcon className="text-white" fontSize="large" />
+            </div>
+            <div>
+              <h1 className="text-3xl xs:text-4xl font-bold text-gray-800">
+                Configuración de Empresa
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">Gestiona la información y configuración de tu gimnasio</p>
+            </div>
+          </div>
         </div>
 
-        {/* Mensajes */}
+        {/* Mensajes mejorados */}
         {mensaje.texto && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
+            className={`mb-6 p-4 rounded-xl shadow-md flex items-center gap-3 ${
               mensaje.tipo === 'exito'
-                ? 'bg-green-100 text-green-800 border border-green-300'
-                : 'bg-red-100 text-red-800 border border-red-300'
+                ? 'bg-green-50 text-green-800 border-l-4 border-green-500'
+                : 'bg-red-50 text-red-800 border-l-4 border-red-500'
             }`}
           >
-            {mensaje.texto}
+            <InfoIcon className={mensaje.tipo === 'exito' ? 'text-green-600' : 'text-red-600'} />
+            <span className="font-medium">{mensaje.texto}</span>
           </div>
         )}
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-lg p-6 space-y-6">
-          {/* Logo de la empresa */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Logo de la Empresa
-            </label>
-            <div className="flex flex-col sm:flex-row gap-4 items-start">
-              {/* Preview del logo */}
-              <div className="relative">
-                {previewLogo ? (
-                  <div className="relative">
-                    <img
-                      src={previewLogo}
-                      alt="Logo de la empresa"
-                      className="w-32 h-32 xs:w-40 xs:h-40 object-contain border-2 border-gray-300 rounded-lg bg-gray-50 p-2"
-                    />
-                    <button
-                      type="button"
-                      onClick={eliminarLogo}
-                      className="absolute -top-2 -right-2 bg-color-botones text-white rounded-full p-1 transition-colors"
-                      title="Eliminar logo"
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </button>
+        {/* Formulario con diseño mejorado */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Sección 1: Información Básica */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <BusinessIcon className="text-color-botones" fontSize="large" />
+              <h2 className="text-xl font-bold text-gray-800">Información Básica</h2>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Logo de la empresa */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Logo de la Empresa
+                </label>
+                <div className="flex flex-col sm:flex-row gap-6 items-start">
+                  {/* Preview del logo mejorado */}
+                  <div className="relative group">
+                    {previewLogo ? (
+                      <div className="relative">
+                        <div className="w-40 h-40 xs:w-48 xs:h-48 rounded-xl overflow-hidden border-2 border-gray-200 shadow-md bg-white p-3">
+                          <img
+                            src={previewLogo}
+                            alt="Logo de la empresa"
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={eliminarLogo}
+                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all transform hover:scale-110"
+                          title="Eliminar logo"
+                        >
+                          <DeleteIcon fontSize="small" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-40 h-40 xs:w-48 xs:h-48 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 flex flex-col items-center justify-center gap-2 hover:border-color-botones transition-colors">
+                        <PhotoCameraIcon className="text-gray-400" fontSize="large" />
+                        <span className="text-xs text-gray-500">Sin logo</span>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="w-32 h-32 xs:w-40 xs:h-40 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <PhotoCameraIcon className="text-gray-400" fontSize="large" />
+
+                  {/* Botón para subir imagen mejorado */}
+                  <div className="flex-1 flex flex-col justify-center">
+                    <label className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-color-botones hover:bg-color-botones/90 text-white rounded-lg cursor-pointer transition-all shadow-md hover:shadow-lg transform hover:scale-105">
+                      <PhotoCameraIcon />
+                      <span className="font-medium">Seleccionar Imagen</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <p className="text-xs text-blue-800">
+                        <strong>Formatos aceptados:</strong> JPG, PNG, GIF<br />
+                        <strong>Tamaño máximo:</strong> 5MB<br />
+                        <strong>Recomendado:</strong> Imagen cuadrada para mejor visualización
+                      </p>
+                    </div>
                   </div>
-                )}
+                </div>
               </div>
 
-              {/* Botón para subir imagen */}
-              <div className="flex-1">
-                <label className="inline-flex items-center px-4 py-2 bg-color-botones text-white rounded-lg cursor-pointer transition-colors">
-                  <PhotoCameraIcon className="mr-2" />
-                  <span>Seleccionar Imagen</span>
+              {/* Nombre y Email en grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Nombre de la empresa */}
+                <div>
+                  <label htmlFor="nombreEmpresa" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <BusinessIcon className="text-color-botones" fontSize="small" />
+                    Nombre de la Empresa *
+                  </label>
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    className="hidden"
+                    type="text"
+                    id="nombreEmpresa"
+                    name="nombreEmpresa"
+                    value={datosEmpresa.nombreEmpresa}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos transition-all"
+                    placeholder="Ej: Gimnasio Terrones"
+                    required
                   />
-                </label>
-                <p className="mt-2 text-xs text-gray-500">
-                  Formatos: JPG, PNG, GIF. Tamaño máximo: 5MB
-                </p>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                    <EmailIcon className="text-color-botones" fontSize="small" />
+                    Email de la Empresa *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={datosEmpresa.email}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos transition-all"
+                    placeholder="empresa@gmail.com"
+                    required
+                  />
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Nombre de la empresa */}
-          <div>
-            <label htmlFor="nombreEmpresa" className="block text-sm font-semibold text-gray-700 mb-2">
-              Nombre de la Empresa *
-            </label>
-            <input
-              type="text"
-              id="nombreEmpresa"
-              name="nombreEmpresa"
-              value={datosEmpresa.nombreEmpresa}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-transparent"
-              placeholder="Ej: Gimnasio Terrones"
-              required
-            />
+          {/* Sección 2: Configuración de Precios */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <AttachMoneyIcon className="text-color-botones" fontSize="large" />
+              <h2 className="text-xl font-bold text-gray-800">Configuración de Precios</h2>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Precio Cliente por Día */}
+              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <label htmlFor="precioClientePorDia" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <AttachMoneyIcon className="text-color-botones" fontSize="small" />
+                  Precio Cliente por Día (Soles) *
+                </label>
+                <div className="flex items-center gap-3">
+                  <span className="text-xl font-bold text-gray-600">S/</span>
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      id="precioClientePorDia"
+                      name="precioClientePorDia"
+                      value={datosEmpresa.precioClientePorDia}
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value);
+                        if (!isNaN(value) && value >= 0) {
+                          setDatosEmpresa(prev => ({
+                            ...prev,
+                            precioClientePorDia: value
+                          }));
+                        } else if (e.target.value === '') {
+                          setDatosEmpresa(prev => ({
+                            ...prev,
+                            precioClientePorDia: 0
+                          }));
+                        }
+                      }}
+                      min="0"
+                      step="0.01"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos transition-all"
+                      placeholder="7.00"
+                      required
+                    />
+                  </div>
+                </div>
+                <p className="mt-2 text-xs text-gray-600 flex items-center gap-1">
+                  <InfoIcon fontSize="small" />
+                  Este precio se aplicará automáticamente al registrar nuevos clientes por día
+                </p>
+              </div>
+
+              {/* Precios de Turnos */}
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <AccessTimeIcon className="text-color-botones" />
+                  <h3 className="text-lg font-bold text-gray-800">Precios de Turnos para Membresías</h3>
+                </div>
+                <p className="text-sm text-gray-600 mb-4 pl-8">
+                  Configura los precios por defecto para cada turno. Estos precios se aplicarán automáticamente al crear nuevas membresías.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Precio Turno Mañana */}
+                  <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 hover:shadow-md transition-all">
+                    <label htmlFor="precioTurnoManana" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <span className="text-lg">🌅</span>
+                      Turno Mañana *
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 font-medium">S/</span>
+                      <input
+                        type="number"
+                        id="precioTurnoManana"
+                        name="precioTurnoManana"
+                        value={datosEmpresa.precioTurnoManana}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value >= 0) {
+                            setDatosEmpresa(prev => ({
+                              ...prev,
+                              precioTurnoManana: value
+                            }));
+                          } else if (e.target.value === '') {
+                            setDatosEmpresa(prev => ({
+                              ...prev,
+                              precioTurnoManana: 0
+                            }));
+                          }
+                        }}
+                        min="0"
+                        step="0.01"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all bg-white"
+                        placeholder="80.00"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Precio Turno Tarde */}
+                  <div className="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200 hover:shadow-md transition-all">
+                    <label htmlFor="precioTurnoTarde" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <span className="text-lg">🌆</span>
+                      Turno Tarde *
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 font-medium">S/</span>
+                      <input
+                        type="number"
+                        id="precioTurnoTarde"
+                        name="precioTurnoTarde"
+                        value={datosEmpresa.precioTurnoTarde}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value >= 0) {
+                            setDatosEmpresa(prev => ({
+                              ...prev,
+                              precioTurnoTarde: value
+                            }));
+                          } else if (e.target.value === '') {
+                            setDatosEmpresa(prev => ({
+                              ...prev,
+                              precioTurnoTarde: 0
+                            }));
+                          }
+                        }}
+                        min="0"
+                        step="0.01"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all bg-white"
+                        placeholder="100.00"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Precio Turno Noche */}
+                  <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 hover:shadow-md transition-all">
+                    <label htmlFor="precioTurnoNoche" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                      <span className="text-lg">🌙</span>
+                      Turno Noche *
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 font-medium">S/</span>
+                      <input
+                        type="number"
+                        id="precioTurnoNoche"
+                        name="precioTurnoNoche"
+                        value={datosEmpresa.precioTurnoNoche}
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value);
+                          if (!isNaN(value) && value >= 0) {
+                            setDatosEmpresa(prev => ({
+                              ...prev,
+                              precioTurnoNoche: value
+                            }));
+                          } else if (e.target.value === '') {
+                            setDatosEmpresa(prev => ({
+                              ...prev,
+                              precioTurnoNoche: 0
+                            }));
+                          }
+                        }}
+                        min="0"
+                        step="0.01"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-all bg-white"
+                        placeholder="120.00"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Email */}
-          <div>
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-              Email de la Empresa *
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={datosEmpresa.email}
-              onChange={handleInputChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-transparent"
-              placeholder="empresa@gmail.com"
-              required
-            />
-          </div>
-
-          {/* Precio Cliente por Día */}
-          <div>
-            <label htmlFor="precioClientePorDia" className="block text-sm font-semibold text-gray-700 mb-2">
-              Precio Cliente por Día (Soles) *
-            </label>
-            <input
-              type="number"
-              id="precioClientePorDia"
-              name="precioClientePorDia"
-              value={datosEmpresa.precioClientePorDia}
-              onChange={(e) => {
-                const value = parseFloat(e.target.value);
-                if (!isNaN(value) && value >= 0) {
-                  setDatosEmpresa(prev => ({
-                    ...prev,
-                    precioClientePorDia: value
-                  }));
-                } else if (e.target.value === '') {
-                  setDatosEmpresa(prev => ({
-                    ...prev,
-                    precioClientePorDia: 0
-                  }));
-                }
-              }}
-              min="0"
-              step="0.01"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-transparent"
-              placeholder="7.00"
-              required
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Este precio se aplicará automáticamente al registrar nuevos clientes por día
-            </p>
-          </div>
-
-          {/* Plantillas de colores */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold text-gray-800">🎨 Plantilla de Colores</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Selecciona una plantilla de colores predefinida para personalizar el aspecto de tu sistema
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Sección 3: Personalización Visual */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+              <PaletteIcon className="text-color-botones" fontSize="large" />
+              <h2 className="text-xl font-bold text-gray-800">Personalización Visual</h2>
+            </div>
+            
+            <div className="space-y-4">
+              <p className="text-sm text-gray-600 mb-6 pl-2">
+                Selecciona una plantilla de colores predefinida para personalizar el aspecto de tu sistema. Los colores se aplicarán a botones, tablas y elementos principales de la interfaz.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {plantillas.map((plantilla) => (
                 <div
                   key={plantilla.id}
@@ -502,38 +693,33 @@ function ConfiguracionEmpresa() {
               ))}
             </div>
           </div>
+          </div>
 
-          {/* Botón de guardar */}
-          <div className="flex justify-end pt-4">
-            <button
-              type="submit"
-              disabled={guardando}
-              className={`flex items-center gap-2 px-6 py-3 bg-color-botones text-white rounded-lg font-semibold transition-colors ${
-                guardando ? 'opacity-70 cursor-not-allowed' : ''
-              }`}
-            >
-              {guardando ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Guardando...</span>
-                </>
-              ) : (
-                <>
-                  <SaveIcon />
-                  <span>Guardar Cambios</span>
-                </>
-              )}
-            </button>
+          {/* Botón de guardar mejorado */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+            <div className="flex items-center justify-center">
+              <button
+                type="submit"
+                disabled={guardando}
+                className={`flex items-center gap-2 px-8 py-3 bg-color-botones hover:bg-color-botones/90 text-white rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                  guardando ? 'opacity-70 cursor-not-allowed' : ''
+                }`}
+              >
+                {guardando ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Guardando...</span>
+                  </>
+                ) : (
+                  <>
+                    <SaveIcon />
+                    <span>Guardar Cambios</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
-
-        {/* Información adicional */}
-        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-800">
-            <strong>Nota:</strong> Los cambios en el nombre y logo de la empresa se reflejarán en la pantalla de inicio de sesión. 
-            El color del sistema se aplicará a los botones y elementos principales de la interfaz.
-          </p>
-        </div>
       </div>
     </div>
   );

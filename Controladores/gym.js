@@ -188,7 +188,10 @@ exports.obtenerDatosEmpresa = async (req, res) => {
         colorTablas: gym.colorTablas || '#D72838',
         colorAcentos: gym.colorAcentos || '#D72838',
         plantillaColor: gym.plantillaColor || 'porDefecto',
-        precioClientePorDia: gym.precioClientePorDia || 7
+        precioClientePorDia: gym.precioClientePorDia || 7,
+        precioTurnoManana: gym.precioTurnoManana || 80,
+        precioTurnoTarde: gym.precioTurnoTarde || 100,
+        precioTurnoNoche: gym.precioTurnoNoche || 120
       }
     });
   } catch (err) {
@@ -201,7 +204,7 @@ exports.obtenerDatosEmpresa = async (req, res) => {
 exports.actualizarDatosEmpresa = async (req, res) => {
   try {
     const gymId = req.usuario.gym_id;
-    const { nombreEmpresa, email, logoEmpresa, plantillaColor, precioClientePorDia } = req.body;
+    const { nombreEmpresa, email, logoEmpresa, plantillaColor, precioClientePorDia, precioTurnoManana, precioTurnoTarde, precioTurnoNoche } = req.body;
 
     const gym = await Gym.findById(gymId);
     
@@ -277,6 +280,29 @@ exports.actualizarDatosEmpresa = async (req, res) => {
         return res.status(400).json({ error: "El precio debe ser un número válido mayor o igual a 0" });
       }
       gym.precioClientePorDia = precio;
+    }
+
+    // Actualizar precios de turnos si se proporcionan
+    if (precioTurnoManana !== undefined) {
+      const precio = parseFloat(precioTurnoManana);
+      if (isNaN(precio) || precio < 0) {
+        return res.status(400).json({ error: "El precio del turno mañana debe ser un número válido mayor o igual a 0" });
+      }
+      gym.precioTurnoManana = precio;
+    }
+    if (precioTurnoTarde !== undefined) {
+      const precio = parseFloat(precioTurnoTarde);
+      if (isNaN(precio) || precio < 0) {
+        return res.status(400).json({ error: "El precio del turno tarde debe ser un número válido mayor o igual a 0" });
+      }
+      gym.precioTurnoTarde = precio;
+    }
+    if (precioTurnoNoche !== undefined) {
+      const precio = parseFloat(precioTurnoNoche);
+      if (isNaN(precio) || precio < 0) {
+        return res.status(400).json({ error: "El precio del turno noche debe ser un número válido mayor o igual a 0" });
+      }
+      gym.precioTurnoNoche = precio;
     }
 
     await gym.save();

@@ -10,27 +10,34 @@ const generarExcelMiembros = async (req, res) => {
         .populate("entrenador")
         .lean();
 
-    // Calcular creadorNombre para cada miembro (Administrador o nombre del trabajador)
-    const miembros = await Promise.all(
-      miembrosRaw.map(async (m) => {
-        let creadorNombre = "Desconocido";
-        try {
-          if (m.creadorId) {
-            if (m.creadoPor === "admin") {
-              creadorNombre = "Administrador";
-            } else if (m.creadoPor === "trabajador") {
-              const creador = await Trabajador.findById(m.creadorId).select("nombre").lean();
-              if (creador && creador.nombre) creadorNombre = creador.nombre;
-            }
-          }
-        } catch (err) {
-          // Si hay un error buscando el trabajador, dejamos 'Desconocido'
-          console.error("Error obteniendo creadorNombre:", err);
-        }
+    // Optimización: Obtener todos los trabajadores de una vez
+    const trabajadorIds = miembrosRaw
+      .filter(m => m.creadoPor === "trabajador" && m.creadorId)
+      .map(m => m.creadorId);
+    
+    const trabajadoresMap = new Map();
+    if (trabajadorIds.length > 0) {
+      const trabajadores = await Trabajador.find({ _id: { $in: trabajadorIds } })
+        .select("_id nombre")
+        .lean();
+      trabajadores.forEach(t => {
+        trabajadoresMap.set(t._id.toString(), t.nombre);
+      });
+    }
 
-        return { ...m, creadorNombre };
-      })
-    );
+    // Calcular creadorNombre para cada miembro (Administrador o nombre del trabajador)
+    const miembros = miembrosRaw.map((m) => {
+      let creadorNombre = "Desconocido";
+      if (m.creadorId) {
+        if (m.creadoPor === "admin") {
+          creadorNombre = "Administrador";
+        } else if (m.creadoPor === "trabajador") {
+          const nombreTrabajador = trabajadoresMap.get(m.creadorId.toString());
+          if (nombreTrabajador) creadorNombre = nombreTrabajador;
+        }
+      }
+      return { ...m, creadorNombre };
+    });
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Miembros");

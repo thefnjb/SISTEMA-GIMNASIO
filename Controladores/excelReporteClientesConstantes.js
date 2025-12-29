@@ -89,20 +89,33 @@ exports.generarReporteClientesConstantesExcel = async (req, res) => {
       .sort({ fecha: -1, createdAt: -1 })
       .lean();
 
+    // Optimización: Obtener todos los trabajadores de una vez
+    const trabajadorIds = clientesDocs
+      .filter(c => c.creadoPor === "trabajador" && c.creadorId)
+      .map(c => c.creadorId);
+    
+    const trabajadoresMap = new Map();
+    if (trabajadorIds.length > 0) {
+      const trabajadores = await Trabajador.find({ _id: { $in: trabajadorIds } })
+        .select("_id nombre")
+        .lean();
+      trabajadores.forEach(t => {
+        trabajadoresMap.set(t._id.toString(), t.nombre);
+      });
+    }
+
     // Agregar nombre del creador
-    const clientes = await Promise.all(
-      clientesDocs.map(async (cliente) => {
-        if (cliente.creadoPor === "admin") {
-          cliente.creadorNombre = "Administrador";
-        } else if (cliente.creadoPor === "trabajador" && cliente.creadorId) {
-          const trabajador = await Trabajador.findById(cliente.creadorId).select("nombre").lean();
-          cliente.creadorNombre = trabajador ? trabajador.nombre : "Trabajador desconocido";
-        } else {
-          cliente.creadorNombre = "Desconocido";
-        }
-        return cliente;
-      })
-    );
+    const clientes = clientesDocs.map((cliente) => {
+      if (cliente.creadoPor === "admin") {
+        cliente.creadorNombre = "Administrador";
+      } else if (cliente.creadoPor === "trabajador" && cliente.creadorId) {
+        const nombreTrabajador = trabajadoresMap.get(cliente.creadorId.toString());
+        cliente.creadorNombre = nombreTrabajador || "Trabajador desconocido";
+      } else {
+        cliente.creadorNombre = "Desconocido";
+      }
+      return cliente;
+    });
 
     // Agrupar clientes
     const grupos = agruparClientes(clientes);

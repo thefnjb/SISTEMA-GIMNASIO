@@ -15,25 +15,43 @@ import {
 import api from "../../utils/axiosInstance";
 import { useColoresSistema } from "../../hooks/useColoresSistema";
 
-
-const preciosPorTurno = {
-  mañana: 80,
-  tarde: 100,
-  noche: 120,
-};
-
 const Membresia = ({ onClose }) => {
   const { isOpen, onOpenChange } = useDisclosure({ defaultOpen: true });
   const [duracion, setDuracion] = useState("");
   const [precio, setPrecio] = useState("");
   const [turno, setTurno] = useState("");
   const [loading, setLoading] = useState(false);
+  const [preciosPorTurno, setPreciosPorTurno] = useState({
+    mañana: 80,
+    tarde: 100,
+    noche: 120,
+  });
 
   // 🚨 Estados para alertas
   const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
   
   // Cargar colores del sistema
   useColoresSistema();
+
+  // Cargar precios de turnos desde la configuración
+  useEffect(() => {
+    const cargarPreciosTurnos = async () => {
+      try {
+        const response = await api.get('/gym/datos-empresa');
+        if (response.data.success && response.data.empresa) {
+          setPreciosPorTurno({
+            mañana: response.data.empresa.precioTurnoManana || 80,
+            tarde: response.data.empresa.precioTurnoTarde || 100,
+            noche: response.data.empresa.precioTurnoNoche || 120,
+          });
+        }
+      } catch (error) {
+        console.error('Error al cargar precios de turnos:', error);
+        // Mantener valores por defecto si hay error
+      }
+    };
+    cargarPreciosTurnos();
+  }, []);
 
   useEffect(() => {
     if (!isOpen && onClose) onClose();
@@ -43,7 +61,7 @@ const Membresia = ({ onClose }) => {
     if (turno && preciosPorTurno[turno]) {
       setPrecio(preciosPorTurno[turno].toString());
     }
-  }, [turno]);
+  }, [turno, preciosPorTurno]);
 
   const mostrarAlertaInterna = (type, title, message) => {
     setAlertaInterna({ show: true, type, title, message });
@@ -164,9 +182,9 @@ const Membresia = ({ onClose }) => {
                   className="text-black"
                   isRequired
                 >
-                  <SelectItem key="mañana" value="mañana">Mañana - S/80</SelectItem>
-                  <SelectItem key="tarde" value="tarde">Tarde - S/100</SelectItem>
-                  <SelectItem key="noche" value="noche">Noche - S/120</SelectItem>
+                  <SelectItem key="mañana" value="mañana">Mañana - S/{preciosPorTurno.mañana}</SelectItem>
+                  <SelectItem key="tarde" value="tarde">Tarde - S/{preciosPorTurno.tarde}</SelectItem>
+                  <SelectItem key="noche" value="noche">Noche - S/{preciosPorTurno.noche}</SelectItem>
                 </Select>
 
                 <Input

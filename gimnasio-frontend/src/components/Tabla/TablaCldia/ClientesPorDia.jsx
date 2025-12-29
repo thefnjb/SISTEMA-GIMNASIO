@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Pagination,
   Button,
-  CircularProgress,
   Alert,
   Modal,
   ModalContent,
@@ -10,6 +9,7 @@ import {
   ModalBody,
   ModalFooter,
 } from "@heroui/react";
+import SkeletonCard from "../../Skeleton/SkeletonCard";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
@@ -313,9 +313,7 @@ export default function TablaClientesHoy({ refresh }) {
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-64 bg-white rounded-xl">
-          <CircularProgress aria-label="Cargando..." size="lg" color="default" />
-        </div>
+        <SkeletonCard count={8} />
       ) : sortedItems.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
           <p className="text-gray-500 text-sm">Inscriba los Clientes de hoy</p>
@@ -470,7 +468,7 @@ export default function TablaClientesHoy({ refresh }) {
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4">
         <div className="text-base sm:text-lg font-bold text-black">
-          Total Recaudado Hoy: <span className="text-red-600">S/ {totalMontoHoy.toFixed(2)}</span>
+          Total Recaudado Hoy: <span className="text-color-acentos font-bold">S/ {totalMontoHoy.toFixed(2)}</span>
         </div>
         <ReporteClientesDia />
       </div>

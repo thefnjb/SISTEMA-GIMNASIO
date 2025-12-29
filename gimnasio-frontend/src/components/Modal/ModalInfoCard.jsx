@@ -21,7 +21,12 @@ const ModalInfoCard = ({ isOpen, onClose, title, description }) => {
       <ModalContent>
         <div className="px-6 pt-6 pb-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-color-botones to-red-600 shadow-lg">
+            <div 
+              className="p-2 rounded-lg shadow-lg"
+              style={{ 
+                background: 'linear-gradient(135deg, var(--color-botones, #D72838) 0%, #DC2626 100%)'
+              }}
+            >
               <AssignmentLateIcon sx={{ fontSize: 28, color: 'white' }} />
             </div>
             <h2 className="text-2xl font-bold text-gray-800">

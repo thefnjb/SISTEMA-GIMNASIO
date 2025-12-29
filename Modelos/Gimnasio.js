@@ -60,6 +60,21 @@ const gymSchema = new mongoose.Schema({
         type:Number,
         default: 7, // Precio por defecto para clientes por día
         min: 0
+    },
+    precioTurnoManana:{
+        type:Number,
+        default: 80, // Precio por defecto para turno mañana
+        min: 0
+    },
+    precioTurnoTarde:{
+        type:Number,
+        default: 100, // Precio por defecto para turno tarde
+        min: 0
+    },
+    precioTurnoNoche:{
+        type:Number,
+        default: 120, // Precio por defecto para turno noche
+        min: 0
     }
 },{ timestamps: true });
 

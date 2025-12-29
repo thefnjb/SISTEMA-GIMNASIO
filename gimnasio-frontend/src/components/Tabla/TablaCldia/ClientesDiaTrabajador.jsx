@@ -2,7 +2,6 @@ import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   Pagination,
   Button,
-  CircularProgress,
   Alert,
   Modal,
   ModalContent,
@@ -11,6 +10,7 @@ import {
   ModalFooter,
   Chip,
 } from "@heroui/react";
+import SkeletonCard from "../../Skeleton/SkeletonCard";
 import EditIcon from "@mui/icons-material/Edit";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
@@ -261,9 +261,7 @@ export default function ClientesDiaTrabajador({ refresh }) {
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-64 bg-white rounded-xl">
-          <CircularProgress aria-label="Cargando..." size="lg" color="default" />
-        </div>
+        <SkeletonCard count={8} />
       ) : sortedItems.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
           <p className="text-gray-500 text-sm">Inscriba los Clientes de hoy</p>

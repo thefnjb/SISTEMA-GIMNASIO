@@ -1,36 +1,58 @@
 import React from 'react';
 
 const SkeletonLoader = () => {
+  const colorSistema = typeof window !== 'undefined' 
+    ? getComputedStyle(document.documentElement).getPropertyValue('--color-sistema').trim() || '#D72838'
+    : '#D72838';
+
   return (
     <div className="fixed inset-0 z-50 bg-gray-100 overflow-hidden">
       <div className="flex h-screen">
         {/* Skeleton del Sidebar */}
         <div 
-          className="w-64 h-full flex flex-col items-center p-4 text-white shadow-2xl"
+          className="w-full max-w-72 h-full flex flex-col text-white shadow-2xl overflow-hidden"
           style={{ 
-            background: `linear-gradient(to bottom, var(--color-sistema, #D72838) 0%, #2E2E2E 40%, #1B1B1B 80%, #000 100%)` 
+            background: `linear-gradient(to bottom, ${colorSistema} 0%, #1a1a1a 50%, #0a0a0a 100%)` 
           }}
         >
-          {/* Nombre de empresa */}
-          <div className="w-full mb-4 text-center">
-            <div className="h-6 bg-white bg-opacity-20 rounded animate-pulse mb-2"></div>
+          {/* Header con logo */}
+          <div className="w-full p-4 md:p-6 pb-4 border-b border-white/10 flex-shrink-0">
+            <div className="flex flex-col items-center gap-3">
+              {/* Logo skeleton */}
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl bg-white/20 animate-pulse"></div>
+              {/* Nombre de empresa skeleton */}
+              <div className="h-5 w-32 bg-white/20 rounded animate-pulse"></div>
+            </div>
           </div>
           
-          {/* Avatar */}
-          <div className="mb-4">
-            <div className="w-20 h-20 bg-white bg-opacity-20 rounded-full animate-pulse"></div>
+          {/* Avatar skeleton */}
+          <div className="flex-shrink-0 px-4 pt-4 pb-2">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-6 w-24 bg-white/20 rounded animate-pulse"></div>
+            </div>
           </div>
+          
+          {/* Separador */}
+          <div className="w-full h-px bg-white/10 my-4"></div>
           
           {/* Botones del menú */}
-          <nav className="flex flex-col w-full gap-2 mt-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <nav className="flex flex-col w-full gap-2 px-3 md:px-4 flex-1">
+            {[1, 2, 3, 4, 5].map((i) => (
               <div 
                 key={i}
-                className="h-10 bg-white bg-opacity-20 rounded animate-pulse"
+                className="h-12 bg-white/10 rounded-xl animate-pulse border-l-4 border-transparent"
                 style={{ animationDelay: `${i * 0.1}s` }}
               ></div>
             ))}
           </nav>
+          
+          {/* Separador antes del logout */}
+          <div className="w-full h-px bg-white/10 my-2"></div>
+          
+          {/* Botón logout skeleton */}
+          <div className="flex-shrink-0 px-3 md:px-4 pb-4">
+            <div className="h-12 bg-white/10 rounded-lg animate-pulse border border-white/20"></div>
+          </div>
         </div>
         
         {/* Skeleton del Contenido Principal */}
