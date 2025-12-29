@@ -12,24 +12,28 @@ const getColorSistema = () => {
   return '#D72838';
 };
 
-const chartConfig = {
-  clientesPorDia: {
-    label: "Clientes por Día",
-    color: "#1f2937", // Negro/gris oscuro degradado
-  },
-  clientesPorMensualidad: {
-    label: "Clientes Mensualidad",
-    color: getColorSistema(), // Color del sistema
-  },
-}
+const AreaChartComponent = ({ data, colorSistema }) => {
+  // Crear chartConfig dinámicamente con el color actual (ANTES del early return)
+  const chartConfig = useMemo(() => ({
+    clientesPorDia: {
+      label: "Clientes por Día",
+      color: "#1f2937", // Negro/gris oscuro degradado
+    },
+    clientesPorMensualidad: {
+      label: "Clientes Mensualidad",
+      color: colorSistema || getColorSistema(),
+    },
+  }), [colorSistema])
 
-const AreaChartComponent = ({ data }) => {
   if (!data.length) return null
 
   const formatXAxisLabel = (tickItem) => {
     const date = new Date(tickItem)
     return date.toLocaleDateString("es-ES", { month: "short", timeZone: "UTC" })
   }
+
+  // Crear ID único para el gradiente basado en el color
+  const gradientId = `colorMensualidad-${chartConfig.clientesPorMensualidad.color.replace('#', '')}`
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -43,7 +47,7 @@ const AreaChartComponent = ({ data }) => {
         }}
       >
         <defs>
-          <linearGradient id="colorMensualidad" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="5%" stopColor={chartConfig.clientesPorMensualidad.color} stopOpacity={0.8} />
             <stop offset="95%" stopColor={chartConfig.clientesPorMensualidad.color} stopOpacity={0.1} />
           </linearGradient>
@@ -116,7 +120,7 @@ const AreaChartComponent = ({ data }) => {
           dataKey="clientesPorMensualidad"
           stackId="1"
           stroke={chartConfig.clientesPorMensualidad.color}
-          fill="url(#colorMensualidad)"
+          fill={`url(#${gradientId})`}
           name="Clientes Mensualidad"
         />
         <Area
@@ -139,6 +143,7 @@ export function ChartAreaInteractive() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [apiStatus, setApiStatus] = useState("checking")
+  const [colorSistema, setColorSistema] = useState(getColorSistema())
 
   const checkApiConnection = useCallback(async () => {
     try {
@@ -195,6 +200,38 @@ export function ChartAreaInteractive() {
   useEffect(() => {
     fetchData()
   }, [fetchData])
+
+  // Escuchar cambios en los colores del sistema
+  useEffect(() => {
+    const actualizarColor = () => {
+      const nuevoColor = getColorSistema()
+      setColorSistema(nuevoColor)
+    }
+
+    // Actualizar color inicial
+    actualizarColor()
+
+    // Escuchar eventos de cambio de color
+    const handleColoresActualizados = () => {
+      actualizarColor()
+    }
+
+    const handleRecargarColores = () => {
+      actualizarColor()
+    }
+
+    window.addEventListener('coloresActualizados', handleColoresActualizados)
+    window.addEventListener('recargarColores', handleRecargarColores)
+
+    // También verificar periódicamente por si cambia la variable CSS directamente
+    const interval = setInterval(actualizarColor, 500)
+
+    return () => {
+      window.removeEventListener('coloresActualizados', handleColoresActualizados)
+      window.removeEventListener('recargarColores', handleRecargarColores)
+      clearInterval(interval)
+    }
+  }, [])
 
   const filteredData = useMemo(() => {
     if (data.length === 0) return []
@@ -295,7 +332,7 @@ export function ChartAreaInteractive() {
             </div>
           </div>
         ) : filteredData.length > 0 ? (
-          <AreaChartComponent data={filteredData} />
+          <AreaChartComponent data={filteredData} colorSistema={colorSistema} />
         ) : (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

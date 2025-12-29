@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   PieChart,
   Pie,
@@ -34,12 +34,28 @@ function ChartPieInteractive2() {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [precioClientePorDia, setPrecioClientePorDia] = useState(7);
 
   // 🔥 Años dinámicos (desde 2020 hasta el actual)
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 2019 }, (_, i) => 2020 + i);
 
-  const fetchData = async (month, year) => {
+  // Obtener precio configurado del gym
+  useEffect(() => {
+    const obtenerPrecio = async () => {
+      try {
+        const response = await api.get('/gym/datos-empresa');
+        if (response.data.success && response.data.empresa.precioClientePorDia) {
+          setPrecioClientePorDia(response.data.empresa.precioClientePorDia);
+        }
+      } catch (error) {
+        console.error('Error al obtener precio:', error);
+      }
+    };
+    obtenerPrecio();
+  }, []);
+
+  const fetchData = useCallback(async (month, year, precio) => {
     try {
       setLoading(true);
       const response = await api.get(`/report/comparativo?year=${year}`);
@@ -58,9 +74,8 @@ function ChartPieInteractive2() {
 
       const totalClientesPorDia = Number(registro.clientesPorDia) || 0;
 
-      // 💰 Precio fijo del día
-      const precioDia = 7;
-      const ganancia = totalClientesPorDia * precioDia;
+      // 💰 Precio configurado del día
+      const ganancia = totalClientesPorDia * precio;
 
       // Obtener color del sistema desde CSS variable
       const colorAcentos = getComputedStyle(document.documentElement).getPropertyValue('--color-acentos').trim() || '#D72838';
@@ -76,11 +91,11 @@ function ChartPieInteractive2() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchData(selectedMonth, selectedYear);
-  }, [selectedMonth, selectedYear]);
+    fetchData(selectedMonth, selectedYear, precioClientePorDia);
+  }, [selectedMonth, selectedYear, precioClientePorDia, fetchData]);
 
   return (
     <div className="rounded-lg shadow p-3 sm:p-4 md:p-6">

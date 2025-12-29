@@ -337,6 +337,32 @@ function dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, esPortada = tr
        lineGap: 5 // Espacio entre líneas si el texto se divide
      });
 
+  // Información adicional - posicionada arriba a la derecha, antes del subtítulo
+  if (esPortada) {
+    const fechaActual = formatDate(new Date(), "long");
+    const infoX = pageWidth - 40; // Margen derecho
+    const infoWidth = 150;
+    const infoY = 65; // Posición bajada un poco
+    
+    doc.fontSize(PDF_CONFIG.text.normal)
+       .font("Helvetica")
+       .fillColor(PDF_CONFIG.colors.white)
+       .text(`Fecha: ${fechaActual}`, infoX - infoWidth, infoY, { 
+         width: infoWidth, 
+         align: "right",
+         lineGap: 3
+       });
+
+    doc.fontSize(PDF_CONFIG.text.normal)
+       .font("Helvetica-Oblique")
+       .fillColor(PDF_CONFIG.colors.white)
+       .text(`Generado por: ${generadoPor}`, infoX - infoWidth, infoY + 15, { 
+         width: infoWidth, 
+         align: "right",
+         lineGap: 3
+       });
+  }
+
   // Subtítulo - más separado del título
   doc.fontSize(PDF_CONFIG.text.subtitle)
      .font("Helvetica")
@@ -347,36 +373,15 @@ function dibujarEncabezado(doc, pageWidth, generadoPor, logoPath, esPortada = tr
        lineGap: 3
      });
 
-  // Información adicional - mejor espaciado
-  const infoY = esPortada ? 105 : 95;
-  const infoX = pageWidth - 160;
-  const infoWidth = 140;
-  
-  if (esPortada) {
-    const fechaActual = formatDate(new Date(), "long");
+  // Para páginas secundarias
+  if (!esPortada) {
+    const infoX = pageWidth - 40;
+    const infoY = 95;
+    const infoWidth = 150;
     doc.fontSize(PDF_CONFIG.text.normal)
        .font("Helvetica")
        .fillColor(PDF_CONFIG.colors.white)
-       .text(`Fecha: ${fechaActual}`, infoX, infoY, { 
-         width: infoWidth, 
-         align: "right",
-         lineGap: 2
-       });
-
-    doc.fontSize(PDF_CONFIG.text.normal)
-       .font("Helvetica-Oblique")
-       .fillColor(PDF_CONFIG.colors.white)
-       .text(`Generado por: ${generadoPor}`, infoX, infoY + 18, { 
-         width: infoWidth, 
-         align: "right",
-         lineGap: 2
-       });
-  } else {
-    // Para páginas secundarias, mostrar número de página
-    doc.fontSize(PDF_CONFIG.text.normal)
-       .font("Helvetica")
-       .fillColor(PDF_CONFIG.colors.white)
-       .text(`Continuación...`, infoX, infoY, { 
+       .text(`Continuación...`, infoX - infoWidth, infoY, { 
          width: infoWidth, 
          align: "right" 
        });

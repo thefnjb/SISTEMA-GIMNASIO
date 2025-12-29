@@ -23,7 +23,6 @@ const AvatarGroup = () => {
 
 const Admin = () => {
   const [logoEmpresa, setLogoEmpresa] = useState("/images/logo.ico");
-  const [nombreEmpresa, setNombreEmpresa] = useState("");
 
   useEffect(() => {
     // Obtener datos de la empresa al montar el componente
@@ -38,10 +37,6 @@ const Admin = () => {
             if (typeof logo === 'string' && logo.length > 0) {
               setLogoEmpresa(logo);
             }
-          }
-          if (response.data.empresa.nombreEmpresa) {
-            setNombreEmpresa(response.data.empresa.nombreEmpresa);
-            console.log('Nombre de empresa establecido (Admin):', response.data.empresa.nombreEmpresa);
           }
         }
       } catch (error) {
@@ -65,44 +60,37 @@ const Admin = () => {
   }, []);
 
   return (
-    <div className="flex items-center justify-center w-full px-2 py-2 rounded-xl">
-      <User
-        avatarProps={{
-          src: logoEmpresa,
-          className: "w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28",
-          isBordered: true,
-          fallback: "/images/logo.ico"
-        }}
-        name={
-          <span className="flex items-center gap-2 text-base font-medium text-white">
-            <AdminPanelSettingsIcon sx={{ fontSize: 22 }} />
-            <ShinyText 
-              text="ADMIN" 
-              disabled={false} 
-              speed={4} 
-              className='custom-class' 
-            />
-          </span>
-        }
-        description={
-          <span className="text-sm text-gray-400">
-            {nombreEmpresa || "Administrador"}
-          </span>
-        }
-        classNames={{
-          base: "gap-3 bg-transparent",
-          wrapper: "gap-1",
-          name: "text-white font-semibold",
-          description: "text-gray-400"
-        }}
-      />
+    <div className="flex flex-col items-center justify-center w-full px-2 py-2 rounded-xl gap-3">
+      {/* Imagen de la empresa arriba */}
+      <div className="flex justify-center">
+        <img 
+          src={logoEmpresa} 
+          alt="Logo Empresa" 
+          className="w-20 h-20 xs:w-24 xs:h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-white shadow-lg"
+          onError={(e) => {
+            e.target.src = "/images/logo.ico";
+          }}
+        />
+      </div>
+      
+      {/* Nombre del ADMIN debajo */}
+      <div className="flex flex-col items-center justify-center gap-2">
+        <span className="flex items-center gap-2 text-sm xs:text-base font-medium text-white">
+          <AdminPanelSettingsIcon sx={{ fontSize: 20 }} />
+          <ShinyText 
+            text="ADMIN" 
+            disabled={false} 
+            speed={4} 
+            className='custom-class' 
+          />
+        </span>
+      </div>
     </div>
   );
 };
 
 const AdminTrabajador = () => {
   const [logoEmpresa, setLogoEmpresa] = useState("/images/logo.ico");
-  const [nombreEmpresa, setNombreEmpresa] = useState("");
 
   useEffect(() => {
     // Obtener datos de la empresa al montar el componente
@@ -117,10 +105,6 @@ const AdminTrabajador = () => {
             if (typeof logo === 'string' && logo.length > 0) {
               setLogoEmpresa(logo);
             }
-          }
-          if (response.data.empresa.nombreEmpresa) {
-            setNombreEmpresa(response.data.empresa.nombreEmpresa);
-            console.log('Nombre de empresa establecido (Trabajador):', response.data.empresa.nombreEmpresa);
           }
         }
       } catch (error) {
@@ -163,16 +147,10 @@ const AdminTrabajador = () => {
             />
           </span>
         }
-        description={
-          <span className="text-sm text-gray-400">
-            {nombreEmpresa || "Empleado"}
-          </span>
-        }
         classNames={{
           base: "gap-3 bg-transparent",
           wrapper: "gap-1",
-          name: "text-white font-semibold",
-          description: "text-gray-400"
+          name: "text-white font-semibold"
         }}
       />
     </div>

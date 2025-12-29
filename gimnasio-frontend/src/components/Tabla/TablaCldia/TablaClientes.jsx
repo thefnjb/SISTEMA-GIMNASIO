@@ -2,12 +2,6 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import {Pagination} from "@heroui/pagination";
 import api from "../../../utils/axiosInstance";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Input,
   Chip,
   Spinner,
@@ -25,8 +19,15 @@ import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import AdfScannerRoundedIcon from "@mui/icons-material/AdfScannerRounded";
 import BotonEditar from "../../Iconos/BotonEditar";
 import BotonRenovar from "../../Iconos/BotonRenovar";
-import BotonEditarDeuda from "../../Iconos/BotonEditarDeuda";
-import EditarDeuda from "../../Modal/ActualizarModal/EditarDeuda";
+import IconButton from "@mui/material/IconButton";
+
+// Función para obtener color del sistema
+const getColorSistema = () => {
+  if (typeof window !== 'undefined') {
+    return getComputedStyle(document.documentElement).getPropertyValue('--color-botones').trim() || '#D72838';
+  }
+  return '#D72838';
+};
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -43,7 +44,7 @@ export default function TablaClientesAdmin({ refresh }) {
   const [mostrarModal, setMostrarModal] = useState(false);
   const [modoModal, setModoModal] = useState("editar");
   const [page, setPage] = useState(1);
-  const [sortDescriptor, setSortDescriptor] = useState({
+  const [sortDescriptor] = useState({
     column: "estado",
     direction: "ascending",
   });
@@ -385,287 +386,272 @@ export default function TablaClientesAdmin({ refresh }) {
   }, [miembros, sortDescriptor, calcularEstado, filtroEstado]);
 
   return (
-    <div className="max-w-full p-2 xs:p-3 sm:p-4 md:p-6">
-      <div className="flex flex-col gap-2 xs:gap-3 mb-3 xs:mb-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 xs:gap-3 sm:flex-row sm:items-center sm:flex-1">
-          <Input
-            type="text"
-            placeholder="Buscar por DNI, CE o nombre completo"
-            value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
-            className="w-full sm:max-w-md text-sm"
-            startContent={<SearchIcon className="text-gray-500 text-base xs:text-lg" />}
-            aria-label="Buscar por DNI, CE o nombre completo"
-            size="sm"
-          />
-          
-          <Dropdown>
-            <DropdownTrigger>
-              <Button 
-                endContent={<KeyboardArrowDownIcon className="text-small" />} 
-                variant="flat"
-                className="capitalize"
+    <div className="max-w-full p-3 sm:p-4 md:p-6 overflow-hidden">
+      {/* Header mejorado */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-5 mb-4 sm:mb-6">
+        <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:flex-1">
+              <Input
+                type="text"
+                placeholder="Buscar por DNI, CE o nombre completo"
+                value={filtro}
+                onChange={(e) => setFiltro(e.target.value)}
+                className="w-full sm:max-w-md"
+                size="sm"
+                startContent={<SearchIcon className="text-gray-400 text-base" />}
+                aria-label="Buscar por DNI, CE o nombre completo"
+                classNames={{
+                  input: "text-sm",
+                  inputWrapper: "border-gray-300 hover:border-gray-400 focus-within:border-color-acentos"
+                }}
+              />
+              
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button 
+                    endContent={<KeyboardArrowDownIcon className="text-small" />} 
+                    variant="flat"
+                    size="sm"
+                    className="capitalize text-sm border border-gray-300 bg-white hover:bg-gray-50"
+                  >
+                    {Array.from(filtroEstado)[0] === "todos" ? "Todos los estados" : Array.from(filtroEstado)[0]}
+                  </Button>
+                </DropdownTrigger>
+              <DropdownMenu
+                disallowEmptySelection
+                aria-label="Filtro de Estado"
+                closeOnSelect={true}
+                selectionMode="single"
+                selectedKeys={filtroEstado}
+                onSelectionChange={(keys) => { setFiltroEstado(keys); setPage(1); }}
               >
-                {Array.from(filtroEstado)[0] === "todos" ? "Todos los estados" : Array.from(filtroEstado)[0]}
-              </Button>
-            </DropdownTrigger>
-            <DropdownMenu
-              disallowEmptySelection
-              aria-label="Filtro de Estado"
-              closeOnSelect={true}
-              selectionMode="single"
-              selectedKeys={filtroEstado}
-              onSelectionChange={(keys) => { setFiltroEstado(keys); setPage(1); }}
-            >
-              <DropdownItem key="todos" className="capitalize">
-                Todos los estados
-              </DropdownItem>
-              <DropdownItem key="activo" className="capitalize">
-                Activo
-              </DropdownItem>
-              <DropdownItem key="a punto de vencer" className="capitalize">
-                A punto de vencer
-              </DropdownItem>
-              <DropdownItem key="vencido" className="capitalize">
-                Vencido
-              </DropdownItem>
-              <DropdownItem key="congelado" className="capitalize">
-                Congelado
-              </DropdownItem>
-            </DropdownMenu>
-          </Dropdown>
-          {/* Selector rows per page moved below the table */}
+                <DropdownItem key="todos" className="capitalize">
+                  Todos los estados
+                </DropdownItem>
+                <DropdownItem key="activo" className="capitalize">
+                  Activo
+                </DropdownItem>
+                <DropdownItem key="a punto de vencer" className="capitalize">
+                  A punto de vencer
+                </DropdownItem>
+                <DropdownItem key="vencido" className="capitalize">
+                  Vencido
+                </DropdownItem>
+                <DropdownItem key="congelado" className="capitalize">
+                  Congelado
+                </DropdownItem>
+              </DropdownMenu>
+            </Dropdown>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <div className="px-1 text-sm text-gray-600">{totalItems} CLIENTES</div>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="px-3 py-1.5 bg-gray-100 rounded-lg">
+                <span className="text-sm font-semibold text-gray-700">{totalItems}</span>
+                <span className="text-xs text-gray-500 ml-1">CLIENTES</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
       {cargando ? (
         <div className="flex items-center justify-center h-64">
           <Spinner label="Cargando miembros..." color="primary" />
         </div>
       ) : (
         <>
-        {/* Vista de Cards para móvil */}
-        <div className="md:hidden space-y-2 xs:space-y-3 mb-4">
-          {miembrosOrdenados.map((miembro) => (
-            <div key={miembro._id} className="bg-color-cards rounded-lg shadow-md p-2 xs:p-3 border border-gray-200">
-              <div className="flex items-start justify-between mb-1.5 xs:mb-2">
-                <div className="flex items-center gap-1.5 xs:gap-2 flex-1 min-w-0">
-                  <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 18 }} className="flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-xs xs:text-sm text-gray-800 truncate">{miembro.nombreCompleto}</p>
-                    <p className="text-[10px] xs:text-xs text-gray-500 truncate">{miembro.telefono}</p>
-                  </div>
-                </div>
-                <Chip color={calcularEstado(miembro).color} variant="flat" size="sm" className="text-[9px] xs:text-[10px] flex-shrink-0">
-                  {calcularEstado(miembro).etiqueta}
-                </Chip>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-1.5 xs:gap-2 text-[10px] xs:text-xs mb-1.5 xs:mb-2">
-                <div className="min-w-0">
-                  <span className="text-gray-500">Vence:</span>
-                  <span className="ml-1 font-medium truncate block">{mostrarVencimiento(miembro)}</span>
-                </div>
-                <div className="min-w-0">
-                  <span className="text-gray-500">Mensualidad:</span>
-                  <span className="ml-1 font-medium truncate block">{formatearMensualidadNumero(miembro)}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-1.5 xs:pt-2 border-t border-gray-200">
-                <div className="flex items-center gap-1.5 xs:gap-2">
-                  <AdfScannerRoundedIcon
-                    onClick={() => descargarVoucher(miembro)}
-                    sx={{ color: "#555555", fontSize: 16, cursor: "pointer" }}
-                    className="flex-shrink-0"
-                  />
-                  <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
-                  <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
-                </div>
-              </div>
+          {miembrosOrdenados.length === 0 ? (
+            <div className="text-center py-12 bg-gray-50 rounded-xl border border-gray-200">
+              <p className="text-gray-500 text-sm">No hay miembros encontrados.</p>
             </div>
-          ))}
-          {miembrosOrdenados.length === 0 && (
-            <div className="text-center py-6 xs:py-8 text-gray-500 text-xs xs:text-sm">No hay miembros encontrados.</div>
-          )}
-        </div>
-
-        {/* Vista de Tabla para desktop */}
-        <div className="hidden md:block w-full overflow-x-auto -mx-2 sm:-mx-3 md:mx-0 px-2 sm:px-3 md:px-0 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100">
-          <div className="min-w-full inline-block">
-            <Table
-              aria-label="Tabla de miembros"
-              removeWrapper
-              isStriped
-              sortDescriptor={sortDescriptor}
-              onSortChange={setSortDescriptor}
-              classNames={{
-                base: "min-w-full",
-                table: "bg-white w-full table-auto text-[11px]",
-                td: "text-gray-800 border-b border-gray-200 align-middle text-[11px] px-1.5 py-0.5",
-                th: "bg-gradient-tabla-header text-white text-[10px] font-semibold px-1.5 py-1 text-center",
-                tr: "hover:bg-gray-50 transition-colors",
-              }}
-            >
-            <TableHeader>
-              <TableColumn className="min-w-[120px]">NOMBRE Y APELLIDO</TableColumn>
-              <TableColumn className="w-[90px]">TELÉFONO</TableColumn>
-              <TableColumn className="hidden md:table-cell min-w-[100px]">DOCUMENTO</TableColumn>
-              <TableColumn key="ingreso" allowsSorting className="min-w-[100px] text-center hidden md:table-cell">INGRESO</TableColumn>
-              <TableColumn className="hidden md:table-cell min-w-[80px]">MENSUALIDAD</TableColumn>
-              <TableColumn className="hidden lg:table-cell min-w-[110px]">ENTRENADOR</TableColumn>
-              <TableColumn className="hidden md:table-cell min-w-[60px]">PAGO</TableColumn>
-              <TableColumn key="debe" allowsSorting className="hidden md:table-cell min-w-[90px]">DEBE</TableColumn>
-              <TableColumn className="min-w-[90px]">VENCE</TableColumn>
-              <TableColumn key="estado" allowsSorting className="min-w-[100px]">ESTADO</TableColumn>
-              <TableColumn className="hidden md:table-cell min-w-[120px]">ACCIONES</TableColumn>
-            </TableHeader>
-
-            <TableBody emptyContent={"No hay miembros encontrados."}>
-              {miembrosOrdenados.map((miembro) => (
-                <TableRow key={miembro._id} className="align-middle">
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 18 }} />
-                      <span className="text-[11px]">{miembro.nombreCompleto}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-[11px]">{miembro.telefono}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex flex-col gap-0.5">
-                      <Chip 
-                        color={miembro?.tipoDocumento === "DNI" ? "primary" : "secondary"} 
-                        variant="flat"
-                        size="sm"
-                        className="text-[10px] h-5"
-                      >
-                        {miembro?.tipoDocumento === "CE" ? "CE" : miembro?.tipoDocumento || "DNI"}
-                      </Chip>
-                      <span className="text-[9px] text-gray-500">
-                        {miembro?.numeroDocumento || "-"}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-[11px]">{formatearFecha(miembro.fechaIngreso)}</TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="font-medium text-[11px]">{formatearMensualidadNumero(miembro)}</span>
-                      <span className="text-[9px] text-gray-500">
-                        S/ {Number(miembro?.mensualidad?.precio ?? miembro?.membresia?.precio ?? 0).toFixed(2)}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden lg:table-cell text-[11px]">{miembro?.entrenador?.nombre || "Sin Entrenador"}</TableCell>
-                  <TableCell className="hidden capitalize md:table-cell text-[11px]">
-                    <div className="flex items-center gap-2">
-                      {miembro.metodoPago && metodosPago[miembro.metodoPago.toLowerCase()] && (
-                        <>
-                          {miembro.metodoPago.toLowerCase() === 'efectivo' ? (
-                            <div className="p-1 cursor-default">
-                              <img
-                                src={metodosPago[miembro.metodoPago.toLowerCase()].icono}
-                                alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
-                                 className="object-contain w-6 h-6 opacity-80"
-                                />
-                            </div>
-                              ) : (
-                              <Button
-                              isIconOnly
-                              size="sm"
-                              onClick={() => openComprobanteModal(miembro)}
-                               className="p-1 bg-transparent hover:opacity-80"
-                              >
-                            <img
-                            src={metodosPago[miembro.metodoPago.toLowerCase()].icono}
-                            alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
-                              className="object-contain w-6 h-6"
-                          />
-                        </Button>
-                        )}
-                      </>
-                    )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center gap-1">
-                      {Number(miembro?.debe || 0) <= 0 ? (
-                        <Chip color="success" variant="flat" size="sm" className="text-[10px] h-5">S/ 0.00</Chip>
-                      ) : (
-                        <Chip color="warning" variant="flat" size="sm" className="text-[10px] h-5">S/ {Number(miembro.debe).toFixed(2)}</Chip>
-                      )}
-                      <BotonEditarDeuda onClick={() => abrirModalActualizar(miembro, "editarDeuda")} />
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-[11px]">{mostrarVencimiento(miembro)}</TableCell>
-                  <TableCell>
-                    <Chip color={calcularEstado(miembro).color} variant="flat" size="sm" className="text-[10px] h-5">
-                      {calcularEstado(miembro).etiqueta}
-                    </Chip>
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    <div className="flex items-center gap-1 h-[35px] justify-end">
-                      <AdfScannerRoundedIcon
-                        onClick={() => descargarVoucher(miembro)}
-                        sx={{ color: "#555555", fontSize: 20, cursor: "pointer" }}
-                      />
-                      <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
-                      <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          </div>
-        </div>
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
-              {Array.from(filtroEstado)[0] === "todos" && (
-                <div className="flex items-center gap-2">
-                  <label htmlFor="rowsPerPage" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Filas por página:</label>
-                  <select
-                    id="rowsPerPage"
-                    value={rowsPerPage}
-                    onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
-                    className="px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                    aria-label="Filas por página"
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
+              {miembrosOrdenados.map((miembro) => {
+                const estado = calcularEstado(miembro);
+                return (
+                  <div 
+                    key={miembro._id} 
+                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden group"
                   >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={30}>30</option>
-                    <option value={40}>40</option>
-                    <option value={50}>50</option>
-                  </select>
-                </div>
-              )}
-              {Array.from(filtroEstado)[0] !== "todos" && !cargando && miembros.length > 0 && (
-                <div className="text-xs sm:text-sm text-gray-600">
-                  Mostrando todos los clientes con estado: <span className="font-semibold">{Array.from(filtroEstado)[0]}</span>
-                </div>
-              )}
-          </div>
+                    {/* Header con gradiente según estado */}
+                    <div 
+                      className={`h-2 ${
+                        estado.color === 'success' ? 'bg-gradient-to-r from-green-500 to-green-600' :
+                        estado.color === 'warning' ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
+                        estado.color === 'danger' ? 'bg-gradient-to-r from-red-500 to-red-600' :
+                        'bg-gradient-to-r from-gray-400 to-gray-500'
+                      }`}
+                    />
+                    
+                    {/* Contenido de la card */}
+                    <div className="p-5">
+                      {/* Nombre y estado */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 40 }} className="flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-base text-gray-900 truncate mb-1">{miembro.nombreCompleto}</h3>
+                            <p className="text-sm text-gray-600">{miembro.telefono}</p>
+                          </div>
+                        </div>
+                        <Chip 
+                          color={estado.color} 
+                          variant="flat" 
+                          size="sm" 
+                          className="text-xs font-semibold capitalize flex-shrink-0"
+                        >
+                          {estado.etiqueta}
+                        </Chip>
+                      </div>
 
-          {Array.from(filtroEstado)[0] === "todos" && (
-            <div className="flex justify-center flex-1 w-full sm:w-auto mt-3 sm:mt-0">
-              <Pagination
-                total={totalPages}
-                initialPage={page}
-                onChange={(page) => setPage(page)}
-                color="red"
-                size="sm"
-              />
+                      {/* Información principal en grid */}
+                      <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                          <span className="text-xs text-gray-500 block mb-1">Documento</span>
+                          <Chip 
+                            color={miembro?.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                            variant="flat"
+                            size="sm"
+                            className="text-[10px] h-5 mb-1"
+                          >
+                            {miembro?.tipoDocumento === "CE" ? "CE" : miembro?.tipoDocumento || "DNI"}
+                          </Chip>
+                          <span className="text-xs font-semibold text-gray-800 block">{miembro?.numeroDocumento || "-"}</span>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                          <span className="text-xs text-gray-500 block mb-1">Ingreso</span>
+                          <span className="text-xs font-semibold text-gray-800">{formatearFecha(miembro.fechaIngreso)}</span>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                          <span className="text-xs text-gray-500 block mb-1">Mensualidad</span>
+                          <span className="text-xs font-semibold text-gray-800">{formatearMensualidadNumero(miembro)}</span>
+                          <span className="text-[10px] text-gray-500 block">S/ {Number(miembro?.mensualidad?.precio ?? miembro?.membresia?.precio ?? 0).toFixed(2)}</span>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                          <span className="text-xs text-gray-500 block mb-1">Vence</span>
+                          <span className="text-xs font-semibold text-gray-800">{mostrarVencimiento(miembro)}</span>
+                        </div>
+                      </div>
+
+                      {/* Información adicional */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                          <span className="text-xs text-gray-500 block mb-1">Entrenador</span>
+                          <span className="text-xs font-semibold text-gray-800">{miembro?.entrenador?.nombre || "Sin Entrenador"}</span>
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                          <span className="text-xs text-gray-500 block mb-1">Método de Pago</span>
+                          <div className="flex items-center gap-2 mt-1">
+                            {miembro.metodoPago && metodosPago[miembro.metodoPago.toLowerCase()] ? (
+                              miembro.metodoPago.toLowerCase() === 'efectivo' ? (
+                                <img
+                                  src={metodosPago[miembro.metodoPago.toLowerCase()].icono}
+                                  alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
+                                  className="object-contain w-6 h-6 opacity-80"
+                                />
+                              ) : (
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  onClick={() => openComprobanteModal(miembro)}
+                                  className="p-1 bg-transparent hover:opacity-80 min-w-0 w-auto h-auto"
+                                >
+                                  <img
+                                    src={metodosPago[miembro.metodoPago.toLowerCase()].icono}
+                                    alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
+                                    className="object-contain w-6 h-6"
+                                  />
+                                </Button>
+                              )
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                            <span className="text-xs font-semibold text-gray-800 capitalize">{miembro.metodoPago || "N/A"}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Deuda */}
+                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-100 mb-4">
+                        <span className="text-xs text-gray-500 block mb-1">Debe</span>
+                        <div className="flex items-center gap-2 mt-1">
+                          {Number(miembro?.debe || 0) <= 0 ? (
+                            <Chip color="success" variant="flat" size="sm" className="text-xs font-medium">S/ 0.00</Chip>
+                          ) : (
+                            <Chip color="warning" variant="flat" size="sm" className="text-xs font-semibold">S/ {Number(miembro.debe).toFixed(2)}</Chip>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Footer con acciones (sin eliminar ni editar deuda) */}
+                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                        <div className="flex items-center gap-2">
+                          <IconButton
+                            aria-label="Descargar voucher"
+                            onClick={() => descargarVoucher(miembro)}
+                            sx={{ color: getColorSistema(), fontSize: 22, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                            size="small"
+                          >
+                            <AdfScannerRoundedIcon fontSize="inherit" />
+                          </IconButton>
+                          <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
+                          <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
-          {Array.from(filtroEstado)[0] !== "todos" && <div className="flex-1" />}
-        </div>
+
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mt-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                {Array.from(filtroEstado)[0] === "todos" && (
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="rowsPerPage" className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">Filas por página:</label>
+                    <select
+                      id="rowsPerPage"
+                      value={rowsPerPage}
+                      onChange={(e) => { setRowsPerPage(Number(e.target.value)); setPage(1); }}
+                      className="px-2 py-1.5 text-xs sm:text-sm border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-color-acentos focus:border-color-acentos"
+                      aria-label="Filas por página"
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={30}>30</option>
+                      <option value={40}>40</option>
+                      <option value={50}>50</option>
+                    </select>
+                  </div>
+                )}
+                {Array.from(filtroEstado)[0] !== "todos" && !cargando && miembros.length > 0 && (
+                  <div className="text-xs sm:text-sm text-gray-600">
+                    Mostrando todos los clientes con estado: <span className="font-semibold">{Array.from(filtroEstado)[0]}</span>
+                  </div>
+                )}
+            </div>
+
+            {Array.from(filtroEstado)[0] === "todos" && (
+              <div className="flex justify-center flex-1 w-full sm:w-auto mt-3 sm:mt-0">
+                <Pagination
+                  total={totalPages}
+                  initialPage={page}
+                  onChange={(page) => setPage(page)}
+                  color="red"
+                  size="sm"
+                />
+              </div>
+            )}
+            {Array.from(filtroEstado)[0] !== "todos" && <div className="flex-1" />}
+          </div>
         </>
       )}
 
-      {mostrarModal && modoModal !== "editarDeuda" && (
+      {mostrarModal && (
         <ActualizarSuscripcion
           miembro={miembroSeleccionado}
           modo={modoModal}
@@ -674,18 +660,6 @@ export default function TablaClientesAdmin({ refresh }) {
             obtenerMiembros(filtro, page);
             setMostrarModal(false);
             showAlert("success", modoModal === "editar" ? "Miembro modificado exitosamente" : "Membresía renovada exitosamente");
-          }}
-        />
-      )}
-
-      {mostrarModal && modoModal === "editarDeuda" && (
-        <EditarDeuda
-          miembro={miembroSeleccionado}
-          onClose={() => setMostrarModal(false)}
-          onUpdated={() => {
-            obtenerMiembros(filtro, page);
-            setMostrarModal(false);
-            showAlert("success", "Deuda modificada exitosamente");
           }}
         />
       )}

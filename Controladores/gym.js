@@ -187,7 +187,8 @@ exports.obtenerDatosEmpresa = async (req, res) => {
         colorCards: gym.colorCards || '#ffffff',
         colorTablas: gym.colorTablas || '#D72838',
         colorAcentos: gym.colorAcentos || '#D72838',
-        plantillaColor: gym.plantillaColor || 'porDefecto'
+        plantillaColor: gym.plantillaColor || 'porDefecto',
+        precioClientePorDia: gym.precioClientePorDia || 7
       }
     });
   } catch (err) {
@@ -200,7 +201,7 @@ exports.obtenerDatosEmpresa = async (req, res) => {
 exports.actualizarDatosEmpresa = async (req, res) => {
   try {
     const gymId = req.usuario.gym_id;
-    const { nombreEmpresa, email, logoEmpresa, plantillaColor } = req.body;
+    const { nombreEmpresa, email, logoEmpresa, plantillaColor, precioClientePorDia } = req.body;
 
     const gym = await Gym.findById(gymId);
     
@@ -269,6 +270,15 @@ exports.actualizarDatosEmpresa = async (req, res) => {
       gym.colorAcentos = plantilla.colorAcentos;
     }
 
+    // Actualizar precio de cliente por día si se proporciona
+    if (precioClientePorDia !== undefined) {
+      const precio = parseFloat(precioClientePorDia);
+      if (isNaN(precio) || precio < 0) {
+        return res.status(400).json({ error: "El precio debe ser un número válido mayor o igual a 0" });
+      }
+      gym.precioClientePorDia = precio;
+    }
+
     await gym.save();
 
     // Preparar respuesta con logo en base64 si está en Buffer
@@ -291,7 +301,8 @@ exports.actualizarDatosEmpresa = async (req, res) => {
         colorCards: gym.colorCards || '#ffffff',
         colorTablas: gym.colorTablas || '#D72838',
         colorAcentos: gym.colorAcentos || '#D72838',
-        plantillaColor: gym.plantillaColor || 'porDefecto'
+        plantillaColor: gym.plantillaColor || 'porDefecto',
+        precioClientePorDia: gym.precioClientePorDia || 7
       }
     });
   } catch (err) {

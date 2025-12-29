@@ -80,27 +80,37 @@ function Login() {
   // Recuperar contraseña con email
   const handleRecuperarPassword = async (e) => {
     e.preventDefault();
-    setCargando(true);
+    
+    // Limpiar mensajes previos
     setMensajeError("");
     setMensajeExito("");
 
-    if (!emailRecuperar || !emailRecuperar.trim()) {
+    // Validaciones
+    const emailTrimmed = emailRecuperar.trim();
+    if (!emailTrimmed) {
       setMensajeError("Por favor ingresa tu email");
-      setCargando(false);
+      return;
+    }
+
+    // Validar formato de email básico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailTrimmed)) {
+      setMensajeError("Por favor ingresa un email válido");
       return;
     }
 
     if (!nuevaPassword || nuevaPassword.length < 6) {
       setMensajeError("La contraseña debe tener al menos 6 caracteres");
-      setCargando(false);
       return;
     }
 
     if (nuevaPassword !== confirmarPassword) {
       setMensajeError("Las contraseñas no coinciden");
-      setCargando(false);
       return;
     }
+
+    // Si pasa todas las validaciones, proceder con el cambio
+    setCargando(true);
 
     try {
       const response = await fetch(`${API_URL}/recuperar-cambiar`, {
@@ -109,7 +119,7 @@ function Login() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ 
-          email: emailRecuperar.trim().toLowerCase(),
+          email: emailTrimmed.toLowerCase(),
           nuevaPassword: nuevaPassword
         }),
       });
@@ -128,67 +138,74 @@ function Login() {
         }, 3000);
         setCargando(false);
       } else {
-        setMensajeError(data.message || 'Error al cambiar la contraseña');
+        setMensajeError(data.message || data.error || 'Error al cambiar la contraseña');
         setCargando(false);
       }
     } catch (error) {
-      setMensajeError("Error de conexión con el servidor.");
+      console.error("Error al cambiar contraseña:", error);
+      setMensajeError("Error de conexión con el servidor. Por favor intenta nuevamente.");
       setCargando(false);
     }
   };
 
   return (
     <div className="flex flex-col min-h-screen text-white bg-black lg:flex-row">
-      <div className="relative w-full h-40 xs:h-48 sm:h-64 md:h-80 lg:h-auto lg:w-1/2 overflow-hidden">
-        <div
-          className="w-full h-full bg-center bg-cover bg-no-repeat animate-zoomImage grayscale lg:grayscale-0"
-          style={{ 
-            backgroundImage: "url('/images/login.png')"
-          }}
-        ></div>
-        <div className="absolute inset-0 bg-black/40 lg:hidden"></div>
-      </div>
+      {!mostrarRecuperar && (
+        <div className="relative w-full h-40 xs:h-48 sm:h-64 md:h-80 lg:h-screen lg:w-1/2 overflow-hidden bg-zinc-800">
+          <div
+            className="w-full h-full bg-center bg-cover bg-no-repeat animate-zoomImage grayscale lg:grayscale-0"
+            style={{ 
+              backgroundImage: "url('/images/login.png')",
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
+          ></div>
+          <div className="absolute inset-0 bg-black/40 lg:hidden"></div>
+        </div>
+      )}
 
-      <div className="flex items-center justify-center w-full px-3 xs:px-4 sm:px-6 py-6 xs:py-8 sm:py-10 shadow-inner bg-zinc-900 lg:w-1/2">
-        <div className="w-full max-w-md space-y-3 xs:space-y-4 sm:space-y-6 animate-fadeInDown">
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <div className="p-4 bg-red-600 rounded-full">
-                <FitnessCenterIcon sx={{ fontSize: 60, color: 'white' }} />
-              </div>
-            </div>
-            <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide mt-2 xs:mt-3">
-              <TextType 
-                text={["Sistema de Gestión"]}
-                typingSpeed={75}
-                pauseDuration={3000}
-                showCursor={true}
-                cursorCharacter="|"
-              />
-            </h1>
-            <p className="mt-1 text-[10px] xs:text-xs sm:text-sm text-gray-400">Accede con tus credenciales</p>
-          </div>
-
-          {mensajeError && (
-            <div className="animate-fadeInDown p-3 bg-red-900/50 border border-red-700 rounded-lg">
-              <p className="text-sm text-red-200">{mensajeError}</p>
-            </div>
-          )}
-
-          {mensajeExito && (
-            <div className="animate-fadeInDown p-3 bg-green-900/50 border border-green-700 rounded-lg">
-              <p className="text-sm text-green-200">{mensajeExito}</p>
-            </div>
-          )}
-
-          {loginExitoso && (
-            <div className="animate-fadeInDown">
-              <AlertaLoginExitoso />
-            </div>
-          )}
+      <div className={`flex items-center justify-center w-full px-3 xs:px-4 sm:px-6 py-6 xs:py-8 sm:py-10 shadow-inner bg-zinc-900 ${mostrarRecuperar ? 'lg:w-full min-h-screen' : 'lg:w-1/2'}`}>
+        <div className={`w-full max-w-md animate-fadeInDown ${mostrarRecuperar ? 'space-y-3 xs:space-y-4 sm:space-y-4' : 'space-y-3 xs:space-y-4 sm:space-y-6'}`}>
 
           {!mostrarRecuperar ? (
-            <form onSubmit={handleLogin} className={`space-y-3 xs:space-y-4 sm:space-y-5 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
+            <>
+              <div className="text-center">
+                <div className="flex justify-center mb-4">
+                  <div className="p-4 bg-red-600 rounded-full">
+                    <FitnessCenterIcon sx={{ fontSize: 60, color: 'white' }} />
+                  </div>
+                </div>
+                <h1 className="text-lg xs:text-xl sm:text-2xl md:text-3xl font-extrabold tracking-wide mt-2 xs:mt-3">
+                  <TextType 
+                    text={["Sistema de Gestión"]}
+                    typingSpeed={75}
+                    pauseDuration={3000}
+                    showCursor={true}
+                    cursorCharacter="|"
+                  />
+                </h1>
+                <p className="mt-1 text-[10px] xs:text-xs sm:text-sm text-gray-400">Accede con tus credenciales</p>
+              </div>
+
+              {mensajeError && (
+                <div className="animate-fadeInDown p-3 bg-red-900/50 border border-red-700 rounded-lg">
+                  <p className="text-sm text-red-200">{mensajeError}</p>
+                </div>
+              )}
+
+              {mensajeExito && (
+                <div className="animate-fadeInDown p-3 bg-green-900/50 border border-green-700 rounded-lg">
+                  <p className="text-sm text-green-200">{mensajeExito}</p>
+                </div>
+              )}
+
+              {loginExitoso && (
+                <div className="animate-fadeInDown">
+                  <AlertaLoginExitoso />
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className={`space-y-3 xs:space-y-4 sm:space-y-5 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
               <div>
                 <label htmlFor="usuario" className="block mb-1.5 xs:mb-2 text-xs sm:text-sm font-semibold">
                   Usuario
@@ -263,14 +280,34 @@ function Login() {
                 </p>
               </div>
             </form>
+            </>
           ) : (
-            <form onSubmit={handleRecuperarPassword} className={`space-y-3 xs:space-y-4 sm:space-y-5 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
-              <div className="text-center">
-                <h2 className="text-xl sm:text-2xl font-bold">Recuperar Contraseña</h2>
-                <p className="text-xs sm:text-sm text-gray-400 mt-1">
+            <>
+              <div className="text-center mb-4 xs:mb-5 sm:mb-6">
+                <div className="flex justify-center mb-3 xs:mb-4">
+                  <div className="p-3 xs:p-4 bg-red-600 rounded-full">
+                    <FitnessCenterIcon sx={{ fontSize: { xs: 40, sm: 50, md: 60 }, color: 'white' }} />
+                  </div>
+                </div>
+                <h2 className="text-xl xs:text-2xl sm:text-3xl font-bold">Recuperar Contraseña</h2>
+                <p className="text-xs xs:text-sm text-gray-400 mt-2">
                   Ingresa tu email y tu nueva contraseña
                 </p>
               </div>
+
+              {mensajeError && (
+                <div className="animate-fadeInDown p-3 bg-red-900/50 border border-red-700 rounded-lg">
+                  <p className="text-sm text-red-200">{mensajeError}</p>
+                </div>
+              )}
+
+              {mensajeExito && (
+                <div className="animate-fadeInDown p-3 bg-green-900/50 border border-green-700 rounded-lg">
+                  <p className="text-sm text-green-200">{mensajeExito}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleRecuperarPassword} noValidate className={`space-y-3 xs:space-y-4 sm:space-y-4 transition-all duration-300 ${cargando ? 'opacity-75' : 'opacity-100'}`}>
 
               <div>
                 <label htmlFor="emailRecuperar" className="block mb-1.5 xs:mb-2 text-xs sm:text-sm font-semibold">
@@ -280,10 +317,14 @@ function Login() {
                   id="emailRecuperar"
                   type="email"
                   value={emailRecuperar}
-                  onChange={(e) => setEmailRecuperar(e.target.value)}
+                  onChange={(e) => {
+                    setEmailRecuperar(e.target.value);
+                    setMensajeError(""); // Limpiar error al escribir
+                  }}
                   className="w-full px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 text-sm xs:text-base text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
-                  required
+                  placeholder="ejemplo@correo.com"
                   disabled={cargando}
+                  autoComplete="email"
                 />
               </div>
 
@@ -295,10 +336,15 @@ function Login() {
                   id="nuevaPassword"
                   type="password"
                   value={nuevaPassword}
-                  onChange={(e) => setNuevaPassword(e.target.value)}
+                  onChange={(e) => {
+                    setNuevaPassword(e.target.value);
+                    setMensajeError(""); // Limpiar error al escribir
+                  }}
                   className="w-full px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 text-sm xs:text-base text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
-                  required
+                  placeholder="Mínimo 6 caracteres"
                   disabled={cargando}
+                  autoComplete="new-password"
+                  minLength={6}
                 />
               </div>
 
@@ -310,23 +356,35 @@ function Login() {
                   id="confirmarPassword"
                   type="password"
                   value={confirmarPassword}
-                  onChange={(e) => setConfirmarPassword(e.target.value)}
+                  onChange={(e) => {
+                    setConfirmarPassword(e.target.value);
+                    setMensajeError(""); // Limpiar error al escribir
+                  }}
                   className="w-full px-3 xs:px-4 py-2 xs:py-2.5 sm:py-3 text-sm xs:text-base text-white border border-gray-600 rounded-lg bg-zinc-800 focus:ring-2 focus:ring-red-500"
-                  required
+                  placeholder="Repite la contraseña"
                   disabled={cargando}
+                  autoComplete="new-password"
+                  minLength={6}
                 />
               </div>
 
               <Button
                 type="submit"
-                disabled={cargando}
+                disabled={cargando || !emailRecuperar.trim() || !nuevaPassword || !confirmarPassword}
                 className={`w-full py-2.5 xs:py-3 text-sm xs:text-base font-semibold text-white rounded-lg transition-all duration-300 ${
-                  cargando 
+                  cargando || !emailRecuperar.trim() || !nuevaPassword || !confirmarPassword
                     ? 'bg-gray-600 cursor-not-allowed opacity-70' 
                     : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
-                {cargando ? "Cambiando..." : "Cambiar Contraseña"}
+                {cargando ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-4 h-4 xs:w-5 xs:h-5 mr-2 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
+                    <span>Cambiando...</span>
+                  </div>
+                ) : (
+                  "Cambiar Contraseña"
+                )}
               </Button>
 
               <div className="text-center">
@@ -346,6 +404,7 @@ function Login() {
                 </button>
               </div>
             </form>
+            </>
           )}
         </div>
       </div>

@@ -15,11 +15,16 @@ import {
   TableCell,
 } from "@heroui/react";
 import api from "../../utils/axiosInstance";
+import { useColoresSistema } from "../../hooks/useColoresSistema";
 
 const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [membresiaSeleccionada, setMembresiaSeleccionada] = useState(null);
+  
+  // Cargar colores del sistema
+  useColoresSistema();
 
   useEffect(() => {
     const fetchMembresias = async () => {
@@ -27,6 +32,7 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
       
       setLoading(true);
       setError(null);
+      setMembresiaSeleccionada(null); // Reset selección al abrir
       
       try {
         const response = await api.get("/plans/vermembresia", {
@@ -97,24 +103,38 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
                           <TableColumn className="min-w-[120px] text-right">PRECIO</TableColumn>
                         </TableHeader>
                         <TableBody items={data}>
-                          {(m) => (
-                            <TableRow
-                              key={m._id}
-                              onClick={() => onSeleccionar(m)}
-                              className="bg-gray-800 hover:bg-gray-700"
-                            >
-                              <TableCell className="bg-gray-800">
-                                <span className="font-medium text-white">
-                                  {m.duracion === 12 ? "1 Año" : `${m.duracion} Mes${m.duracion > 1 ? 'es' : ''}`}
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right bg-gray-800">
-                                <span className="font-semibold text-green-400">
-                                  S/ {Number(m.precio).toFixed(2)}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          )}
+                          {(m) => {
+                            const isSelected = membresiaSeleccionada?._id === m._id;
+                            return (
+                              <TableRow
+                                key={m._id}
+                                onClick={() => {
+                                  setMembresiaSeleccionada(m);
+                                  onSeleccionar(m);
+                                }}
+                                className={`transition-all duration-200 ${
+                                  isSelected 
+                                    ? "bg-color-botones ring-2 ring-color-acentos" 
+                                    : "bg-gray-800 hover:bg-gray-700"
+                                }`}
+                                style={isSelected ? {
+                                  backgroundColor: 'var(--color-botones, #D72838)',
+                                  borderColor: 'var(--color-acentos, #D72838)'
+                                } : {}}
+                              >
+                                <TableCell className={isSelected ? "bg-transparent" : "bg-gray-800"}>
+                                  <span className="font-medium text-white">
+                                    {m.duracion === 12 ? "1 Año" : `${m.duracion} Mes${m.duracion > 1 ? 'es' : ''}`}
+                                  </span>
+                                </TableCell>
+                                <TableCell className={`text-right ${isSelected ? "bg-transparent" : "bg-gray-800"}`}>
+                                  <span className="font-semibold text-green-400">
+                                    S/ {Number(m.precio).toFixed(2)}
+                                  </span>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }}
                         </TableBody>
                       </Table>
                     </div>
@@ -122,23 +142,37 @@ const ModalSeleccionarMembresia = ({ isOpen, onOpenChange, onSeleccionar }) => {
 
                   {/* Vista de cards para móvil */}
                   <div className="md:hidden space-y-2 xs:space-y-3">
-                    {data.map((m) => (
-                      <div
-                        key={m._id}
-                        onClick={() => onSeleccionar(m)}
-                        className="flex items-center justify-between p-2 xs:p-3 sm:p-4 transition-all duration-200 bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-600 active:scale-95 border border-gray-600"
-                      >
-                        <div className="flex flex-col gap-0.5 xs:gap-1 min-w-0 flex-1">
-                          <span className="text-sm xs:text-base font-semibold text-white truncate">
-                            {m.duracion === 12 ? "1 Año" : `${m.duracion} Mes${m.duracion > 1 ? 'es' : ''}`}
-                          </span>
-                          <span className="text-base xs:text-lg font-bold text-green-400">
-                            S/ {Number(m.precio).toFixed(2)}
-                          </span>
+                    {data.map((m) => {
+                      const isSelected = membresiaSeleccionada?._id === m._id;
+                      return (
+                        <div
+                          key={m._id}
+                          onClick={() => {
+                            setMembresiaSeleccionada(m);
+                            onSeleccionar(m);
+                          }}
+                          className={`flex items-center justify-between p-2 xs:p-3 sm:p-4 transition-all duration-200 rounded-lg cursor-pointer active:scale-95 ${
+                            isSelected 
+                              ? "bg-color-botones ring-2 ring-color-acentos border-color-acentos" 
+                              : "bg-gray-700 hover:bg-gray-600 border border-gray-600"
+                          }`}
+                          style={isSelected ? {
+                            backgroundColor: 'var(--color-botones, #D72838)',
+                            borderColor: 'var(--color-acentos, #D72838)'
+                          } : {}}
+                        >
+                          <div className="flex flex-col gap-0.5 xs:gap-1 min-w-0 flex-1">
+                            <span className="text-sm xs:text-base font-semibold text-white truncate">
+                              {m.duracion === 12 ? "1 Año" : `${m.duracion} Mes${m.duracion > 1 ? 'es' : ''}`}
+                            </span>
+                            <span className="text-base xs:text-lg font-bold text-green-400">
+                              S/ {Number(m.precio).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="text-white text-lg xs:text-xl font-bold ml-2 flex-shrink-0">→</div>
                         </div>
-                        <div className="text-white text-lg xs:text-xl font-bold ml-2 flex-shrink-0">→</div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </>
               ) : (

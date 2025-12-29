@@ -16,6 +16,7 @@ import FitnessCenterOutlinedIcon from '@mui/icons-material/FitnessCenterOutlined
 import ModalSeleccionarMembresia from "../Membresia/ModalSeleccionarMembresia";
 import ModalSeleccionarEntrenador from "./ModalSeleccionarEntrenador";
 import ModalPagoComprobante from "./ModalPagoComprobante";
+import { useColoresSistema } from "../../hooks/useColoresSistema";
 
 const metodosPago = {
   yape: { nombre: "Yape", color: "bg-purple-700", icono: "/iconos/yape.png" },
@@ -27,6 +28,9 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const [isMembresiaOpen, setMembresiaOpen] = useState(false);
   const [isEntrenadorModalOpen, setEntrenadorModalOpen] = useState(false);
+  
+  // Cargar colores del sistema
+  useColoresSistema();
 
   // Estados para las alertas
   const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
@@ -445,8 +449,17 @@ const ModalSuscripcion = ({ triggerText = "Nueva Suscripción", onSuscripcionExi
                   <button
                     type="button"
                     onClick={() => setMembresiaOpen(true)}
-                    className="flex items-center w-full gap-2 xs:gap-3 p-2 xs:p-2.5 sm:p-3 text-white transition-all duration-200 bg-black border rounded-lg hover:bg-gray-900 hover:scale-105 hover:shadow-lg"
-                    style={{ borderColor: 'var(--color-acentos, #D72838)' }}
+                    className={`flex items-center w-full gap-2 xs:gap-3 p-2 xs:p-2.5 sm:p-3 text-white transition-all duration-200 border rounded-lg hover:scale-105 hover:shadow-lg ${
+                      membresia 
+                        ? "bg-color-botones ring-2 ring-color-acentos border-color-acentos hover:opacity-90" 
+                        : "bg-black border-gray-700 hover:bg-gray-900"
+                    }`}
+                    style={membresia ? {
+                      backgroundColor: 'var(--color-botones, #D72838)',
+                      borderColor: 'var(--color-acentos, #D72838)'
+                    } : {
+                      borderColor: 'var(--color-acentos, #D72838)'
+                    }}
                   >
                     <DateRangeOutlinedIcon className="text-color-acentos text-base xs:text-lg sm:text-xl flex-shrink-0" />
                     <span className="text-sm xs:text-base sm:text-lg font-medium truncate">

@@ -1,11 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
-  Table,
-  TableHeader,
-  TableColumn,
-  TableBody,
-  TableRow,
-  TableCell,
   Pagination,
   Button,
   CircularProgress,
@@ -27,12 +21,18 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import ViewModuleIcon from "@mui/icons-material/ViewModule";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import TableChartIcon from "@mui/icons-material/TableChart";
-import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import PersonIcon from "@mui/icons-material/Person";
+import AccountCircleRoundedIcon from "@mui/icons-material/AccountCircleRounded";
 import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
 import ModalEditarClienteDia from "../../Modal/ModalEditarClienteDia";
 import api from "../../../utils/axiosInstance";
+
+// Función para obtener color del sistema
+const getColorSistema = () => {
+  if (typeof window !== 'undefined') {
+    return getComputedStyle(document.documentElement).getPropertyValue('--color-botones').trim() || '#D72838';
+  }
+  return '#D72838';
+};
 
 // 🔹 Función para formatear hora
 const formatTime12Hour = (timeString) => {
@@ -54,26 +54,11 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
   const [userRol, setUserRol] = useState(null);
   const [vistaAgrupada, setVistaAgrupada] = useState(true); // Nueva opción para vista agrupada
   const [clientesExpandidos, setClientesExpandidos] = useState(new Set()); // Clientes con detalles expandidos
-  const [sortDescriptor, setSortDescriptor] = useState({
+  const [sortDescriptor] = useState({
     column: "fecha",
     direction: "descending",
   });
   const [filtroRepetidos, setFiltroRepetidos] = useState("todos"); // "todos", "repetidos", "unicos"
-
-  const allowedSortFields = useMemo(
-    () => new Set(["nombre", "fecha", "horaInicio", "metododePago"]),
-    []
-  );
-
-  const handleSortChange = useCallback(
-    (descriptor) => {
-      if (!descriptor || !descriptor.column) return;
-      if (allowedSortFields.has(descriptor.column)) {
-        setSortDescriptor(descriptor);
-      }
-    },
-    [allowedSortFields]
-  );
 
   // Alertas
   const [alert, setAlert] = useState({
@@ -150,7 +135,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
     setIsImageModalOpen(false);
   };
 
-  const rowsPerPage = 10;
+  const rowsPerPage = 4;
 
   // 🔹 Función para verificar si un cliente es repetido
   const esClienteRepetido = useCallback((cliente) => {
@@ -484,8 +469,6 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
     }
   }, [sortDescriptor, items, vistaAgrupada, clientesExpandidos]);
 
-  const loadingState = isLoading ? "loading" : "idle";
-
   const totalMonto = useMemo(
     () => {
       if (!Array.isArray(clientesFiltrados)) return 0;
@@ -663,493 +646,394 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
         </div>
       )}
 
-      <div className="w-full overflow-x-auto -mx-3 sm:-mx-4 md:mx-0 px-3 sm:px-4 md:px-0">
-        <Table
-          aria-label="Tabla de todos los clientes"
-          sortDescriptor={sortDescriptor}
-          onSortChange={handleSortChange}
-          removeWrapper
-          bottomContent={
-            pages > 1 && (
-              <div className="flex justify-center mt-3">
-                <Pagination
-                  isCompact
-                  showControls
-                  color="primary"
-                  page={page}
-                  total={pages}
-                  onChange={(p) => setPage(p)}
-                />
-              </div>
-            )
-          }
-          classNames={{
-            base: "min-w-full",
-            wrapper: "bg-white rounded-lg shadow",
-            table: "min-w-full",
-            th: "bg-gradient-tabla-header text-white font-bold text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3 whitespace-nowrap",
-            td: "text-black text-[10px] xs:text-xs sm:text-sm px-2 sm:px-3 py-2 sm:py-3",
-            tr: "hover:bg-gray-50 transition-colors",
-          }}
-        >
-        <TableHeader>
-          {vistaAgrupada ? (
-            <>
-              <TableColumn className="min-w-[40px] sm:min-w-[50px]"></TableColumn>
-              <TableColumn key="nombre" allowsSorting className="min-w-[100px] sm:min-w-[120px]">Nombre</TableColumn>
-              <TableColumn key="documento" allowsSorting className="min-w-[90px] sm:min-w-[120px]">Documento</TableColumn>
-              <TableColumn key="visitas" className="text-center min-w-[60px] sm:min-w-[80px]">Visitas</TableColumn>
-              <TableColumn className="min-w-[80px] sm:min-w-[100px] hidden xs:table-cell">Última Visita</TableColumn>
-              <TableColumn className="text-right min-w-[70px] sm:min-w-[80px]">Total</TableColumn>
-              <TableColumn className="text-center min-w-[80px] hidden sm:table-cell">Métodos</TableColumn>
-              <TableColumn key="cambios" className="text-center min-w-[90px] sm:min-w-[110px] hidden xs:table-cell">Ingresado Por</TableColumn>
-              <TableColumn key="acciones" className="text-center min-w-[100px] sm:min-w-[120px]">Acciones</TableColumn>
-            </>
-          ) : (
-            <>
-              <TableColumn key="nombre" allowsSorting className="min-w-[100px] sm:min-w-[120px]">Nombre</TableColumn>
-              <TableColumn key="documento" allowsSorting className="min-w-[90px] sm:min-w-[120px]">Documento</TableColumn>
-              <TableColumn key="fecha" allowsSorting className="min-w-[80px] sm:min-w-[100px] hidden xs:table-cell">Fecha</TableColumn>
-              <TableColumn key="horaInicio" allowsSorting className="min-w-[70px] sm:min-w-[100px]">Hora</TableColumn>
-              <TableColumn key="metododePago" allowsSorting className="text-center min-w-[60px] sm:min-w-[80px]">PAGO</TableColumn>
-              <TableColumn key="precio" className="text-right min-w-[60px] sm:min-w-[80px]" allowsSorting>Monto</TableColumn>
-              <TableColumn key="visitas" className="text-center min-w-[60px] sm:min-w-[80px] hidden sm:table-cell">Visitas</TableColumn>
-              <TableColumn key="cambios" className="text-center min-w-[90px] sm:min-w-[110px] hidden xs:table-cell">Ingresado Por</TableColumn>
-              <TableColumn key="acciones" className="text-center min-w-[100px] sm:min-w-[120px]">Acciones</TableColumn>
-            </>
-          )}
-        </TableHeader>
-
-        <TableBody
-          items={sortedItems}
-          loadingState={loadingState}
-          loadingContent={
-            <div className="flex items-center justify-center h-40">
-              <CircularProgress aria-label="Cargando..." size="lg" color="default" />
-            </div>
-          }
-          emptyContent={"No hay clientes registrados"}
-        >
-          {vistaAgrupada ? (
-            // Vista Agrupada: mostrar cada cliente una vez con resumen
-            (item) => {
-              // Determinar si es una fila principal o una fila expandida
-              if (item.esVisitaExpandida) {
-                // Renderizar fila expandida (visita individual)
+      {isLoading ? (
+        <div className="flex items-center justify-center h-64 bg-white rounded-xl">
+          <CircularProgress aria-label="Cargando..." size="lg" color="default" />
+        </div>
+      ) : sortedItems.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-xl border border-gray-200">
+          <p className="text-gray-500 text-sm">No hay clientes registrados</p>
+        </div>
+      ) : (
+        <>
+          {/* Vista de Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+            {sortedItems.map((item) => {
+              // Si es una visita expandida en vista agrupada
+              if (vistaAgrupada && item.esVisitaExpandida) {
                 const puedeEliminar = userRol === 'admin';
                 return (
-                  <TableRow 
+                  <div 
                     key={`${item.grupoPadre}-${item.indiceVisita}`}
-                    className="bg-gray-50"
+                    className="bg-gray-50 rounded-lg shadow-md border border-gray-200 overflow-hidden ml-4"
                   >
-                    <TableCell></TableCell>
-                    <TableCell className="text-xs text-gray-600 pl-6">
-                      <div className="flex items-center gap-1">
-                        <span className="font-medium">{item.nombre}</span>
+                    <div className="h-1 bg-gradient-to-r from-gray-400 to-gray-500" />
+                    <div className="p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 24 }} />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-xs text-gray-700 truncate">{item.nombre || "Sin nombre"}</h3>
+                          <Chip size="sm" color="secondary" variant="flat" className="text-[9px] h-4 mt-0.5">
+                            #{item.indiceVisita + 1}
+                          </Chip>
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell></TableCell>
-                    <TableCell className="text-center">
-                      <Chip
-                        size="sm"
-                        color="secondary"
-                        variant="flat"
-                        className="text-[10px] xs:text-[11px]"
-                      >
-                        #{item.indiceVisita + 1}
-                      </Chip>
-                    </TableCell>
-                    <TableCell className="text-xs">
-                      <div className="flex flex-col gap-0.5">
-                        <span>{item.fecha ? new Date(item.fecha).toLocaleDateString("es-PE") : "Sin fecha"}</span>
-                        <span className="text-gray-500">{formatTime12Hour(item.horaInicio)}</span>
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        <div className="bg-white rounded-md p-2 border border-gray-100">
+                          <span className="text-[9px] text-gray-500 block mb-0.5">Fecha</span>
+                          <span className="text-xs font-medium text-gray-800">
+                            {item.fecha ? new Date(item.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "Sin fecha"}
+                          </span>
+                        </div>
+                        <div className="bg-white rounded-md p-2 border border-gray-100">
+                          <span className="text-[9px] text-gray-500 block mb-0.5">Hora</span>
+                          <span className="text-xs font-medium text-gray-800">{formatTime12Hour(item.horaInicio)}</span>
+                        </div>
+                        <div className="bg-white rounded-md p-2 border border-gray-100">
+                          <span className="text-[9px] text-gray-500 block mb-0.5">Monto</span>
+                          <span className="text-xs font-bold text-gray-900">S/ {item.monto ?? 7}</span>
+                        </div>
+                        <div className="bg-white rounded-md p-2 border border-gray-100">
+                          <span className="text-[9px] text-gray-500 block mb-0.5">Pago</span>
+                          <div className="flex items-center justify-center h-full">
+                            {item.metododePago && metodosPago[item.metododePago.toLowerCase()] ? (
+                              item.metododePago.toLowerCase() === 'efectivo' ? (
+                                <img
+                                  src={metodosPago[item.metododePago.toLowerCase()].icono}
+                                  alt={metodosPago[item.metododePago.toLowerCase()].nombre}
+                                  className="object-contain w-5 h-5 opacity-80"
+                                />
+                              ) : (
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  onClick={() => openComprobanteModal(item)}
+                                  className="p-0.5 bg-transparent hover:opacity-80 min-w-0 w-auto h-auto"
+                                >
+                                  <img
+                                    src={metodosPago[item.metododePago.toLowerCase()].icono}
+                                    alt={metodosPago[item.metododePago.toLowerCase()].nombre}
+                                    className="object-contain w-5 h-5"
+                                  />
+                                </Button>
+                              )
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-right text-xs font-semibold">
-                      S/ {item.monto ?? 7}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {item.metododePago && metodosPago[item.metododePago.toLowerCase()] && (
-                        <img
-                          src={metodosPago[item.metododePago.toLowerCase()].icono}
-                          alt={item.metododePago}
-                          className="object-contain w-5 h-5 mx-auto"
-                          title={item.metododePago}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center hidden xs:table-cell">
-                      {item.creadoPor === "admin" ? (
-                        <Tooltip title="Administrador" arrow>
-                          <IconButton size="small" sx={{ p: 0.5, color: "#d32f2f" }}>
-                            <AdminPanelSettingsIcon sx={{ fontSize: 20 }} />
-                          </IconButton>
-                        </Tooltip>
-                      ) : item.creadoPor === "trabajador" ? (
-                        <Tooltip title={item.creadorNombre || "Trabajador"} arrow>
-                          <IconButton size="small" sx={{ p: 0.5, color: "#1976d2" }}>
-                            <PersonIcon sx={{ fontSize: 20 }} />
-                          </IconButton>
-                        </Tooltip>
-                      ) : (
-                        <span className="text-[9px] xs:text-[10px] text-gray-400">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1">
+                      <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-200">
                         <IconButton
                           aria-label="Descargar voucher"
                           onClick={() => descargarVoucher(item)}
-                          sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                          sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                           size="small"
                         >
-                          <AdfScannerRoundedIcon sx={{ fontSize: 18 }} />
+                          <AdfScannerRoundedIcon fontSize="inherit" />
                         </IconButton>
                         <IconButton
                           aria-label="Editar cliente"
                           onClick={() => openModalEditar(item)}
-                          sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                          sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                           size="small"
                         >
-                          <EditIcon sx={{ fontSize: 18 }} />
+                          <EditIcon fontSize="inherit" />
                         </IconButton>
                         {puedeEliminar && (
                           <IconButton
                             aria-label="Eliminar cliente"
-                            color="error"
                             onClick={() => handleDeleteConfirm(item)}
-                            sx={{ p: 0.5 }}
+                            sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                             size="small"
                           >
-                            <DeleteIcon sx={{ fontSize: 18 }} />
+                            <DeleteIcon fontSize="inherit" />
                           </IconButton>
                         )}
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                  </div>
                 );
               }
-              
-              // Renderizar fila principal del grupo
-              const grupo = item;
-              const estaExpandido = clientesExpandidos.has(grupo.clave);
-              const puedeEliminar = userRol === 'admin';
-              
-              return (
-                <TableRow 
-                  key={grupo.clave}
-                  className={grupo.esRepetido ? "bg-yellow-50 hover:bg-yellow-100" : ""}
-                >
-                  {/* Botón expandir/colapsar */}
-                  <TableCell>
-                    {grupo.totalVisitas > 1 && (
-                      <IconButton
-                        onClick={() => toggleExpandirCliente(grupo.clave)}
-                        sx={{ p: 0.5 }}
-                        size="small"
-                      >
-                        {estaExpandido ? 
-                          <ExpandLessIcon sx={{ fontSize: 20, color: "#d32f2f" }} /> : 
-                          <ExpandMoreIcon sx={{ fontSize: 20, color: "#d32f2f" }} />
-                        }
-                      </IconButton>
-                    )}
-                  </TableCell>
-                  
-                  {/* Nombre */}
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {grupo.nombre || "Sin nombre"}
-                      {grupo.esRepetido && (
-                        <Chip
-                          size="sm"
-                          color="warning"
-                          variant="flat"
-                          startContent={<RepeatIcon sx={{ fontSize: 14 }} />}
-                        >
-                          {grupo.totalVisitas}x
-                        </Chip>
-                      )}
-                    </div>
-                  </TableCell>
-                  
-                  {/* Documento */}
-                  <TableCell>
-                    {grupo.tipoDocumento && grupo.numeroDocumento ? (
-                      <div className="flex flex-col gap-0.5">
-                        <Chip 
-                          color={grupo.tipoDocumento === "DNI" ? "primary" : "secondary"} 
-                          variant="flat"
-                          size="sm"
-                          className="text-[10px] xs:text-[11px] h-5 w-fit"
-                        >
-                          {grupo.tipoDocumento === "CE" ? "CE" : grupo.tipoDocumento || "DNI"}
-                        </Chip>
-                        <span className="text-[9px] xs:text-[10px] text-gray-600">
-                          {grupo.numeroDocumento}
-                        </span>
+
+              // Vista agrupada - grupo principal
+              if (vistaAgrupada && item.esGrupoPrincipal) {
+                const grupo = item;
+                const estaExpandido = clientesExpandidos.has(grupo.clave);
+                const puedeEliminar = userRol === 'admin';
+                
+                return (
+                  <div 
+                    key={grupo.clave}
+                    className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 overflow-hidden ${grupo.esRepetido ? 'ring-2 ring-yellow-300' : ''}`}
+                  >
+                    <div className={`h-1 ${grupo.esRepetido ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-color-botones to-red-600'}`} />
+                    <div className="p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} className="flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-sm text-gray-900 truncate mb-0.5">{grupo.nombre || "Sin nombre"}</h3>
+                            {grupo.tipoDocumento && grupo.numeroDocumento && (
+                              <div className="flex items-center gap-1">
+                                <Chip 
+                                  color={grupo.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                                  variant="flat"
+                                  size="sm"
+                                  className="text-[9px] h-4"
+                                >
+                                  {grupo.tipoDocumento === "CE" ? "CE" : grupo.tipoDocumento}
+                                </Chip>
+                                <span className="text-[9px] text-gray-600 truncate">{grupo.numeroDocumento}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {grupo.esRepetido && (
+                            <Chip size="sm" color="warning" variant="flat" className="text-[9px] h-5">
+                              <RepeatIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                              {grupo.totalVisitas}x
+                            </Chip>
+                          )}
+                          <Chip size="sm" color={grupo.totalVisitas > 1 ? "warning" : "default"} variant="flat" className="text-[9px] h-5">
+                            {grupo.totalVisitas} visita{grupo.totalVisitas > 1 ? 's' : ''}
+                          </Chip>
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </TableCell>
-                  
-                  {/* Total Visitas */}
-                  <TableCell className="text-center">
-                    <Chip
-                      size="sm"
-                      color={grupo.totalVisitas > 1 ? "warning" : "default"}
-                      variant="flat"
-                    >
-                      {grupo.totalVisitas}
-                    </Chip>
-                  </TableCell>
-                  
-                  {/* Última Visita */}
-                  <TableCell>
-                    {grupo.ultimaVisita ? (
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-xs">
-                          {grupo.ultimaVisita.fecha ? new Date(grupo.ultimaVisita.fecha).toLocaleDateString("es-PE") : "Sin fecha"}
-                        </span>
-                        <span className="text-[10px] text-gray-500">
-                          {formatTime12Hour(grupo.ultimaVisita.horaInicio)}
-                        </span>
+
+                      <div className="grid grid-cols-2 gap-2 mb-2">
+                        <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
+                          <span className="text-[9px] text-gray-500 block mb-0.5">Última Visita</span>
+                          <span className="text-xs font-medium text-gray-800">
+                            {grupo.ultimaVisita?.fecha ? new Date(grupo.ultimaVisita.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "Sin fecha"}
+                          </span>
+                          <span className="text-[9px] text-gray-500 block">{formatTime12Hour(grupo.ultimaVisita?.horaInicio)}</span>
+                        </div>
+                        <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
+                          <span className="text-[9px] text-gray-500 block mb-0.5">Total Gastado</span>
+                          <span className="text-xs font-bold text-gray-900">S/ {grupo.totalMonto.toFixed(2)}</span>
+                        </div>
+                        <div className="bg-gray-50 rounded-md p-2 border border-gray-100 col-span-2">
+                          <span className="text-[9px] text-gray-500 block mb-0.5">Métodos de Pago</span>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            {Array.from(grupo.metodosPago).slice(0, 3).map((metodo) => (
+                              metodosPago[metodo.toLowerCase()] && (
+                                <img
+                                  key={metodo}
+                                  src={metodosPago[metodo.toLowerCase()].icono}
+                                  alt={metodo}
+                                  className="object-contain w-5 h-5"
+                                  title={metodo}
+                                />
+                              )
+                            ))}
+                            {grupo.metodosPago.size > 3 && (
+                              <span className="text-[9px] text-gray-500">+{grupo.metodosPago.size - 3}</span>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </TableCell>
-                  
-                  {/* Total Gastado */}
-                  <TableCell className="text-right font-semibold">
-                    S/ {grupo.totalMonto.toFixed(2)}
-                  </TableCell>
-                  
-                  {/* Métodos de Pago */}
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1 flex-wrap">
-                      {Array.from(grupo.metodosPago).slice(0, 3).map((metodo) => (
-                        metodosPago[metodo.toLowerCase()] && (
-                          <img
-                            key={metodo}
-                            src={metodosPago[metodo.toLowerCase()].icono}
-                            alt={metodo}
-                            className="object-contain w-5 h-5 xs:w-6 xs:h-6"
-                            title={metodo}
-                          />
-                        )
-                      ))}
-                      {grupo.metodosPago.size > 3 && (
-                        <span className="text-[9px] text-gray-500">+{grupo.metodosPago.size - 3}</span>
+
+                      {grupo.totalVisitas > 1 && (
+                        <div className="mb-2">
+                          <Button
+                            size="sm"
+                            variant="flat"
+                            onClick={() => toggleExpandirCliente(grupo.clave)}
+                            className="w-full text-xs"
+                            startContent={estaExpandido ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
+                          >
+                            {estaExpandido ? 'Ocultar visitas' : `Ver ${grupo.totalVisitas} visita${grupo.totalVisitas > 1 ? 's' : ''}`}
+                          </Button>
+                        </div>
                       )}
-                    </div>
-                  </TableCell>
-                  
-                  {/* Ingresado Por */}
-                  <TableCell className="text-center hidden xs:table-cell">
-                    {grupo.ultimaVisita?.creadoPor === "admin" ? (
-                      <Tooltip title="Administrador" arrow>
-                        <IconButton size="small" sx={{ p: 0.5, color: "#d32f2f" }}>
-                          <AdminPanelSettingsIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                      </Tooltip>
-                    ) : grupo.ultimaVisita?.creadoPor === "trabajador" ? (
-                      <Tooltip title={grupo.ultimaVisita?.creadorNombre || "Trabajador"} arrow>
-                        <IconButton size="small" sx={{ p: 0.5, color: "#1976d2" }}>
-                          <PersonIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                      </Tooltip>
-                    ) : (
-                      <span className="text-[9px] xs:text-[10px] text-gray-400">-</span>
-                    )}
-                  </TableCell>
-                  
-                  {/* Acciones */}
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1 sm:gap-2">
-                      {grupo.ultimaVisita && (
-                        <>
-                          <IconButton
-                            aria-label="Descargar voucher"
-                            onClick={() => descargarVoucher(grupo.ultimaVisita)}
-                            sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
-                            size="small"
-                          >
-                            <AdfScannerRoundedIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-                          </IconButton>
-                          <IconButton
-                            aria-label="Editar cliente"
-                            onClick={() => openModalEditar(grupo.ultimaVisita)}
-                            sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
-                            size="small"
-                          >
-                            <EditIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
-                          </IconButton>
-                          {puedeEliminar && (
+
+                      <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-200">
+                        {grupo.ultimaVisita && (
+                          <>
                             <IconButton
-                              aria-label="Eliminar cliente"
-                              color="error"
-                              onClick={() => handleDeleteConfirm(grupo.ultimaVisita)}
-                              sx={{ p: 0.5 }}
+                              aria-label="Descargar voucher"
+                              onClick={() => descargarVoucher(grupo.ultimaVisita)}
+                              sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                               size="small"
                             >
-                              <DeleteIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                              <AdfScannerRoundedIcon fontSize="inherit" />
                             </IconButton>
-                          )}
-                        </>
-                      )}
+                            <IconButton
+                              aria-label="Editar cliente"
+                              onClick={() => openModalEditar(grupo.ultimaVisita)}
+                              sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                              size="small"
+                            >
+                              <EditIcon fontSize="inherit" />
+                            </IconButton>
+                            {puedeEliminar && (
+                              <IconButton
+                                aria-label="Eliminar cliente"
+                                onClick={() => handleDeleteConfirm(grupo.ultimaVisita)}
+                                sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                                size="small"
+                              >
+                                <DeleteIcon fontSize="inherit" />
+                              </IconButton>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </TableCell>
-                </TableRow>
-              );
-            }
-          ) : (
-            // Vista Detallada: mostrar todas las visitas individuales (código original)
-            (cliente) => {
+                  </div>
+                );
+              }
+
+              // Vista detallada - cliente individual
+              const cliente = item;
               const esRepetido = esClienteRepetido(cliente);
               const numVisitas = obtenerNumeroVisitas(cliente);
               const puedeEliminar = userRol === 'admin';
+              
               return (
-                <TableRow 
+                <div 
                   key={cliente._id || cliente.nombre}
-                  className={esRepetido ? "bg-yellow-50 hover:bg-yellow-100" : ""}
+                  className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 overflow-hidden ${esRepetido ? 'ring-2 ring-yellow-300' : ''}`}
                 >
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      {cliente.nombre || "Sin nombre"}
-                      {esRepetido && (
-                        <Chip
-                          size="sm"
-                          color="warning"
-                          variant="flat"
-                          startContent={<RepeatIcon sx={{ fontSize: 14 }} />}
-                        >
-                          {numVisitas}x
+                  <div className={`h-1 ${esRepetido ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-color-botones to-red-600'}`} />
+                  <div className="p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} className="flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-sm text-gray-900 truncate mb-0.5">{cliente.nombre || "Sin nombre"}</h3>
+                          {cliente.tipoDocumento && cliente.numeroDocumento && (
+                            <div className="flex items-center gap-1">
+                              <Chip 
+                                color={cliente.tipoDocumento === "DNI" ? "primary" : "secondary"} 
+                                variant="flat"
+                                size="sm"
+                                className="text-[9px] h-4"
+                              >
+                                {cliente.tipoDocumento === "CE" ? "CE" : cliente.tipoDocumento}
+                              </Chip>
+                              <span className="text-[9px] text-gray-600 truncate">{cliente.numeroDocumento}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        {esRepetido && (
+                          <Chip size="sm" color="warning" variant="flat" className="text-[9px] h-5">
+                            <RepeatIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                            {numVisitas}x
+                          </Chip>
+                        )}
+                        <Chip size="sm" color={numVisitas > 1 ? "warning" : "default"} variant="flat" className="text-[9px] h-5">
+                          {numVisitas} visita{numVisitas > 1 ? 's' : ''}
                         </Chip>
-                      )}
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {cliente.tipoDocumento && cliente.numeroDocumento ? (
-                      <div className="flex flex-col gap-0.5">
-                        <Chip 
-                          color={cliente.tipoDocumento === "DNI" ? "primary" : "secondary"} 
-                          variant="flat"
-                          size="sm"
-                          className="text-[10px] xs:text-[11px] h-5 w-fit"
-                        >
-                          {cliente.tipoDocumento === "CE" ? "CE" : cliente.tipoDocumento || "DNI"}
-                        </Chip>
-                        <span className="text-[9px] xs:text-[10px] text-gray-600">
-                          {cliente.numeroDocumento}
+
+                    <div className="grid grid-cols-2 gap-2 mb-2">
+                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
+                        <span className="text-[9px] text-gray-500 block mb-0.5">Fecha</span>
+                        <span className="text-xs font-medium text-gray-800">
+                          {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "Sin fecha"}
                         </span>
                       </div>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE") : "Sin fecha"}
-                  </TableCell>
-                  <TableCell>{formatTime12Hour(cliente.horaInicio)}</TableCell>
-                  <TableCell className="text-center capitalize">
-                    <div className="flex items-center justify-center gap-2">
-                      {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] && (
-                        <>
-                          {cliente.metododePago.toLowerCase() === 'efectivo' ? (
-                            <div className="p-1 cursor-default">
+                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
+                        <span className="text-[9px] text-gray-500 block mb-0.5">Hora</span>
+                        <span className="text-xs font-medium text-gray-800">{formatTime12Hour(cliente.horaInicio)}</span>
+                      </div>
+                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
+                        <span className="text-[9px] text-gray-500 block mb-0.5">Monto</span>
+                        <span className="text-xs font-bold text-gray-900">S/ {cliente.monto ?? 7}</span>
+                      </div>
+                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
+                        <span className="text-[9px] text-gray-500 block mb-0.5">Pago</span>
+                        <div className="flex items-center justify-center h-full">
+                          {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] ? (
+                            cliente.metododePago.toLowerCase() === 'efectivo' ? (
                               <img
                                 src={metodosPago[cliente.metododePago.toLowerCase()].icono}
                                 alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                                className="object-contain w-6 h-6 opacity-80"
+                                className="object-contain w-5 h-5 opacity-80"
                               />
-                            </div>
+                            ) : (
+                              <Button
+                                isIconOnly
+                                size="sm"
+                                onClick={() => openComprobanteModal(cliente)}
+                                className="p-0.5 bg-transparent hover:opacity-80 min-w-0 w-auto h-auto"
+                              >
+                                <img
+                                  src={metodosPago[cliente.metododePago.toLowerCase()].icono}
+                                  alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
+                                  className="object-contain w-5 h-5"
+                                />
+                              </Button>
+                            )
                           ) : (
-                            <Button
-                              isIconOnly
-                              size="sm"
-                              onClick={() => openComprobanteModal(cliente)}
-                              className="p-1 bg-transparent hover:opacity-80"
-                            >
-                              <img
-                                src={metodosPago[cliente.metododePago.toLowerCase()].icono}
-                                alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                                className="object-contain w-6 h-6"
-                              />
-                            </Button>
+                            <span className="text-gray-400">-</span>
                           )}
-                        </>
-                      )}
+                        </div>
+                      </div>
                     </div>
-                  </TableCell>
-                  <TableCell className="text-right font-semibold">{cliente.monto ?? 7}</TableCell>
-                  <TableCell className="text-center">
-                    <Chip
-                      size="sm"
-                      color={numVisitas > 1 ? "warning" : "default"}
-                      variant={numVisitas > 1 ? "flat" : "flat"}
-                    >
-                      {numVisitas}
-                    </Chip>
-                  </TableCell>
-                  <TableCell className="text-center hidden xs:table-cell">
-                    {cliente.creadoPor === "admin" ? (
-                      <Tooltip title="Administrador" arrow>
-                        <IconButton size="small" sx={{ p: 0.5, color: "#d32f2f" }}>
-                          <AdminPanelSettingsIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                      </Tooltip>
-                    ) : cliente.creadoPor === "trabajador" ? (
-                      <Tooltip title={cliente.creadorNombre || "Trabajador"} arrow>
-                        <IconButton size="small" sx={{ p: 0.5, color: "#1976d2" }}>
-                          <PersonIcon sx={{ fontSize: 20 }} />
-                        </IconButton>
-                      </Tooltip>
-                    ) : (
-                      <span className="text-[9px] xs:text-[10px] text-gray-400">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
+
+                    <div className="flex items-center justify-between mb-2 text-xs">
+                      <span className="text-[9px] text-gray-500">
+                        {cliente.creadoPor === "admin" ? "Admin" : (cliente.creadorNombre || "Trabajador")}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-200">
                       <IconButton
                         aria-label="Descargar voucher"
                         onClick={() => descargarVoucher(cliente)}
-                        sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                        sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                         size="small"
                       >
-                        <AdfScannerRoundedIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
+                        <AdfScannerRoundedIcon fontSize="inherit" />
                       </IconButton>
-
                       <IconButton
                         aria-label="Editar cliente"
                         onClick={() => openModalEditar(cliente)}
-                        sx={{ color: "#d32f2f", "&:hover": { color: "#9a1b1b" }, p: 0.5 }}
+                        sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                         size="small"
                       >
-                        <EditIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
+                        <EditIcon fontSize="inherit" />
                       </IconButton>
-
                       {puedeEliminar && (
                         <IconButton
                           aria-label="Eliminar cliente"
-                          color="error"
                           onClick={() => handleDeleteConfirm(cliente)}
-                          sx={{ p: 0.5 }}
+                          sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                           size="small"
                         >
-                          <DeleteIcon sx={{ fontSize: { xs: 20, sm: 24, md: 26 } }} />
+                          <DeleteIcon fontSize="inherit" />
                         </IconButton>
                       )}
                     </div>
-                  </TableCell>
-                </TableRow>
+                  </div>
+                </div>
               );
-            }
+            })}
+          </div>
+
+          {/* Paginación */}
+          {pages > 1 && (
+            <div className="flex justify-center mt-4">
+              <Pagination
+                isCompact
+                showControls
+                color="primary"
+                page={page}
+                total={pages}
+                onChange={(p) => setPage(p)}
+                size="sm"
+              />
+            </div>
           )}
-        </TableBody>
-        </Table>
-      </div>
+        </>
+      )}
 
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-4">
         <div className="text-base sm:text-lg font-bold text-black">

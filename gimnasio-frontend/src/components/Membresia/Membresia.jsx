@@ -13,6 +13,7 @@ import {
   Alert,
 } from "@heroui/react";
 import api from "../../utils/axiosInstance";
+import { useColoresSistema } from "../../hooks/useColoresSistema";
 
 
 const preciosPorTurno = {
@@ -30,6 +31,9 @@ const Membresia = ({ onClose }) => {
 
   // 🚨 Estados para alertas
   const [alertaInterna, setAlertaInterna] = useState({ show: false, type: "", message: "", title: "" });
+  
+  // Cargar colores del sistema
+  useColoresSistema();
 
   useEffect(() => {
     if (!isOpen && onClose) onClose();
@@ -120,7 +124,7 @@ const Membresia = ({ onClose }) => {
           {(modalClose) => (
             <div className="text-white bg-neutral-600 rounded-xl">
               <ModalHeader>
-                <div className="w-full text-xl sm:text-2xl md:text-3xl font-bold text-center text-red-500">
+                <div className="w-full text-xl sm:text-2xl md:text-3xl font-bold text-center text-color-acentos">
                   Agregar Nueva Membresía
                 </div>
               </ModalHeader>
@@ -193,7 +197,10 @@ const Membresia = ({ onClose }) => {
                   Cancelar
                 </Button>
                 <Button
-                  className="w-full sm:w-auto text-white bg-red-600 hover:bg-red-700"
+                  className="w-full sm:w-auto text-white bg-color-botones hover:opacity-90"
+                  style={{
+                    backgroundColor: 'var(--color-botones, #D72838)'
+                  }}
                   onPress={() => handleGuardar(modalClose)}
                   isLoading={loading}
                   isDisabled={loading}

@@ -55,6 +55,11 @@ const gymSchema = new mongoose.Schema({
         type:String,
         default: 'porDefecto', // Nombre de la plantilla de colores seleccionada
         trim: true,
+    },
+    precioClientePorDia:{
+        type:Number,
+        default: 7, // Precio por defecto para clientes por día
+        min: 0
     }
 },{ timestamps: true });
 

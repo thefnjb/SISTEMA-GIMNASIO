@@ -9,12 +9,15 @@ import TablaClientesDiaTrabajador from "../../components/Tabla/TablaCldia/Client
 import GetAppRoundedIcon from "@mui/icons-material/GetAppRounded";
 import { useColoresSistema } from "../../hooks/useColoresSistema";
 import SkeletonLoader from "../../components/Skeleton/SkeletonLoader";
+import ModalInfoCard from "../../components/Modal/ModalInfoCard";
 
 const PanelTrabajador = () => {
   const coloresCargados = useColoresSistema();
   const [active, setActive] = useState("INICIO");
   const [refreshClientes, setRefreshClientes] = useState(0);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [modalInfoMembresias, setModalInfoMembresias] = useState(false);
+  const [modalInfoClientesDia, setModalInfoClientesDia] = useState(false);
 
   // 🔄 Refresca las tablas cuando se agrega un cliente o suscripción
   const handleClienteAgregado = () => {
@@ -30,14 +33,20 @@ const PanelTrabajador = () => {
             {/* 🧩 Cards principales */}
             {/* Cards para móvil/tablet */}
             <div className="flex flex-col gap-3 xs:gap-4 md:hidden max-w-4xl mx-auto">
-              <CustomCardMobile title="Membresías" description="Inscribir clientes por membresías - Clientes que se inscriben con una suscripción">
+              <CustomCardMobile 
+                title="Membresías" 
+                onClick={() => setModalInfoMembresias(true)}
+              >
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCardMobile>
 
-              <CustomCardMobile title="Clientes por Día" description="Registra clientes que entrenan por día">
+              <CustomCardMobile 
+                title="Clientes por Día" 
+                onClick={() => setModalInfoClientesDia(true)}
+              >
                 <ModalDia
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   title="Clientes por Día"
@@ -48,14 +57,22 @@ const PanelTrabajador = () => {
 
             {/* Cards para desktop */}
             <div className="hidden md:grid md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
-              <CustomCard title="Membresías" description="Inscribir clientes por membresías - Clientes que se inscriben con una suscripción" className="w-full max-w-xs sm:max-w-sm mx-auto">
+              <CustomCard 
+                title="Membresías" 
+                className="w-full max-w-xs sm:max-w-sm mx-auto"
+                onClick={() => setModalInfoMembresias(true)}
+              >
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCard>
 
-              <CustomCard title="Clientes por Día" description="Registra clientes que entrenan por día" className="w-full max-w-xs sm:max-w-sm mx-auto">
+              <CustomCard 
+                title="Clientes por Día" 
+                className="w-full max-w-xs sm:max-w-sm mx-auto"
+                onClick={() => setModalInfoClientesDia(true)}
+              >
                 <div className="flex justify-center">
                   <ModalDia
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -107,10 +124,8 @@ const PanelTrabajador = () => {
       {/* Contenedor principal */}
       <div className="relative z-10 flex h-screen overflow-hidden">
         {/* Static sidebar for desktop */}
-        <div className="hidden md:flex md:flex-shrink-0">
-          <div className="flex flex-col w-72">
-            <BarralateralTrabajador active={active} setActive={setActive} />
-          </div>
+        <div className="hidden md:flex md:flex-shrink-0 md:w-72">
+          <BarralateralTrabajador active={active} setActive={setActive} />
         </div>
 
         {/* Mobile sidebar overlay */}
@@ -165,6 +180,21 @@ const PanelTrabajador = () => {
           </div>
         </div>
       </div>
+
+      {/* Modales informativos - Fuera del switch para que estén siempre disponibles */}
+      <ModalInfoCard
+        isOpen={modalInfoMembresias}
+        onClose={() => setModalInfoMembresias(false)}
+        title="Membresías"
+        description="En esta sección puedes inscribir clientes con membresías. Los clientes con suscripción tienen acceso ilimitado al gimnasio durante el período de su membresía activa. Puedes gestionar sus datos personales, seleccionar el tipo de membresía, asignar entrenadores, establecer fechas de inicio, gestionar métodos de pago, y realizar renovaciones. Los clientes con membresía aparecerán en tu lista de miembros activos y podrás hacer seguimiento de sus fechas de vencimiento."
+      />
+
+      <ModalInfoCard
+        isOpen={modalInfoClientesDia}
+        onClose={() => setModalInfoClientesDia(false)}
+        title="Clientes por Día"
+        description="Esta sección te permite registrar clientes que entrenan por día, es decir, clientes que no tienen una membresía activa pero que pagan una tarifa diaria para acceder al gimnasio. Puedes registrar su entrada, gestionar sus datos y hacer seguimiento de sus visitas. Este tipo de registro es ideal para clientes ocasionales o visitantes que no desean comprometerse con una membresía mensual."
+      />
     </div>
   );
 };

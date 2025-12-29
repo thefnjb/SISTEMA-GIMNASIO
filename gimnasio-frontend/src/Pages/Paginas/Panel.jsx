@@ -19,6 +19,7 @@ import AddCircleOutlineRoundedIcon from '@mui/icons-material/AddCircleOutlineRou
 import GetAppRoundedIcon from '@mui/icons-material/GetAppRounded';
 import { useColoresSistema } from '../../hooks/useColoresSistema';
 import SkeletonLoader from '../../components/Skeleton/SkeletonLoader';
+import ModalInfoCard from '../../components/Modal/ModalInfoCard';
 
 function Panel() {
   const coloresCargados = useColoresSistema();
@@ -27,7 +28,10 @@ function Panel() {
   const [showVer, setShowVer] = useState(false);
   const [refreshClientes, setRefreshClientes] = useState(0);
   const [refreshEntrenadores, setRefreshEntrenadores] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false); 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [modalInfoMembresias, setModalInfoMembresias] = useState(false);
+  const [modalInfoClientesDia, setModalInfoClientesDia] = useState(false);
+  const [modalInfoEntrenadores, setModalInfoEntrenadores] = useState(false); 
 
   const handleClienteAgregado = () => {
     setRefreshClientes((prev) => prev + 1);
@@ -73,14 +77,20 @@ function Panel() {
 
             {/* Cards para móvil/tablet */}
             <div className="flex flex-col gap-4 md:hidden">
-              <CustomCardMobile title="Membresías" description="Inscribir clientes por membresías - Clientes que se inscriben con una suscripción">
+              <CustomCardMobile 
+                title="Membresías" 
+                onClick={() => setModalInfoMembresias(true)}
+              >
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCardMobile>
 
-              <CustomCardMobile title="Clientes por Día" description="Registra clientes que entrenan por día">
+              <CustomCardMobile 
+                title="Clientes por Día" 
+                onClick={() => setModalInfoClientesDia(true)}
+              >
                 <ModalDia
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   title="Clientes por Dia"
@@ -88,7 +98,10 @@ function Panel() {
                 />
               </CustomCardMobile>
 
-              <CustomCardMobile title="Entrenadores" description="Administra los entrenadores del gimnasio">
+              <CustomCardMobile 
+                title="Entrenadores" 
+                onClick={() => setModalInfoEntrenadores(true)}
+              >
                 <div className="flex gap-4">
                   <ModalEntrenadores
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -106,14 +119,20 @@ function Panel() {
 
             {/* Cards para desktop */}
             <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <CustomCard title="Membresías" description="Inscribir clientes por membresías - Clientes que se inscriben con una suscripción">
+              <CustomCard 
+                title="Membresías" 
+                onClick={() => setModalInfoMembresias(true)}
+              >
                 <ModalSuscripcion
                   triggerText={<GetAppRoundedIcon fontSize="large" />}
                   onSuscripcionExitosa={handleClienteAgregado}
                 />
               </CustomCard>
 
-              <CustomCard title="Clientes por Día" description="Registra clientes que entrenan por día">
+              <CustomCard 
+                title="Clientes por Día" 
+                onClick={() => setModalInfoClientesDia(true)}
+              >
                 <div className="flex gap-10">
                   <ModalDia
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -123,7 +142,10 @@ function Panel() {
                 </div>
               </CustomCard>
 
-              <CustomCard title="Entrenadores" description="Administra los entrenadores del gimnasio">
+              <CustomCard 
+                title="Entrenadores" 
+                onClick={() => setModalInfoEntrenadores(true)}
+              >
                 <div className="flex gap-10">
                   <ModalEntrenadores
                     triggerText={<GetAppRoundedIcon fontSize="large" />}
@@ -195,10 +217,8 @@ function Panel() {
 
       <div className="relative z-10 flex h-screen overflow-hidden">
         {/* Static sidebar for desktop */}
-        <div className="hidden md:flex md:flex-shrink-0">
-          <div className="flex flex-col w-72">
-            <Barralateral active={active} setActive={setActive} />
-          </div>
+        <div className="hidden md:flex md:flex-shrink-0 md:w-72">
+          <Barralateral active={active} setActive={setActive} />
         </div>
 
         {/* Mobile sidebar overlay */}
@@ -253,6 +273,28 @@ function Panel() {
           </div>
         </div>
       </div>
+
+      {/* Modales informativos - Fuera del switch para que estén siempre disponibles */}
+      <ModalInfoCard
+        isOpen={modalInfoMembresias}
+        onClose={() => setModalInfoMembresias(false)}
+        title="Membresías"
+        description="En esta sección puedes inscribir clientes con membresías. Los clientes con suscripción tienen acceso ilimitado al gimnasio durante el período de su membresía activa. Puedes gestionar sus datos personales, seleccionar el tipo de membresía, asignar entrenadores, establecer fechas de inicio, gestionar métodos de pago, y realizar renovaciones. Los clientes con membresía aparecerán en tu lista de miembros activos y podrás hacer seguimiento de sus fechas de vencimiento."
+      />
+
+      <ModalInfoCard
+        isOpen={modalInfoClientesDia}
+        onClose={() => setModalInfoClientesDia(false)}
+        title="Clientes por Día"
+        description="Esta sección te permite registrar clientes que entrenan por día, es decir, clientes que no tienen una membresía activa pero que pagan una tarifa diaria para acceder al gimnasio. Puedes registrar su entrada, gestionar sus datos y hacer seguimiento de sus visitas. Este tipo de registro es ideal para clientes ocasionales o visitantes que no desean comprometerse con una membresía mensual."
+      />
+
+      <ModalInfoCard
+        isOpen={modalInfoEntrenadores}
+        onClose={() => setModalInfoEntrenadores(false)}
+        title="Entrenadores"
+        description="En esta sección puedes administrar los entrenadores del gimnasio. Puedes agregar nuevos entrenadores, ver la lista de entrenadores activos, editar su información y gestionar sus datos. Los entrenadores pueden ser asignados a clientes con membresías para proporcionarles seguimiento personalizado y orientación durante sus entrenamientos."
+      />
     </div>
   );
 }

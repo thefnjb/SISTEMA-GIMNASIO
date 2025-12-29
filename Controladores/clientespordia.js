@@ -2,6 +2,7 @@
 const mongoose = require("mongoose");
 const ClientesPorDia = require("../Modelos/ClientesporDia");
 const Trabajador = require("../Modelos/Trabajador");
+const Gym = require("../Modelos/Gimnasio");
 
 // --- Función de ayuda para calcular rango semanal ---
 function getWeekRange(date = new Date()) {
@@ -171,6 +172,11 @@ exports.registrarCliente = async (req, res) => {
         const now = new Date();
         const horaInicio = now.toTimeString().slice(0, 5);
 
+        // Obtener el precio configurado del gym
+        const gymId = req.usuario.gym_id;
+        const gym = await Gym.findById(gymId);
+        const precioClientePorDia = gym?.precioClientePorDia || 7;
+
         // Normalizar documentos antes de guardar
         const tipoDocFinal = tipoDocumento ? String(tipoDocumento).trim() : undefined;
         const numeroDocFinal = numeroDocumento ? String(numeroDocumento).trim().replace(/\s+/g, '') : undefined;
@@ -182,6 +188,7 @@ exports.registrarCliente = async (req, res) => {
             fecha: fecha || new Date(),
             horaInicio,
             metododePago: metododePago || 'Efectivo',
+            monto: precioClientePorDia,
             creadoPor: rol,
             creadorId: id
         });

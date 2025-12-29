@@ -29,7 +29,8 @@ function ConfiguracionEmpresa() {
     colorBotones: '#D72838',
     colorCards: '#ffffff',
     colorTablas: '#D72838',
-    colorAcentos: '#D72838'
+    colorAcentos: '#D72838',
+    precioClientePorDia: 7
   });
   const [plantillas, setPlantillas] = useState([]);
 
@@ -65,7 +66,8 @@ function ConfiguracionEmpresa() {
           colorBotones: empresa.colorBotones || '#D72838',
           colorCards: empresa.colorCards || '#ffffff',
           colorTablas: empresa.colorTablas || '#D72838',
-          colorAcentos: empresa.colorAcentos || '#D72838'
+          colorAcentos: empresa.colorAcentos || '#D72838',
+          precioClientePorDia: empresa.precioClientePorDia || 7
         });
         setPreviewLogo(empresa.logoEmpresa || null);
       }
@@ -177,7 +179,8 @@ function ConfiguracionEmpresa() {
         plantillaColor: datosEmpresa.plantillaColor,
         logoEmpresa: datosEmpresa.logoEmpresa && datosEmpresa.logoEmpresa.startsWith('data:') 
           ? datosEmpresa.logoEmpresa 
-          : null
+          : null,
+        precioClientePorDia: parseFloat(datosEmpresa.precioClientePorDia) || 7
       };
 
       const response = await api.put('/gym/datos-empresa', datosEnviar);
@@ -216,25 +219,26 @@ function ConfiguracionEmpresa() {
         // Aplicar inmediatamente
         aplicarColoresInmediatamente();
 
-        // Forzar re-renderizado de todos los componentes que usan los colores
-        // Usar requestAnimationFrame para asegurar que se aplica después del render
-        requestAnimationFrame(() => {
-          aplicarColoresInmediatamente();
-          
-          // Notificar a otros componentes que los colores han cambiado
-          window.dispatchEvent(new CustomEvent('coloresActualizados', {
-            detail: { colores: colores }
-          }));
-          
-          // Disparar evento para recargar colores desde el servidor
+        // Disparar eventos de actualización de manera inmediata y con delay para asegurar actualización
+        // Primero disparar eventos inmediatos
+        window.dispatchEvent(new CustomEvent('coloresActualizados', {
+          detail: { colores: colores }
+        }));
+        
+        // Disparar evento para actualizar datos de la empresa (nombre, logo, email, etc.)
+        window.dispatchEvent(new CustomEvent('datosEmpresaActualizados', {
+          detail: { empresa: response.data.empresa }
+        }));
+
+        // Usar setTimeout para asegurar que el servidor haya procesado los cambios
+        setTimeout(() => {
+          // Disparar evento para recargar datos desde el servidor
           window.dispatchEvent(new Event('recargarColores'));
-          
-          // Disparar evento para actualizar datos de la empresa (nombre, logo, etc.)
           window.dispatchEvent(new Event('datosEmpresaActualizados'));
           
-          // Disparar un evento adicional para forzar actualización de componentes
+          // Forzar re-renderizado de componentes
           window.dispatchEvent(new Event('resize'));
-        });
+        }, 100);
 
         // Pequeña pausa para mostrar el mensaje de éxito
         await new Promise(resolve => setTimeout(resolve, 300));
@@ -386,6 +390,41 @@ function ConfiguracionEmpresa() {
               placeholder="empresa@gmail.com"
               required
             />
+          </div>
+
+          {/* Precio Cliente por Día */}
+          <div>
+            <label htmlFor="precioClientePorDia" className="block text-sm font-semibold text-gray-700 mb-2">
+              Precio Cliente por Día (Soles) *
+            </label>
+            <input
+              type="number"
+              id="precioClientePorDia"
+              name="precioClientePorDia"
+              value={datosEmpresa.precioClientePorDia}
+              onChange={(e) => {
+                const value = parseFloat(e.target.value);
+                if (!isNaN(value) && value >= 0) {
+                  setDatosEmpresa(prev => ({
+                    ...prev,
+                    precioClientePorDia: value
+                  }));
+                } else if (e.target.value === '') {
+                  setDatosEmpresa(prev => ({
+                    ...prev,
+                    precioClientePorDia: 0
+                  }));
+                }
+              }}
+              min="0"
+              step="0.01"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-transparent"
+              placeholder="7.00"
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Este precio se aplicará automáticamente al registrar nuevos clientes por día
+            </p>
           </div>
 
           {/* Plantillas de colores */}

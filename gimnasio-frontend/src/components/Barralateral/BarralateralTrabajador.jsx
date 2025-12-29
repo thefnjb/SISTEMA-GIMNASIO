@@ -24,9 +24,11 @@ const BarralateralTrabajador = ({ active, setActive }) => {
         const response = await api.get('/gym/datos-empresa');
         console.log('Datos de empresa recibidos (BarralateralTrabajador):', response.data);
         if (response.data.success && response.data.empresa) {
-          if (response.data.empresa.nombreEmpresa) {
-            setNombreEmpresa(response.data.empresa.nombreEmpresa);
-            console.log('Nombre de empresa establecido (BarralateralTrabajador):', response.data.empresa.nombreEmpresa);
+          // Establecer nombre de empresa siempre que exista
+          const nombre = response.data.empresa.nombreEmpresa;
+          if (nombre && nombre.trim()) {
+            setNombreEmpresa(nombre.trim());
+            console.log('Nombre de empresa establecido (BarralateralTrabajador):', nombre.trim());
           }
           if (response.data.empresa.colorSistema) {
             setColorSistema(response.data.empresa.colorSistema);
@@ -37,7 +39,6 @@ const BarralateralTrabajador = ({ active, setActive }) => {
         }
       } catch (error) {
         console.error('Error al obtener datos de la empresa:', error);
-        // Si hay error, mantener el nombre por defecto
       }
     };
 
@@ -60,7 +61,21 @@ const BarralateralTrabajador = ({ active, setActive }) => {
       await obtenerDatosEmpresa();
     };
 
-    const handleDatosEmpresaActualizados = async () => {
+    const handleDatosEmpresaActualizados = async (event) => {
+      // Si el evento trae datos directamente, actualizar inmediatamente
+      if (event.detail && event.detail.empresa) {
+        const empresa = event.detail.empresa;
+        if (empresa.nombreEmpresa) {
+          setNombreEmpresa(empresa.nombreEmpresa.trim());
+        }
+        if (empresa.colorSistema) {
+          setColorSistema(empresa.colorSistema);
+        }
+        if (empresa.colorBotones) {
+          setColorBotones(empresa.colorBotones);
+        }
+      }
+      // También recargar desde el servidor para asegurar sincronización
       await obtenerDatosEmpresa();
     };
 
@@ -82,27 +97,32 @@ const BarralateralTrabajador = ({ active, setActive }) => {
   };
 
   return (
-    <div className="flex">
+    <div className="flex w-full h-full">
       <aside
-        className="flex flex-col items-center min-h-screen p-2 xs:p-3 sm:p-4 md:p-6 text-white shadow-2xl w-full md:w-72"
+        className="flex flex-col items-center h-full min-h-screen p-2 xs:p-3 sm:p-4 md:p-6 text-white shadow-2xl w-full max-w-full md:max-w-72 overflow-y-auto overflow-x-hidden custom-scrollbar"
         style={{
           background: `linear-gradient(to bottom, var(--color-sistema, ${colorSistema}) 0%, #2E2E2E 40%, #1B1B1B 80%, #000 100%)`, 
         }}
       >
         <div className="w-full mb-2 xs:mb-3 sm:mb-6 md:mb-8 text-center flex-shrink-0">
           <h1 className="mb-1 xs:mb-2 text-base xs:text-lg sm:text-xl md:text-2xl lg:text-3xl font-extrabold tracking-wide text-white px-2">
-            <SplitText
-              text={nombreEmpresa || "Gimnasio"}
-              tag="span"
-              splitType="chars"
-              delay={75}
-            />
+            {nombreEmpresa ? (
+              <SplitText
+                key={nombreEmpresa}
+                text={nombreEmpresa}
+                tag="span"
+                splitType="chars"
+                delay={75}
+              />
+            ) : (
+              <span className="animate-pulse">Cargando...</span>
+            )}
           </h1>
         </div>
         <div className="scale-75 xs:scale-90 sm:scale-100">
           <AdminTrabajador />
         </div>
-        <nav className="flex flex-col flex-1 w-full gap-1.5 xs:gap-2 sm:gap-3 md:gap-4 mt-2 xs:mt-3 sm:mt-6 md:mt-8 px-1 xs:px-2">
+        <nav className="flex flex-col flex-1 w-full gap-1.5 xs:gap-2 sm:gap-3 md:gap-4 mt-2 xs:mt-3 sm:mt-6 md:mt-8 px-1 xs:px-2 overflow-y-auto custom-scrollbar">
           <SidebarItem
             icon={<HomeIcon />}
             label="INICIO"
