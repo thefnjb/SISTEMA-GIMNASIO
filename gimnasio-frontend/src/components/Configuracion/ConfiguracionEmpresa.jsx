@@ -10,13 +10,9 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import PaletteIcon from '@mui/icons-material/Palette';
 import InfoIcon from '@mui/icons-material/Info';
-// eslint-disable-next-line no-unused-vars
 import TableChartIcon from '@mui/icons-material/TableChart';
-// eslint-disable-next-line no-unused-vars
 import DashboardIcon from '@mui/icons-material/Dashboard';
-// eslint-disable-next-line no-unused-vars
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
-// eslint-disable-next-line no-unused-vars
 import ViewModuleIcon from '@mui/icons-material/ViewModule';
 
 function ConfiguracionEmpresa() {
@@ -271,15 +267,15 @@ function ConfiguracionEmpresa() {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-color-botones border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 text-lg font-semibold">Cargando datos...</p>
+          <div className="w-16 h-16 mx-auto mb-4 border-4 rounded-full border-color-botones border-t-transparent animate-spin"></div>
+          <p className="text-lg font-semibold text-gray-600">Cargando datos...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full p-4 xs:p-6 sm:p-8 lg:p-10 relative bg-gray-50 min-h-screen">
+    <div className="relative w-full min-h-screen p-4 xs:p-6 sm:p-8 lg:p-10 bg-gray-50">
       {/* Overlay de carga completo */}
       {guardando && (
         <div className="fixed inset-0 bg-black bg-opacity-60 z-[9999] flex items-center justify-center backdrop-blur-sm">
@@ -292,7 +288,7 @@ function ConfiguracionEmpresa() {
               }}
             ></div>
             <p className="text-lg font-semibold text-gray-700">Guardando cambios...</p>
-            <p className="text-sm text-gray-500 text-center">Aplicando los cambios en el sistema</p>
+            <p className="text-sm text-center text-gray-500">Aplicando los cambios en el sistema</p>
           </div>
         </div>
       )}
@@ -302,7 +298,7 @@ function ConfiguracionEmpresa() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <div 
-              className="p-3 rounded-xl shadow-lg"
+              className="p-3 shadow-lg rounded-xl"
               style={{ 
                 background: 'linear-gradient(135deg, var(--color-botones, #D72838) 0%, #DC2626 100%)'
               }}
@@ -310,10 +306,10 @@ function ConfiguracionEmpresa() {
               <SettingsIcon className="text-white" fontSize="large" />
             </div>
             <div>
-              <h1 className="text-3xl xs:text-4xl font-bold text-gray-800">
+              <h1 className="text-3xl font-bold text-gray-800 xs:text-4xl">
                 Configuración de Empresa
               </h1>
-              <p className="text-sm text-gray-500 mt-1">Gestiona la información y configuración de tu gimnasio</p>
+              <p className="mt-1 text-sm text-gray-500">Gestiona la información y configuración de tu gimnasio</p>
             </div>
           </div>
         </div>
@@ -335,8 +331,8 @@ function ConfiguracionEmpresa() {
         {/* Formulario con diseño mejorado */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Sección 1: Información Básica */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+          <div className="p-6 bg-white border border-gray-200 shadow-md rounded-xl">
+            <div className="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
               <BusinessIcon className="text-color-botones" fontSize="large" />
               <h2 className="text-xl font-bold text-gray-800">Información Básica</h2>
             </div>
@@ -344,32 +340,32 @@ function ConfiguracionEmpresa() {
             <div className="space-y-6">
               {/* Logo de la empresa */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                <label className="block mb-3 text-sm font-semibold text-gray-700">
                   Logo de la Empresa
                 </label>
-                <div className="flex flex-col sm:flex-row gap-6 items-start">
+                <div className="flex flex-col items-start gap-6 sm:flex-row">
                   {/* Preview del logo mejorado */}
                   <div className="relative group">
                     {previewLogo ? (
                       <div className="relative">
-                        <div className="w-40 h-40 xs:w-48 xs:h-48 rounded-xl overflow-hidden border-2 border-gray-200 shadow-md bg-white p-3">
+                        <div className="w-40 h-40 p-3 overflow-hidden bg-white border-2 border-gray-200 shadow-md xs:w-48 xs:h-48 rounded-xl">
                           <img
                             src={previewLogo}
                             alt="Logo de la empresa"
-                            className="w-full h-full object-contain"
+                            className="object-contain w-full h-full"
                           />
                         </div>
                         <button
                           type="button"
                           onClick={eliminarLogo}
-                          className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all transform hover:scale-110"
+                          className="absolute p-2 text-white transition-all transform bg-red-500 rounded-full shadow-lg -top-2 -right-2 hover:bg-red-600 hover:scale-110"
                           title="Eliminar logo"
                         >
                           <DeleteIcon fontSize="small" />
                         </button>
                       </div>
                     ) : (
-                      <div className="w-40 h-40 xs:w-48 xs:h-48 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 flex flex-col items-center justify-center gap-2 hover:border-color-botones transition-colors">
+                      <div className="flex flex-col items-center justify-center w-40 h-40 gap-2 transition-colors border-2 border-gray-300 border-dashed xs:w-48 xs:h-48 rounded-xl bg-gray-50 hover:border-color-botones">
                         <PhotoCameraIcon className="text-gray-400" fontSize="large" />
                         <span className="text-xs text-gray-500">Sin logo</span>
                       </div>
@@ -377,8 +373,8 @@ function ConfiguracionEmpresa() {
                   </div>
 
                   {/* Botón para subir imagen mejorado */}
-                  <div className="flex-1 flex flex-col justify-center">
-                    <label className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-color-botones hover:bg-color-botones/90 text-white rounded-lg cursor-pointer transition-all shadow-md hover:shadow-lg transform hover:scale-105">
+                  <div className="flex flex-col justify-center flex-1">
+                    <label className="inline-flex items-center justify-center gap-2 px-6 py-3 text-white transition-all transform rounded-lg shadow-md cursor-pointer bg-color-botones hover:bg-color-botones/90 hover:shadow-lg hover:scale-105">
                       <PhotoCameraIcon />
                       <span className="font-medium">Seleccionar Imagen</span>
                       <input
@@ -388,7 +384,7 @@ function ConfiguracionEmpresa() {
                         className="hidden"
                       />
                     </label>
-                    <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="p-3 mt-3 border border-blue-200 rounded-lg bg-blue-50">
                       <p className="text-xs text-blue-800">
                         <strong>Formatos aceptados:</strong> JPG, PNG, GIF<br />
                         <strong>Tamaño máximo:</strong> 5MB<br />
@@ -400,10 +396,10 @@ function ConfiguracionEmpresa() {
               </div>
 
               {/* Nombre y Email en grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 {/* Nombre de la empresa */}
                 <div>
-                  <label htmlFor="nombreEmpresa" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="nombreEmpresa" className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700">
                     <BusinessIcon className="text-color-botones" fontSize="small" />
                     Nombre de la Empresa *
                   </label>
@@ -413,7 +409,7 @@ function ConfiguracionEmpresa() {
                     name="nombreEmpresa"
                     value={datosEmpresa.nombreEmpresa}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos transition-all"
+                    className="w-full px-4 py-3 transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos"
                     placeholder="Ej: Gimnasio Terrones"
                     required
                   />
@@ -421,7 +417,7 @@ function ConfiguracionEmpresa() {
 
                 {/* Email */}
                 <div>
-                  <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <label htmlFor="email" className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700">
                     <EmailIcon className="text-color-botones" fontSize="small" />
                     Email de la Empresa *
                   </label>
@@ -431,7 +427,7 @@ function ConfiguracionEmpresa() {
                     name="email"
                     value={datosEmpresa.email}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos transition-all"
+                    className="w-full px-4 py-3 transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos"
                     placeholder="empresa@gmail.com"
                     required
                   />
@@ -441,16 +437,16 @@ function ConfiguracionEmpresa() {
           </div>
 
           {/* Sección 2: Configuración de Precios */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+          <div className="p-6 bg-white border border-gray-200 shadow-md rounded-xl">
+            <div className="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
               <AttachMoneyIcon className="text-color-botones" fontSize="large" />
               <h2 className="text-xl font-bold text-gray-800">Configuración de Precios</h2>
             </div>
             
             <div className="space-y-6">
               {/* Precio Cliente por Día */}
-              <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <label htmlFor="precioClientePorDia" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+              <div className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <label htmlFor="precioClientePorDia" className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700">
                   <AttachMoneyIcon className="text-color-botones" fontSize="small" />
                   Precio Cliente por Día (Soles) *
                 </label>
@@ -478,13 +474,13 @@ function ConfiguracionEmpresa() {
                       }}
                       min="0"
                       step="0.01"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos transition-all"
+                      className="w-full px-4 py-3 transition-all border border-gray-300 rounded-lg focus:ring-2 focus:ring-color-acentos focus:border-color-acentos"
                       placeholder="7.00"
                       required
                     />
                   </div>
                 </div>
-                <p className="mt-2 text-xs text-gray-600 flex items-center gap-1">
+                <p className="flex items-center gap-1 mt-2 text-xs text-gray-600">
                   <InfoIcon fontSize="small" />
                   Este precio se aplicará automáticamente al registrar nuevos clientes por día
                 </p>
@@ -496,19 +492,19 @@ function ConfiguracionEmpresa() {
                   <AccessTimeIcon className="text-color-botones" />
                   <h3 className="text-lg font-bold text-gray-800">Precios de Turnos para Membresías</h3>
                 </div>
-                <p className="text-sm text-gray-600 mb-4 pl-8">
+                <p className="pl-8 mb-4 text-sm text-gray-600">
                   Configura los precios por defecto para cada turno. Estos precios se aplicarán automáticamente al crear nuevas membresías.
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                   {/* Precio Turno Mañana */}
-                  <div className="p-4 bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg border border-yellow-200 hover:shadow-md transition-all">
-                    <label htmlFor="precioTurnoManana" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <div className="p-4 transition-all border border-yellow-200 rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50 hover:shadow-md">
+                    <label htmlFor="precioTurnoManana" className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700">
                       <span className="text-lg">🌅</span>
                       Turno Mañana *
                     </label>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500 font-medium">S/</span>
+                      <span className="font-medium text-gray-500">S/</span>
                       <input
                         type="number"
                         id="precioTurnoManana"
@@ -530,7 +526,7 @@ function ConfiguracionEmpresa() {
                         }}
                         min="0"
                         step="0.01"
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400 transition-all bg-white"
+                        className="flex-1 px-4 py-2 transition-all bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
                         placeholder="80.00"
                         required
                       />
@@ -538,13 +534,13 @@ function ConfiguracionEmpresa() {
                   </div>
 
                   {/* Precio Turno Tarde */}
-                  <div className="p-4 bg-gradient-to-br from-orange-50 to-red-50 rounded-lg border border-orange-200 hover:shadow-md transition-all">
-                    <label htmlFor="precioTurnoTarde" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <div className="p-4 transition-all border border-orange-200 rounded-lg bg-gradient-to-br from-orange-50 to-red-50 hover:shadow-md">
+                    <label htmlFor="precioTurnoTarde" className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700">
                       <span className="text-lg">🌆</span>
                       Turno Tarde *
                     </label>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500 font-medium">S/</span>
+                      <span className="font-medium text-gray-500">S/</span>
                       <input
                         type="number"
                         id="precioTurnoTarde"
@@ -566,7 +562,7 @@ function ConfiguracionEmpresa() {
                         }}
                         min="0"
                         step="0.01"
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400 transition-all bg-white"
+                        className="flex-1 px-4 py-2 transition-all bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-400 focus:border-orange-400"
                         placeholder="100.00"
                         required
                       />
@@ -574,13 +570,13 @@ function ConfiguracionEmpresa() {
                   </div>
 
                   {/* Precio Turno Noche */}
-                  <div className="p-4 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-lg border border-indigo-200 hover:shadow-md transition-all">
-                    <label htmlFor="precioTurnoNoche" className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-2">
+                  <div className="p-4 transition-all border border-indigo-200 rounded-lg bg-gradient-to-br from-indigo-50 to-purple-50 hover:shadow-md">
+                    <label htmlFor="precioTurnoNoche" className="flex items-center gap-2 mb-2 text-sm font-semibold text-gray-700">
                       <span className="text-lg">🌙</span>
                       Turno Noche *
                     </label>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-500 font-medium">S/</span>
+                      <span className="font-medium text-gray-500">S/</span>
                       <input
                         type="number"
                         id="precioTurnoNoche"
@@ -602,7 +598,7 @@ function ConfiguracionEmpresa() {
                         }}
                         min="0"
                         step="0.01"
-                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400 transition-all bg-white"
+                        className="flex-1 px-4 py-2 transition-all bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-400 focus:border-indigo-400"
                         placeholder="120.00"
                         required
                       />
@@ -614,66 +610,58 @@ function ConfiguracionEmpresa() {
           </div>
 
           {/* Sección 3: Personalización Visual */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
-            <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-200">
+          <div className="p-6 bg-white border border-gray-200 shadow-md rounded-xl">
+            <div className="flex items-center gap-3 pb-4 mb-6 border-b border-gray-200">
               <PaletteIcon className="text-color-botones" fontSize="large" />
               <h2 className="text-xl font-bold text-gray-800">Personalización Visual</h2>
             </div>
             
             <div className="space-y-4">
-              <p className="text-sm text-gray-600 mb-6 pl-2">
+              <p className="pl-2 mb-6 text-sm text-gray-600">
                 Selecciona una plantilla de colores predefinida para personalizar el aspecto de tu sistema. Los colores se aplicarán a botones, tablas y elementos principales de la interfaz.
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
               {plantillas.map((plantilla) => (
                 <div
                   key={plantilla.id}
                   onClick={() => handleSeleccionarPlantilla(plantilla.id)}
                   className={`relative p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-lg ${
                     datosEmpresa.plantillaColor === plantilla.id
-                      ? 'border-color-botones bg-color-botones bg-opacity-5'
+                      ? 'border-red-600 shadow-lg'
                       : 'border-gray-300 hover:border-gray-400'
                   }`}
                 >
-                  {/* Indicador de selección */}
-                  {datosEmpresa.plantillaColor === plantilla.id && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-color-botones rounded-full flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
                   
                   {/* Preview de colores */}
                   <div className="mb-3">
-                    <div className="flex gap-1 h-16 rounded overflow-hidden border border-gray-300 shadow-sm">
+                    <div className="flex h-16 gap-1 overflow-hidden border border-gray-300 rounded shadow-sm">
                       {/* Negro - Tablas (header) */}
-                      <div className="w-1/6 bg-black flex flex-col items-center justify-center relative group">
-                        <TableChartIcon className="text-white text-xs opacity-80" />
+                      <div className="relative flex flex-col items-center justify-center w-1/6 bg-black group">
+                        <TableChartIcon className="text-xs text-white opacity-80" />
                         <span className="text-[8px] text-white opacity-70 mt-0.5 hidden group-hover:block absolute bottom-0.5 left-0 right-0 text-center">Tablas</span>
                       </div>
                       {/* Sistema (sidebar) */}
-                      <div className="flex-1 flex flex-col items-center justify-center relative group" style={{ backgroundColor: plantilla.preview[0] }}>
+                      <div className="relative flex flex-col items-center justify-center flex-1 group" style={{ backgroundColor: plantilla.preview[0] }}>
                         <DashboardIcon className={`text-xs ${plantilla.preview[0] === '#ffffff' || plantilla.preview[0] === '#111827' ? 'text-gray-800' : 'text-white'} opacity-80`} />
                         <span className="text-[8px] mt-0.5 hidden group-hover:block absolute bottom-0.5 left-0 right-0 text-center" style={{ color: plantilla.preview[0] === '#ffffff' || plantilla.preview[0] === '#111827' ? '#1f2937' : 'white' }}>Sistema</span>
                       </div>
                       {/* Botones */}
-                      <div className="flex-1 flex flex-col items-center justify-center relative group" style={{ backgroundColor: plantilla.preview[1] }}>
+                      <div className="relative flex flex-col items-center justify-center flex-1 group" style={{ backgroundColor: plantilla.preview[1] }}>
                         <RadioButtonCheckedIcon className={`text-xs ${plantilla.preview[1] === '#ffffff' || plantilla.preview[1] === '#111827' ? 'text-gray-800' : 'text-white'} opacity-80`} />
                         <span className="text-[8px] mt-0.5 hidden group-hover:block absolute bottom-0.5 left-0 right-0 text-center" style={{ color: plantilla.preview[1] === '#ffffff' || plantilla.preview[1] === '#111827' ? '#1f2937' : 'white' }}>Botones</span>
                       </div>
                       {/* Cards */}
-                      <div className="flex-1 flex flex-col items-center justify-center relative group" style={{ backgroundColor: plantilla.preview[2] }}>
+                      <div className="relative flex flex-col items-center justify-center flex-1 group" style={{ backgroundColor: plantilla.preview[2] }}>
                         <ViewModuleIcon className={`text-xs ${plantilla.preview[2] === '#ffffff' || plantilla.preview[2] === '#111827' ? 'text-gray-800' : 'text-white'} opacity-80`} />
                         <span className="text-[8px] mt-0.5 hidden group-hover:block absolute bottom-0.5 left-0 right-0 text-center" style={{ color: plantilla.preview[2] === '#ffffff' || plantilla.preview[2] === '#111827' ? '#1f2937' : 'white' }}>Cards</span>
                       </div>
                       {/* Tablas */}
-                      <div className="flex-1 flex flex-col items-center justify-center relative group" style={{ backgroundColor: plantilla.preview[3] }}>
+                      <div className="relative flex flex-col items-center justify-center flex-1 group" style={{ backgroundColor: plantilla.preview[3] }}>
                         <TableChartIcon className={`text-xs ${plantilla.preview[3] === '#ffffff' || plantilla.preview[3] === '#111827' ? 'text-gray-800' : 'text-white'} opacity-80`} />
                         <span className="text-[8px] mt-0.5 hidden group-hover:block absolute bottom-0.5 left-0 right-0 text-center" style={{ color: plantilla.preview[3] === '#ffffff' || plantilla.preview[3] === '#111827' ? '#1f2937' : 'white' }}>Tablas</span>
                       </div>
                       {/* Acentos */}
-                      <div className="flex-1 flex flex-col items-center justify-center relative group" style={{ backgroundColor: plantilla.preview[4] }}>
+                      <div className="relative flex flex-col items-center justify-center flex-1 group" style={{ backgroundColor: plantilla.preview[4] }}>
                         <PaletteIcon className={`text-xs ${plantilla.preview[4] === '#ffffff' || plantilla.preview[4] === '#111827' ? 'text-gray-800' : 'text-white'} opacity-80`} />
                         <span className="text-[8px] mt-0.5 hidden group-hover:block absolute bottom-0.5 left-0 right-0 text-center" style={{ color: plantilla.preview[4] === '#ffffff' || plantilla.preview[4] === '#111827' ? '#1f2937' : 'white' }}>Acentos</span>
                       </div>
@@ -686,7 +674,7 @@ function ConfiguracionEmpresa() {
                   
                   {/* Información de la plantilla */}
                   <div>
-                    <h4 className="font-semibold text-gray-800 mb-1">{plantilla.nombre}</h4>
+                    <h4 className="mb-1 font-semibold text-gray-800">{plantilla.nombre}</h4>
                     <p className="text-xs text-gray-500">{plantilla.descripcion}</p>
                   </div>
                 </div>
@@ -696,7 +684,7 @@ function ConfiguracionEmpresa() {
           </div>
 
           {/* Botón de guardar mejorado */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200">
+          <div className="p-6 bg-white border border-gray-200 shadow-md rounded-xl">
             <div className="flex items-center justify-center">
               <button
                 type="submit"
@@ -707,7 +695,7 @@ function ConfiguracionEmpresa() {
               >
                 {guardando ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-white rounded-full border-t-transparent animate-spin"></div>
                     <span>Guardando...</span>
                   </>
                 ) : (
