@@ -468,17 +468,17 @@ export default function TablaClientesAdmin({ refresh }) {
               <p className="text-gray-500 text-sm">No hay miembros encontrados.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
               {miembrosOrdenados.map((miembro) => {
                 const estado = calcularEstado(miembro);
                 return (
                   <div 
                     key={miembro._id} 
-                    className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-200 overflow-hidden group"
+                    className="bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden group"
                   >
                     {/* Header con gradiente según estado */}
                     <div 
-                      className={`h-2 ${
+                      className={`h-0.5 ${
                         estado.color === 'success' ? 'bg-gradient-to-r from-green-500 to-green-600' :
                         estado.color === 'warning' ? 'bg-gradient-to-r from-yellow-500 to-orange-500' :
                         estado.color === 'danger' ? 'bg-gradient-to-r from-red-500 to-red-600' :
@@ -487,119 +487,117 @@ export default function TablaClientesAdmin({ refresh }) {
                     />
                     
                     {/* Contenido de la card */}
-                    <div className="p-5">
+                    <div className="p-2">
                       {/* Nombre y estado */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 40 }} className="flex-shrink-0" />
+                      <div className="flex items-start justify-between mb-1.5">
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                          <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 20 }} className="flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-base text-gray-900 truncate mb-1">{miembro.nombreCompleto}</h3>
-                            <p className="text-sm text-gray-600">{miembro.telefono}</p>
+                            <h3 className="font-medium text-xs text-gray-900 truncate mb-0.5">{miembro.nombreCompleto}</h3>
+                            <p className="text-[9px] text-gray-600 truncate">{miembro.telefono}</p>
                           </div>
                         </div>
                         <Chip 
                           color={estado.color} 
                           variant="flat" 
                           size="sm" 
-                          className="text-xs font-semibold capitalize flex-shrink-0"
+                          className="text-[8px] font-medium capitalize flex-shrink-0 h-4"
                         >
                           {estado.etiqueta}
                         </Chip>
                       </div>
 
                       {/* Información principal en grid */}
-                      <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                          <span className="text-xs text-gray-500 block mb-1">Documento</span>
+                      <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Doc</span>
                           <Chip 
                             color={miembro?.tipoDocumento === "DNI" ? "primary" : "secondary"} 
                             variant="flat"
                             size="sm"
-                            className="text-[10px] h-5 mb-1"
+                            className="text-[8px] h-3 mb-0.5"
                           >
                             {miembro?.tipoDocumento === "CE" ? "CE" : miembro?.tipoDocumento || "DNI"}
                           </Chip>
-                          <span className="text-xs font-semibold text-gray-800 block">{miembro?.numeroDocumento || "-"}</span>
+                          <span className="text-[8px] font-medium text-gray-800 block truncate">{miembro?.numeroDocumento || "-"}</span>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                          <span className="text-xs text-gray-500 block mb-1">Ingreso</span>
-                          <span className="text-xs font-semibold text-gray-800">{formatearFecha(miembro.fechaIngreso)}</span>
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Ingreso</span>
+                          <span className="text-[10px] font-medium text-gray-800">{formatearFecha(miembro.fechaIngreso)}</span>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                          <span className="text-xs text-gray-500 block mb-1">Mensualidad</span>
-                          <span className="text-xs font-semibold text-gray-800">{formatearMensualidadNumero(miembro)}</span>
-                          <span className="text-[10px] text-gray-500 block">S/ {Number(miembro?.mensualidad?.precio ?? miembro?.membresia?.precio ?? 0).toFixed(2)}</span>
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Mensualidad</span>
+                          <span className="text-[10px] font-medium text-gray-800">{formatearMensualidadNumero(miembro)}</span>
+                          <span className="text-[8px] text-gray-500 block">S/ {Number(miembro?.mensualidad?.precio ?? miembro?.membresia?.precio ?? 0).toFixed(2)}</span>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                          <span className="text-xs text-gray-500 block mb-1">Vence</span>
-                          <span className="text-xs font-semibold text-gray-800">{mostrarVencimiento(miembro)}</span>
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Vence</span>
+                          <span className="text-[10px] font-medium text-gray-800">{mostrarVencimiento(miembro)}</span>
                         </div>
                       </div>
 
                       {/* Información adicional */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                          <span className="text-xs text-gray-500 block mb-1">Entrenador</span>
-                          <span className="text-xs font-semibold text-gray-800">{miembro?.entrenador?.nombre || "Sin Entrenador"}</span>
+                      <div className="grid grid-cols-1 gap-1.5 mb-1.5">
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Entrenador</span>
+                          <span className="text-[10px] font-medium text-gray-800 truncate block">{miembro?.entrenador?.nombre || "Sin Entrenador"}</span>
                         </div>
-                        <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
-                          <span className="text-xs text-gray-500 block mb-1">Método de Pago</span>
-                          <div className="flex items-center gap-2 mt-1">
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Pago</span>
+                          <div className="flex items-center gap-1 mt-0.5">
                             {miembro.metodoPago && metodosPago[miembro.metodoPago.toLowerCase()] ? (
                               miembro.metodoPago.toLowerCase() === 'efectivo' ? (
                                 <img
                                   src={metodosPago[miembro.metodoPago.toLowerCase()].icono}
                                   alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
-                                  className="object-contain w-6 h-6 opacity-80"
+                                  className="object-contain w-4 h-4 opacity-80"
                                 />
                               ) : (
                                 <Button
                                   isIconOnly
                                   size="sm"
                                   onClick={() => openComprobanteModal(miembro)}
-                                  className="p-1 bg-transparent hover:opacity-80 min-w-0 w-auto h-auto"
+                                  className="p-0.5 bg-transparent hover:opacity-80 min-w-0 w-auto h-auto"
                                 >
                                   <img
                                     src={metodosPago[miembro.metodoPago.toLowerCase()].icono}
                                     alt={metodosPago[miembro.metodoPago.toLowerCase()].nombre}
-                                    className="object-contain w-6 h-6"
+                                    className="object-contain w-4 h-4"
                                   />
                                 </Button>
                               )
                             ) : (
-                              <span className="text-gray-400">-</span>
+                              <span className="text-gray-400 text-[8px]">-</span>
                             )}
-                            <span className="text-xs font-semibold text-gray-800 capitalize">{miembro.metodoPago || "N/A"}</span>
+                            <span className="text-[9px] font-medium text-gray-800 capitalize truncate">{miembro.metodoPago || "N/A"}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Deuda */}
-                      <div className="bg-gray-50 rounded-lg p-3 border border-gray-100 mb-4">
-                        <span className="text-xs text-gray-500 block mb-1">Debe</span>
-                        <div className="flex items-center gap-2 mt-1">
+                      <div className="bg-gray-50 rounded p-1.5 border border-gray-100 mb-1.5">
+                        <span className="text-[8px] text-gray-500 block mb-0.5">Debe</span>
+                        <div className="flex items-center gap-1 mt-0.5">
                           {Number(miembro?.debe || 0) <= 0 ? (
-                            <Chip color="success" variant="flat" size="sm" className="text-xs font-medium">S/ 0.00</Chip>
+                            <Chip color="success" variant="flat" size="sm" className="text-[9px] font-medium h-4">S/ 0.00</Chip>
                           ) : (
-                            <Chip color="warning" variant="flat" size="sm" className="text-xs font-semibold">S/ {Number(miembro.debe).toFixed(2)}</Chip>
+                            <Chip color="warning" variant="flat" size="sm" className="text-[9px] font-medium h-4">S/ {Number(miembro.debe).toFixed(2)}</Chip>
                           )}
                         </div>
                       </div>
 
                       {/* Footer con acciones (sin eliminar ni editar deuda) */}
-                      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                        <div className="flex items-center gap-2">
-                          <IconButton
-                            aria-label="Descargar voucher"
-                            onClick={() => descargarVoucher(miembro)}
-                            sx={{ color: getColorSistema(), fontSize: 22, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
-                            size="small"
-                          >
-                            <AdfScannerRoundedIcon fontSize="inherit" />
-                          </IconButton>
-                          <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
-                          <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
-                        </div>
+                      <div className="flex items-center justify-center gap-1 pt-1.5 border-t border-gray-200">
+                        <IconButton
+                          aria-label="Descargar voucher"
+                          onClick={() => descargarVoucher(miembro)}
+                          sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                          size="small"
+                        >
+                          <AdfScannerRoundedIcon fontSize="inherit" />
+                        </IconButton>
+                        <BotonEditar onClick={() => abrirModalActualizar(miembro)} />
+                        <BotonRenovar onClick={() => abrirModalActualizar(miembro, "renovar")} />
                       </div>
                     </div>
                   </div>

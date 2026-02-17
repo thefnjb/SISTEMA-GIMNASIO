@@ -2,9 +2,13 @@ const express = require('express');
 const router = express.Router();
 const AuthController = require('../Controladores/authController');
 const GymController = require('../Controladores/gym'); // Importamos el controlador que faltaba
+const authUnificado = require('../Middleware/AuthUnificado');
 
 // RUTA DE LOGIN UNIFICADO PARA ADMIN Y TRABAJADOR
 router.post('/login', AuthController.loginUnificado);
+
+// RUTA DE LOGOUT (requiere autenticación)
+router.post('/logout', authUnificado, AuthController.logout);
 
 // RUTA DE RECUPERACIÓN DE CONTRASEÑA (solo requiere email y nueva contraseña)
 router.post('/recuperar-cambiar', AuthController.recuperarCambiar);

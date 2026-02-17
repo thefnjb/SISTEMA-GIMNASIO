@@ -1,5 +1,6 @@
 const Trabajador = require('../Modelos/Trabajador');
 const Gym = require('../Modelos/Gimnasio');
+const RegistroAsistencia = require('../Modelos/RegistroAsistencia');
 const bcrypt = require('bcryptjs');
 
 const TrabajadorController = {
@@ -276,6 +277,199 @@ const TrabajadorController = {
             res.status(500).json({ error: "Error al eliminar trabajador", detalle: error.message });
         }
     },
+
+    // Registrar entrada de trabajador
+    registrarEntrada: async (req, res) => {
+        try {
+            const { trabajadorId } = req.body;
+            
+            // Verificar que el trabajador existe y pertenece al gym
+            const trabajador = await Trabajador.findOne({ 
+                _id: trabajadorId, 
+                gym: req.usuario.gym_id 
+            });
+            
+            if (!trabajador) {
+                return res.status(404).json({ error: "Trabajador no encontrado" });
+            }
+
+            // Verificar si ya tiene una entrada sin salida hoy
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const manana = new Date(hoy);
+            manana.setDate(manana.getDate() + 1);
+
+            const entradaPendiente = await RegistroAsistencia.findOne({
+                trabajador: trabajadorId,
+                fechaEntrada: { $gte: hoy, $lt: manana },
+                fechaSalida: null
+            });
+
+            if (entradaPendiente) {
+                return res.status(400).json({ 
+                    error: "El trabajador ya tiene una entrada registrada hoy sin salida" 
+                });
+            }
+
+            // Crear nuevo registro de entrada
+            const nuevoRegistro = new RegistroAsistencia({
+                trabajador: trabajadorId,
+                fechaEntrada: new Date(),
+                gym: req.usuario.gym_id
+            });
+
+            await nuevoRegistro.save();
+
+            res.status(201).json({
+                mensaje: "Entrada registrada exitosamente",
+                registro: nuevoRegistro
+            });
+
+        } catch (error) {
+            console.error("Error al registrar entrada:", error);
+            res.status(500).json({ error: "Error al registrar entrada" });
+        }
+    },
+
+    // Registrar salida de trabajador
+    registrarSalida: async (req, res) => {
+        try {
+            const { trabajadorId } = req.body;
+            
+            // Verificar que el trabajador existe y pertenece al gym
+            const trabajador = await Trabajador.findOne({ 
+                _id: trabajadorId, 
+                gym: req.usuario.gym_id 
+            });
+            
+            if (!trabajador) {
+                return res.status(404).json({ error: "Trabajador no encontrado" });
+            }
+
+            // Buscar la entrada más reciente sin salida
+            const registroPendiente = await RegistroAsistencia.findOne({
+                trabajador: trabajadorId,
+                fechaSalida: null
+            }).sort({ fechaEntrada: -1 });
+
+            if (!registroPendiente) {
+                return res.status(400).json({ 
+                    error: "No hay entrada registrada para este trabajador" 
+                });
+            }
+
+            // Registrar la salida
+            registroPendiente.fechaSalida = new Date();
+            await registroPendiente.save();
+
+            res.json({
+                mensaje: "Salida registrada exitosamente",
+                registro: registroPendiente
+            });
+
+        } catch (error) {
+            console.error("Error al registrar salida:", error);
+            res.status(500).json({ error: "Error al registrar salida" });
+        }
+    },
+
+    // Obtener historial de asistencia de un trabajador
+    obtenerHistorialAsistencia: async (req, res) => {
+        try {
+            const { id } = req.params;
+            const { page = 1, limit = 20, fechaInicio, fechaFin, mes, año } = req.query;
+
+            // Verificar que el trabajador existe y pertenece al gym
+            const trabajador = await Trabajador.findOne({ 
+                _id: id, 
+                gym: req.usuario.gym_id 
+            });
+            
+            if (!trabajador) {
+                return res.status(404).json({ error: "Trabajador no encontrado" });
+            }
+
+            const skip = (parseInt(page) - 1) * parseInt(limit);
+
+            // Construir query con filtros
+            let query = {
+                trabajador: id,
+                gym: req.usuario.gym_id
+            };
+
+            // Filtro por rango de fechas
+            if (fechaInicio && fechaFin) {
+                const inicio = new Date(fechaInicio);
+                inicio.setHours(0, 0, 0, 0);
+                const fin = new Date(fechaFin);
+                fin.setHours(23, 59, 59, 999);
+                query.fechaEntrada = { $gte: inicio, $lte: fin };
+            } 
+            // Filtro por mes y año
+            else if (mes && año) {
+                const inicioMes = new Date(parseInt(año), parseInt(mes) - 1, 1);
+                inicioMes.setHours(0, 0, 0, 0);
+                const finMes = new Date(parseInt(año), parseInt(mes), 0);
+                finMes.setHours(23, 59, 59, 999);
+                query.fechaEntrada = { $gte: inicioMes, $lte: finMes };
+            }
+            // Filtro por fecha exacta
+            else if (fechaInicio && !fechaFin) {
+                const fecha = new Date(fechaInicio);
+                fecha.setHours(0, 0, 0, 0);
+                const fechaFinDia = new Date(fecha);
+                fechaFinDia.setHours(23, 59, 59, 999);
+                query.fechaEntrada = { $gte: fecha, $lte: fechaFinDia };
+            }
+            // Sin filtro: mostrar todos los registros
+
+            const registros = await RegistroAsistencia.find(query)
+            .sort({ fechaEntrada: -1 })
+            .limit(parseInt(limit))
+            .skip(skip)
+            .populate('trabajador', 'nombre nombreUsuario');
+
+            const total = await RegistroAsistencia.countDocuments(query);
+
+            res.json({
+                registros,
+                total,
+                page: parseInt(page),
+                totalPages: Math.ceil(total / parseInt(limit))
+            });
+
+        } catch (error) {
+            console.error("Error al obtener historial:", error);
+            res.status(500).json({ error: "Error al obtener historial de asistencia" });
+        }
+    },
+
+    // Eliminar registro de asistencia
+    eliminarRegistroAsistencia: async (req, res) => {
+        try {
+            const { registroId } = req.params;
+
+            const registro = await RegistroAsistencia.findOne({
+                _id: registroId,
+                gym: req.usuario.gym_id
+            });
+
+            if (!registro) {
+                return res.status(404).json({ error: "Registro no encontrado" });
+            }
+
+            await RegistroAsistencia.findByIdAndDelete(registroId);
+
+            res.json({
+                mensaje: "Registro eliminado exitosamente"
+            });
+
+        } catch (error) {
+            console.error("Error al eliminar registro:", error);
+            res.status(500).json({ error: "Error al eliminar registro" });
+        }
+    },
+
 };
 
 module.exports = TrabajadorController;

@@ -1,9 +1,13 @@
 import React from 'react';
 
-const SkeletonLoader = () => {
+const SkeletonLoader = ({ menuItems = 6, isTrabajador = false }) => {
   const colorSistema = typeof window !== 'undefined' 
     ? getComputedStyle(document.documentElement).getPropertyValue('--color-sistema').trim() || '#D72838'
     : '#D72838';
+
+  // Determinar número de cards según el tipo de usuario
+  const numCards = isTrabajador ? 2 : 3;
+  const gridCols = isTrabajador ? 'md:grid-cols-2' : 'md:grid-cols-2 lg:grid-cols-3';
 
   return (
     <div className="fixed inset-0 z-50 bg-gray-100 overflow-hidden">
@@ -37,7 +41,7 @@ const SkeletonLoader = () => {
           
           {/* Botones del menú */}
           <nav className="flex flex-col w-full gap-2 px-3 md:px-4 flex-1">
-            {[1, 2, 3, 4, 5].map((i) => (
+            {Array.from({ length: menuItems }, (_, i) => i + 1).map((i) => (
               <div 
                 key={i}
                 className="h-12 bg-white/10 rounded-xl animate-pulse border-l-4 border-transparent"
@@ -57,21 +61,23 @@ const SkeletonLoader = () => {
         
         {/* Skeleton del Contenido Principal */}
         <div className="flex-1 overflow-auto bg-white">
-          <div className="p-6">
-            {/* Header con botón */}
-            <div className="flex justify-end mb-6">
-              <div 
-                className="h-10 w-32 rounded animate-pulse"
-                style={{ backgroundColor: 'var(--color-botones, #D72838)' }}
-              ></div>
-            </div>
+          <div className="p-2 xs:p-3 sm:p-4 md:p-6">
+            {/* Header con botón - Solo para admin */}
+            {!isTrabajador && (
+              <div className="flex justify-end mb-3 xs:mb-4 sm:mb-6">
+                <div 
+                  className="h-10 w-32 rounded animate-pulse"
+                  style={{ backgroundColor: 'var(--color-botones, #D72838)' }}
+                ></div>
+              </div>
+            )}
             
             {/* Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {[1, 2, 3].map((i) => (
+            <div className={`grid grid-cols-1 ${gridCols} gap-3 xs:gap-4 sm:gap-6 md:gap-8 mb-3 xs:mb-4 sm:mb-6 md:mb-8 max-w-4xl mx-auto`}>
+              {Array.from({ length: numCards }, (_, i) => i + 1).map((i) => (
                 <div 
                   key={i}
-                  className="h-48 rounded-lg animate-pulse"
+                  className="h-48 rounded-lg animate-pulse max-w-xs sm:max-w-sm mx-auto w-full"
                   style={{ backgroundColor: 'var(--color-cards, #ffffff)', border: '1px solid #e5e7eb' }}
                 >
                   <div className="p-4">

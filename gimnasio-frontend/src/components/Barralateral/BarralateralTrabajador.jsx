@@ -4,8 +4,10 @@ import { AdminTrabajador } from '../Avatar/avatar';
 import HomeIcon from '@mui/icons-material/Home';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import SplitText from '../TextAnimation/SplitText';
 import api from '../../utils/axiosInstance';
+import { useContadorNotificaciones } from '../Chat/NotificacionesTrabajador';
 
 const BarralateralTrabajador = ({ active, setActive }) => {
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ const BarralateralTrabajador = ({ active, setActive }) => {
   const [logoEmpresa, setLogoEmpresa] = useState(null);
   const [colorSistema, setColorSistema] = useState("#D72838");
   const [colorBotones, setColorBotones] = useState("#D72838");
+  const contadorNotificaciones = useContadorNotificaciones();
 
   useEffect(() => {
     // Obtener datos de la empresa al montar el componente
@@ -93,10 +96,30 @@ const BarralateralTrabajador = ({ active, setActive }) => {
     };
   }, []);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('rol');
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      // Llamar al endpoint de logout para registrar salida automática
+      const token = sessionStorage.getItem('token');
+      if (token) {
+        await fetch('http://localhost:4000/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }).catch(err => {
+          // Si falla, continuar con el logout de todas formas
+          console.error('Error al registrar salida:', err);
+        });
+      }
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      // Limpiar sesión y redirigir
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('rol');
+      navigate('/');
+    }
   };
 
   return (
@@ -169,6 +192,22 @@ const BarralateralTrabajador = ({ active, setActive }) => {
             label="CLIENTES"
             active={active === 'CLIENTES'}
             onClick={() => setActive('CLIENTES')}
+            colorBotones={colorBotones}
+          />
+          <SidebarItem
+            icon={
+              <div className="relative">
+                <NotificationsIcon />
+                {contadorNotificaciones > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                    {contadorNotificaciones > 9 ? '9+' : contadorNotificaciones}
+                  </div>
+                )}
+              </div>
+            }
+            label="NOTIFICACIONES"
+            active={active === 'NOTIFICACIONES'}
+            onClick={() => setActive('NOTIFICACIONES')}
             colorBotones={colorBotones}
           />
         </nav>

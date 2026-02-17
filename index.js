@@ -29,7 +29,7 @@ const Reportepdf = require('./Routes/Reportepdf');
 const Voucherpdf = require('./Routes/voucherpdf');
 const excel = require("./Routes/excel");
 const ReniecRoutes = require("./Routes/reniec");
-
+const MensajeRoutes = require("./Routes/mensaje");
 
 
 
@@ -46,6 +46,7 @@ app.use('/pdfdia', Reportepdf);
 app.use('/pdfvoucher', Voucherpdf);
 app.use("/export", excel); 
 app.use('/api/reniec', ReniecRoutes);
+app.use('/mensajes', MensajeRoutes);
 
 app.listen(PORT, () => {
     console.log(`Servidor corriendo en http://localhost:${PORT}`);

@@ -18,7 +18,10 @@ function AppContent() {
   const isProtectedRoute = location.pathname === '/panel' || location.pathname === '/PanelTrabajador';
   
   if (isProtectedRoute && !coloresCargados) {
-    return <SkeletonLoader />;
+    // El trabajador tiene 3 elementos de menú, el admin tiene 6
+    const isTrabajador = location.pathname === '/PanelTrabajador';
+    const menuItems = isTrabajador ? 3 : 6;
+    return <SkeletonLoader menuItems={menuItems} isTrabajador={isTrabajador} />;
   }
   
   return (

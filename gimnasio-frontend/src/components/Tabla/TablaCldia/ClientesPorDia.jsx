@@ -320,66 +320,66 @@ export default function TablaClientesHoy({ refresh }) {
         </div>
       ) : (
         <>
-          {/* Vista de Cards Grid más pequeña */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+          {/* Vista de Cards Grid más pequeña y minimalista */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
             {sortedItems.map((cliente) => (
               <div 
                 key={cliente._id || cliente.nombre} 
-                className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 overflow-hidden"
+                className="bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden"
               >
                 {/* Barra superior con color */}
-                <div className="h-1 bg-gradient-to-r from-color-botones to-red-600" />
+                <div className="h-0.5 bg-gradient-to-r from-color-botones to-red-600" />
                 
                 {/* Contenido de la card */}
-                <div className="p-3">
+                <div className="p-2">
                   {/* Nombre */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} className="flex-shrink-0" />
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 20 }} className="flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-gray-900 truncate">{cliente.nombre || "Sin nombre"}</h3>
+                      <h3 className="font-medium text-xs text-gray-900 truncate">{cliente.nombre || "Sin nombre"}</h3>
                     </div>
                   </div>
 
                   {/* Información en grid compacto */}
-                  <div className="grid grid-cols-2 gap-2 mb-2">
+                  <div className="grid grid-cols-2 gap-1.5 mb-1.5">
                     {cliente.tipoDocumento && cliente.numeroDocumento && (
-                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                        <span className="text-[9px] text-gray-500 block mb-0.5">Documento</span>
+                      <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                        <span className="text-[8px] text-gray-500 block mb-0.5">Doc</span>
                         <Chip 
                           color={cliente.tipoDocumento === "DNI" ? "primary" : "secondary"} 
                           variant="flat"
                           size="sm"
-                          className="text-[9px] h-4"
+                          className="text-[8px] h-3"
                         >
                           {cliente.tipoDocumento === "CE" ? "CE" : cliente.tipoDocumento}
                         </Chip>
-                        <span className="text-[8px] text-gray-600 block mt-0.5 truncate">
+                        <span className="text-[7px] text-gray-600 block mt-0.5 truncate">
                           {cliente.numeroDocumento}
                         </span>
                       </div>
                     )}
                     
-                    <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                      <span className="text-[9px] text-gray-500 block mb-0.5">Fecha</span>
-                      <span className="text-xs font-medium text-gray-800">
-                        {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "Sin fecha"}
+                    <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                      <span className="text-[8px] text-gray-500 block mb-0.5">Fecha</span>
+                      <span className="text-[10px] font-medium text-gray-800">
+                        {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "-"}
                       </span>
                     </div>
                     
-                    <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                      <span className="text-[9px] text-gray-500 block mb-0.5">Hora</span>
-                      <span className="text-xs font-medium text-gray-800">{formatTime12Hour(cliente.horaInicio)}</span>
+                    <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                      <span className="text-[8px] text-gray-500 block mb-0.5">Hora</span>
+                      <span className="text-[10px] font-medium text-gray-800">{formatTime12Hour(cliente.horaInicio)}</span>
                     </div>
                     
-                    <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                      <span className="text-[9px] text-gray-500 block mb-0.5">Monto</span>
-                      <span className="text-xs font-bold text-gray-900">S/ {cliente.monto ?? 7}</span>
+                    <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                      <span className="text-[8px] text-gray-500 block mb-0.5">Monto</span>
+                      <span className="text-[10px] font-bold text-gray-900">S/ {cliente.monto ?? 7}</span>
                     </div>
                   </div>
 
                   {/* Método de pago y creador */}
-                  <div className="flex items-center justify-between mb-2 text-xs">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-center justify-between mb-1.5 text-[9px]">
+                    <div className="flex items-center gap-1">
                       <span className="text-gray-500">Pago:</span>
                       {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] && (
                         cliente.metododePago.toLowerCase() === 'efectivo' ? (
@@ -387,7 +387,7 @@ export default function TablaClientesHoy({ refresh }) {
                             <img
                               src={metodosPago[cliente.metododePago.toLowerCase()].icono}
                               alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                              className="object-contain w-5 h-5 opacity-80"
+                              className="object-contain w-4 h-4 opacity-80"
                             />
                           </div>
                         ) : (
@@ -400,32 +400,32 @@ export default function TablaClientesHoy({ refresh }) {
                             <img
                               src={metodosPago[cliente.metododePago.toLowerCase()].icono}
                               alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                              className="object-contain w-5 h-5"
+                              className="object-contain w-4 h-4"
                             />
                           </Button>
                         )
                       )}
                     </div>
                     {cliente.creadoPor && (
-                      <span className="text-[9px] text-gray-500">
+                      <span className="text-[8px] text-gray-500">
                         {cliente.creadoPor === "admin"
                           ? "Admin"
                           : cliente.creadoPor === "trabajador"
-                          ? (cliente.creadorNombre || "Trabajador").substring(0, 8)
+                          ? (cliente.creadorNombre || "Trab").substring(0, 6)
                           : ""}
                       </span>
                     )}
                   </div>
 
                   {/* Acciones */}
-                  <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-200">
+                  <div className="flex items-center justify-center gap-1 pt-1.5 border-t border-gray-200">
                     <IconButton
                       aria-label="Descargar voucher"
                       onClick={() => descargarVoucher(cliente)}
                       sx={{ color: getColorSistema(), "&:hover": { opacity: 0.8 }, p: 0.5 }}
                       size="small"
                     >
-                      <AdfScannerRoundedIcon sx={{ fontSize: 18 }} />
+                      <AdfScannerRoundedIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                     <IconButton
                       aria-label="Editar cliente"
@@ -433,7 +433,7 @@ export default function TablaClientesHoy({ refresh }) {
                       sx={{ color: getColorSistema(), "&:hover": { opacity: 0.8 }, p: 0.5 }}
                       size="small"
                     >
-                      <EditIcon sx={{ fontSize: 18 }} />
+                      <EditIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                     <IconButton
                       aria-label="Eliminar cliente"
@@ -441,7 +441,7 @@ export default function TablaClientesHoy({ refresh }) {
                       sx={{ color: getColorSistema(), "&:hover": { opacity: 0.8 }, p: 0.5 }}
                       size="small"
                     >
-                      <DeleteIcon sx={{ fontSize: 18 }} />
+                      <DeleteIcon sx={{ fontSize: 16 }} />
                     </IconButton>
                   </div>
                 </div>

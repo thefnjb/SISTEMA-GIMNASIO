@@ -20,6 +20,7 @@ import GetAppRoundedIcon from '@mui/icons-material/GetAppRounded';
 import { useColoresSistema } from '../../hooks/useColoresSistema';
 import SkeletonLoader from '../../components/Skeleton/SkeletonLoader';
 import ModalInfoCard from '../../components/Modal/ModalInfoCard';
+import ListaConversaciones from '../../components/Chat/ListaConversaciones';
 
 function Panel() {
   const coloresCargados = useColoresSistema();
@@ -188,6 +189,13 @@ function Panel() {
           </div>
         );
 
+      case "MENSAJES":
+        return (
+          <div className="w-full p-2 xs:p-3 sm:p-4 md:p-6">
+            <ListaConversaciones />
+          </div>
+        );
+
       case "CONFIGURACIÓN":
         return <ConfiguracionEmpresa />;
 
@@ -198,7 +206,7 @@ function Panel() {
 
   // Mostrar skeleton mientras se cargan los colores
   if (!coloresCargados) {
-    return <SkeletonLoader />;
+    return <SkeletonLoader menuItems={6} isTrabajador={false} />;
   }
 
   return (

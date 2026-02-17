@@ -7,6 +7,7 @@ import AddchartIcon from '@mui/icons-material/Addchart';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import EngineeringOutlinedIcon from '@mui/icons-material/EngineeringOutlined';
 import SettingsIcon from '@mui/icons-material/Settings';
+import MessageIcon from '@mui/icons-material/Message';
 import SplitText from '../TextAnimation/SplitText';
 import api from '../../utils/axiosInstance';
 
@@ -111,10 +112,31 @@ const Barralateral = ({ active, setActive }) => {
     };
   }, []);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('token');
-    sessionStorage.removeItem('rol');
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      // Llamar al endpoint de logout para registrar salida automática (si es trabajador)
+      const token = sessionStorage.getItem('token');
+      const rol = sessionStorage.getItem('rol');
+      if (token && rol === 'trabajador') {
+        await fetch('http://localhost:4000/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }).catch(err => {
+          // Si falla, continuar con el logout de todas formas
+          console.error('Error al registrar salida:', err);
+        });
+      }
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+    } finally {
+      // Limpiar sesión y redirigir
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('rol');
+      navigate('/');
+    }
   };
 
   return (
@@ -201,6 +223,13 @@ const Barralateral = ({ active, setActive }) => {
             label="INGRESOS"
             active={active === 'INGRESOS'}
             onClick={() => setActive('INGRESOS')}
+            colorBotones={colorBotones}
+          />
+          <SidebarItem
+            icon={<MessageIcon />}
+            label="MENSAJES"
+            active={active === 'MENSAJES'}
+            onClick={() => setActive('MENSAJES')}
             colorBotones={colorBotones}
           />
           <SidebarItem

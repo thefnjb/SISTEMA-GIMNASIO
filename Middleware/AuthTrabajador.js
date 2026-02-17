@@ -13,7 +13,14 @@ const authTrabajador = async (req, res, next) => {
         const token = authHeader.split(' ')[1];
 
         // 3. Verificar el token con la clave de TRABAJADOR
-        const decoded = jwt.verify(token, process.env.JWT_TRABAJADOR_SECRET);
+        let decoded;
+        try {
+            decoded = jwt.verify(token, process.env.JWT_TRABAJADOR_SECRET);
+        } catch (jwtError) {
+            // Log del error para debugging
+            console.error('Error al verificar token de trabajador:', jwtError.name, jwtError.message);
+            return res.status(401).json({ message: 'Token inválido o expirado.' });
+        }
 
         // 4. Verificar que el rol sea 'trabajador'
         if (decoded.rol !== 'trabajador') {
@@ -25,7 +32,8 @@ const authTrabajador = async (req, res, next) => {
         next();
 
     } catch (error) {
-        res.status(401).json({ message: 'Token inválido o expirado.' });
+        console.error('Error inesperado en authTrabajador:', error);
+        res.status(500).json({ message: 'Error interno en la autenticación.' });
     }
 };
 

@@ -10,6 +10,10 @@ import GetAppRoundedIcon from "@mui/icons-material/GetAppRounded";
 import { useColoresSistema } from "../../hooks/useColoresSistema";
 import SkeletonLoader from "../../components/Skeleton/SkeletonLoader";
 import ModalInfoCard from "../../components/Modal/ModalInfoCard";
+import NotificacionesTrabajador from "../../components/Chat/NotificacionesTrabajador";
+import { useContadorNotificaciones } from "../../components/Chat/NotificacionesTrabajador";
+import { Alert, Button } from "@heroui/react";
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 const PanelTrabajador = () => {
   const coloresCargados = useColoresSistema();
@@ -18,6 +22,8 @@ const PanelTrabajador = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [modalInfoMembresias, setModalInfoMembresias] = useState(false);
   const [modalInfoClientesDia, setModalInfoClientesDia] = useState(false);
+  const [mostrarAlertaMensajes, setMostrarAlertaMensajes] = useState(true);
+  const contadorNotificaciones = useContadorNotificaciones();
 
   // 🔄 Refresca las tablas cuando se agrega un cliente o suscripción
   const handleClienteAgregado = () => {
@@ -30,6 +36,32 @@ const PanelTrabajador = () => {
       case "INICIO":
         return (
           <div className="p-2 xs:p-3 sm:p-4 md:p-6">
+            {/* Alerta de mensajes no leídos */}
+            {contadorNotificaciones > 0 && mostrarAlertaMensajes && (
+              <Alert
+                color="warning"
+                title={`Tienes ${contadorNotificaciones} mensaje${contadorNotificaciones > 1 ? 's' : ''} no leído${contadorNotificaciones > 1 ? 's' : ''}`}
+                description="Ve a la sección de Notificaciones para ver tus mensajes"
+                variant="faded"
+                isClosable
+                onClose={() => setMostrarAlertaMensajes(false)}
+                className="mb-4"
+                actionContent={
+                  <Button
+                    size="sm"
+                    color="warning"
+                    variant="flat"
+                    onPress={() => {
+                      setActive("NOTIFICACIONES");
+                      setMostrarAlertaMensajes(false);
+                    }}
+                    startContent={<NotificationsIcon />}
+                  >
+                    Ver Mensajes
+                  </Button>
+                }
+              />
+            )}
             {/* 🧩 Cards principales */}
             {/* Cards para móvil/tablet */}
             <div className="flex flex-col gap-3 xs:gap-4 md:hidden max-w-4xl mx-auto">
@@ -97,6 +129,13 @@ const PanelTrabajador = () => {
           </div>
         );
 
+      case "NOTIFICACIONES":
+        return (
+          <div className="w-full p-2 xs:p-3 sm:p-4 md:p-6">
+            <NotificacionesTrabajador isOpen={true} onClose={() => setActive('INICIO')} />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -104,7 +143,7 @@ const PanelTrabajador = () => {
 
   // Mostrar skeleton mientras se cargan los colores
   if (!coloresCargados) {
-    return <SkeletonLoader />;
+    return <SkeletonLoader menuItems={3} isTrabajador={true} />;
   }
 
   return (

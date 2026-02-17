@@ -654,8 +654,8 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
         </div>
       ) : (
         <>
-          {/* Vista de Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+          {/* Vista de Cards Grid más pequeña y minimalista */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2">
             {sortedItems.map((item) => {
               // Si es una visita expandida en vista agrupada
               if (vistaAgrupada && item.esVisitaExpandida) {
@@ -663,43 +663,43 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                 return (
                   <div 
                     key={`${item.grupoPadre}-${item.indiceVisita}`}
-                    className="bg-gray-50 rounded-lg shadow-md border border-gray-200 overflow-hidden ml-4"
+                    className="bg-gray-50 rounded-md shadow-sm border border-gray-200 overflow-hidden ml-4"
                   >
-                    <div className="h-1 bg-gradient-to-r from-gray-400 to-gray-500" />
-                    <div className="p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 24 }} />
+                    <div className="h-0.5 bg-gradient-to-r from-gray-400 to-gray-500" />
+                    <div className="p-2">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 18 }} />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-xs text-gray-700 truncate">{item.nombre || "Sin nombre"}</h3>
-                          <Chip size="sm" color="secondary" variant="flat" className="text-[9px] h-4 mt-0.5">
+                          <h3 className="font-medium text-[10px] text-gray-700 truncate">{item.nombre || "Sin nombre"}</h3>
+                          <Chip size="sm" color="secondary" variant="flat" className="text-[8px] h-3 mt-0.5">
                             #{item.indiceVisita + 1}
                           </Chip>
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 mb-2">
-                        <div className="bg-white rounded-md p-2 border border-gray-100">
-                          <span className="text-[9px] text-gray-500 block mb-0.5">Fecha</span>
-                          <span className="text-xs font-medium text-gray-800">
-                            {item.fecha ? new Date(item.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "Sin fecha"}
+                      <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+                        <div className="bg-white rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Fecha</span>
+                          <span className="text-[10px] font-medium text-gray-800">
+                            {item.fecha ? new Date(item.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "-"}
                           </span>
                         </div>
-                        <div className="bg-white rounded-md p-2 border border-gray-100">
-                          <span className="text-[9px] text-gray-500 block mb-0.5">Hora</span>
-                          <span className="text-xs font-medium text-gray-800">{formatTime12Hour(item.horaInicio)}</span>
+                        <div className="bg-white rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Hora</span>
+                          <span className="text-[10px] font-medium text-gray-800">{formatTime12Hour(item.horaInicio)}</span>
                         </div>
-                        <div className="bg-white rounded-md p-2 border border-gray-100">
-                          <span className="text-[9px] text-gray-500 block mb-0.5">Monto</span>
-                          <span className="text-xs font-bold text-gray-900">S/ {item.monto ?? 7}</span>
+                        <div className="bg-white rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Monto</span>
+                          <span className="text-[10px] font-bold text-gray-900">S/ {item.monto ?? 7}</span>
                         </div>
-                        <div className="bg-white rounded-md p-2 border border-gray-100">
-                          <span className="text-[9px] text-gray-500 block mb-0.5">Pago</span>
+                        <div className="bg-white rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Pago</span>
                           <div className="flex items-center justify-center h-full">
                             {item.metododePago && metodosPago[item.metododePago.toLowerCase()] ? (
                               item.metododePago.toLowerCase() === 'efectivo' ? (
                                 <img
                                   src={metodosPago[item.metododePago.toLowerCase()].icono}
                                   alt={metodosPago[item.metododePago.toLowerCase()].nombre}
-                                  className="object-contain w-5 h-5 opacity-80"
+                                  className="object-contain w-4 h-4 opacity-80"
                                 />
                               ) : (
                                 <Button
@@ -711,21 +711,21 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                                   <img
                                     src={metodosPago[item.metododePago.toLowerCase()].icono}
                                     alt={metodosPago[item.metododePago.toLowerCase()].nombre}
-                                    className="object-contain w-5 h-5"
+                                    className="object-contain w-4 h-4"
                                   />
                                 </Button>
                               )
                             ) : (
-                              <span className="text-gray-400">-</span>
+                              <span className="text-gray-400 text-[8px]">-</span>
                             )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-200">
+                      <div className="flex items-center justify-center gap-1 pt-1.5 border-t border-gray-200">
                         <IconButton
                           aria-label="Descargar voucher"
                           onClick={() => descargarVoucher(item)}
-                          sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                          sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                           size="small"
                         >
                           <AdfScannerRoundedIcon fontSize="inherit" />
@@ -733,7 +733,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                         <IconButton
                           aria-label="Editar cliente"
                           onClick={() => openModalEditar(item)}
-                          sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                          sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                           size="small"
                         >
                           <EditIcon fontSize="inherit" />
@@ -742,7 +742,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                           <IconButton
                             aria-label="Eliminar cliente"
                             onClick={() => handleDeleteConfirm(item)}
-                            sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                            sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                             size="small"
                           >
                             <DeleteIcon fontSize="inherit" />
@@ -763,57 +763,57 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                 return (
                   <div 
                     key={grupo.clave}
-                    className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 overflow-hidden ${grupo.esRepetido ? 'ring-2 ring-yellow-300' : ''}`}
+                    className={`bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden ${grupo.esRepetido ? 'ring-1 ring-yellow-300' : ''}`}
                   >
-                    <div className={`h-1 ${grupo.esRepetido ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-color-botones to-red-600'}`} />
-                    <div className="p-3">
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} className="flex-shrink-0" />
+                    <div className={`h-0.5 ${grupo.esRepetido ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-color-botones to-red-600'}`} />
+                    <div className="p-2">
+                      <div className="flex items-start justify-between mb-1.5">
+                        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                          <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 20 }} className="flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-semibold text-sm text-gray-900 truncate mb-0.5">{grupo.nombre || "Sin nombre"}</h3>
+                            <h3 className="font-medium text-xs text-gray-900 truncate mb-0.5">{grupo.nombre || "Sin nombre"}</h3>
                             {grupo.tipoDocumento && grupo.numeroDocumento && (
                               <div className="flex items-center gap-1">
                                 <Chip 
                                   color={grupo.tipoDocumento === "DNI" ? "primary" : "secondary"} 
                                   variant="flat"
                                   size="sm"
-                                  className="text-[9px] h-4"
+                                  className="text-[8px] h-3"
                                 >
                                   {grupo.tipoDocumento === "CE" ? "CE" : grupo.tipoDocumento}
                                 </Chip>
-                                <span className="text-[9px] text-gray-600 truncate">{grupo.numeroDocumento}</span>
+                                <span className="text-[8px] text-gray-600 truncate">{grupo.numeroDocumento}</span>
                               </div>
                             )}
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-1">
+                        <div className="flex flex-col items-end gap-0.5">
                           {grupo.esRepetido && (
-                            <Chip size="sm" color="warning" variant="flat" className="text-[9px] h-5">
-                              <RepeatIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                            <Chip size="sm" color="warning" variant="flat" className="text-[8px] h-4">
+                              <RepeatIcon sx={{ fontSize: 10, mr: 0.5 }} />
                               {grupo.totalVisitas}x
                             </Chip>
                           )}
-                          <Chip size="sm" color={grupo.totalVisitas > 1 ? "warning" : "default"} variant="flat" className="text-[9px] h-5">
+                          <Chip size="sm" color={grupo.totalVisitas > 1 ? "warning" : "default"} variant="flat" className="text-[8px] h-4">
                             {grupo.totalVisitas} visita{grupo.totalVisitas > 1 ? 's' : ''}
                           </Chip>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 mb-2">
-                        <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                          <span className="text-[9px] text-gray-500 block mb-0.5">Última Visita</span>
-                          <span className="text-xs font-medium text-gray-800">
-                            {grupo.ultimaVisita?.fecha ? new Date(grupo.ultimaVisita.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "Sin fecha"}
+                      <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Última Visita</span>
+                          <span className="text-[10px] font-medium text-gray-800">
+                            {grupo.ultimaVisita?.fecha ? new Date(grupo.ultimaVisita.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "-"}
                           </span>
-                          <span className="text-[9px] text-gray-500 block">{formatTime12Hour(grupo.ultimaVisita?.horaInicio)}</span>
+                          <span className="text-[8px] text-gray-500 block">{formatTime12Hour(grupo.ultimaVisita?.horaInicio)}</span>
                         </div>
-                        <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                          <span className="text-[9px] text-gray-500 block mb-0.5">Total Gastado</span>
-                          <span className="text-xs font-bold text-gray-900">S/ {grupo.totalMonto.toFixed(2)}</span>
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Total Gastado</span>
+                          <span className="text-[10px] font-bold text-gray-900">S/ {grupo.totalMonto.toFixed(2)}</span>
                         </div>
-                        <div className="bg-gray-50 rounded-md p-2 border border-gray-100 col-span-2">
-                          <span className="text-[9px] text-gray-500 block mb-0.5">Métodos de Pago</span>
+                        <div className="bg-gray-50 rounded p-1.5 border border-gray-100 col-span-2">
+                          <span className="text-[8px] text-gray-500 block mb-0.5">Métodos de Pago</span>
                           <div className="flex items-center gap-1 flex-wrap">
                             {Array.from(grupo.metodosPago).slice(0, 3).map((metodo) => (
                               metodosPago[metodo.toLowerCase()] && (
@@ -821,39 +821,39 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                                   key={metodo}
                                   src={metodosPago[metodo.toLowerCase()].icono}
                                   alt={metodo}
-                                  className="object-contain w-5 h-5"
+                                  className="object-contain w-4 h-4"
                                   title={metodo}
                                 />
                               )
                             ))}
                             {grupo.metodosPago.size > 3 && (
-                              <span className="text-[9px] text-gray-500">+{grupo.metodosPago.size - 3}</span>
+                              <span className="text-[8px] text-gray-500">+{grupo.metodosPago.size - 3}</span>
                             )}
                           </div>
                         </div>
                       </div>
 
                       {grupo.totalVisitas > 1 && (
-                        <div className="mb-2">
+                        <div className="mb-1.5">
                           <Button
                             size="sm"
                             variant="flat"
                             onClick={() => toggleExpandirCliente(grupo.clave)}
-                            className="w-full text-xs"
-                            startContent={estaExpandido ? <ExpandLessIcon sx={{ fontSize: 16 }} /> : <ExpandMoreIcon sx={{ fontSize: 16 }} />}
+                            className="w-full text-[10px] h-6"
+                            startContent={estaExpandido ? <ExpandLessIcon sx={{ fontSize: 14 }} /> : <ExpandMoreIcon sx={{ fontSize: 14 }} />}
                           >
-                            {estaExpandido ? 'Ocultar visitas' : `Ver ${grupo.totalVisitas} visita${grupo.totalVisitas > 1 ? 's' : ''}`}
+                            {estaExpandido ? 'Ocultar' : `Ver ${grupo.totalVisitas}`}
                           </Button>
                         </div>
                       )}
 
-                      <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-200">
+                      <div className="flex items-center justify-center gap-1 pt-1.5 border-t border-gray-200">
                         {grupo.ultimaVisita && (
                           <>
                             <IconButton
                               aria-label="Descargar voucher"
                               onClick={() => descargarVoucher(grupo.ultimaVisita)}
-                              sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                              sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                               size="small"
                             >
                               <AdfScannerRoundedIcon fontSize="inherit" />
@@ -861,7 +861,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                             <IconButton
                               aria-label="Editar cliente"
                               onClick={() => openModalEditar(grupo.ultimaVisita)}
-                              sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                              sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                               size="small"
                             >
                               <EditIcon fontSize="inherit" />
@@ -870,7 +870,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                               <IconButton
                                 aria-label="Eliminar cliente"
                                 onClick={() => handleDeleteConfirm(grupo.ultimaVisita)}
-                                sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                                sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                                 size="small"
                               >
                                 <DeleteIcon fontSize="inherit" />
@@ -893,67 +893,67 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
               return (
                 <div 
                   key={cliente._id || cliente.nombre}
-                  className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 border border-gray-200 overflow-hidden ${esRepetido ? 'ring-2 ring-yellow-300' : ''}`}
+                  className={`bg-white rounded-md shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 overflow-hidden ${esRepetido ? 'ring-1 ring-yellow-300' : ''}`}
                 >
-                  <div className={`h-1 ${esRepetido ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-color-botones to-red-600'}`} />
-                  <div className="p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 28 }} className="flex-shrink-0" />
+                  <div className={`h-0.5 ${esRepetido ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-color-botones to-red-600'}`} />
+                  <div className="p-2">
+                    <div className="flex items-start justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                        <AccountCircleRoundedIcon sx={{ color: "#555", fontSize: 20 }} className="flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-sm text-gray-900 truncate mb-0.5">{cliente.nombre || "Sin nombre"}</h3>
+                          <h3 className="font-medium text-xs text-gray-900 truncate mb-0.5">{cliente.nombre || "Sin nombre"}</h3>
                           {cliente.tipoDocumento && cliente.numeroDocumento && (
                             <div className="flex items-center gap-1">
                               <Chip 
                                 color={cliente.tipoDocumento === "DNI" ? "primary" : "secondary"} 
                                 variant="flat"
                                 size="sm"
-                                className="text-[9px] h-4"
+                                className="text-[8px] h-3"
                               >
                                 {cliente.tipoDocumento === "CE" ? "CE" : cliente.tipoDocumento}
                               </Chip>
-                              <span className="text-[9px] text-gray-600 truncate">{cliente.numeroDocumento}</span>
+                              <span className="text-[8px] text-gray-600 truncate">{cliente.numeroDocumento}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-1">
+                      <div className="flex flex-col items-end gap-0.5">
                         {esRepetido && (
-                          <Chip size="sm" color="warning" variant="flat" className="text-[9px] h-5">
-                            <RepeatIcon sx={{ fontSize: 12, mr: 0.5 }} />
+                          <Chip size="sm" color="warning" variant="flat" className="text-[8px] h-4">
+                            <RepeatIcon sx={{ fontSize: 10, mr: 0.5 }} />
                             {numVisitas}x
                           </Chip>
                         )}
-                        <Chip size="sm" color={numVisitas > 1 ? "warning" : "default"} variant="flat" className="text-[9px] h-5">
+                        <Chip size="sm" color={numVisitas > 1 ? "warning" : "default"} variant="flat" className="text-[8px] h-4">
                           {numVisitas} visita{numVisitas > 1 ? 's' : ''}
                         </Chip>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                        <span className="text-[9px] text-gray-500 block mb-0.5">Fecha</span>
-                        <span className="text-xs font-medium text-gray-800">
-                          {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "Sin fecha"}
+                    <div className="grid grid-cols-2 gap-1.5 mb-1.5">
+                      <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                        <span className="text-[8px] text-gray-500 block mb-0.5">Fecha</span>
+                        <span className="text-[10px] font-medium text-gray-800">
+                          {cliente.fecha ? new Date(cliente.fecha).toLocaleDateString("es-PE", { day: "2-digit", month: "2-digit" }) : "-"}
                         </span>
                       </div>
-                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                        <span className="text-[9px] text-gray-500 block mb-0.5">Hora</span>
-                        <span className="text-xs font-medium text-gray-800">{formatTime12Hour(cliente.horaInicio)}</span>
+                      <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                        <span className="text-[8px] text-gray-500 block mb-0.5">Hora</span>
+                        <span className="text-[10px] font-medium text-gray-800">{formatTime12Hour(cliente.horaInicio)}</span>
                       </div>
-                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                        <span className="text-[9px] text-gray-500 block mb-0.5">Monto</span>
-                        <span className="text-xs font-bold text-gray-900">S/ {cliente.monto ?? 7}</span>
+                      <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                        <span className="text-[8px] text-gray-500 block mb-0.5">Monto</span>
+                        <span className="text-[10px] font-bold text-gray-900">S/ {cliente.monto ?? 7}</span>
                       </div>
-                      <div className="bg-gray-50 rounded-md p-2 border border-gray-100">
-                        <span className="text-[9px] text-gray-500 block mb-0.5">Pago</span>
+                      <div className="bg-gray-50 rounded p-1.5 border border-gray-100">
+                        <span className="text-[8px] text-gray-500 block mb-0.5">Pago</span>
                         <div className="flex items-center justify-center h-full">
                           {cliente.metododePago && metodosPago[cliente.metododePago.toLowerCase()] ? (
                             cliente.metododePago.toLowerCase() === 'efectivo' ? (
                               <img
                                 src={metodosPago[cliente.metododePago.toLowerCase()].icono}
                                 alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                                className="object-contain w-5 h-5 opacity-80"
+                                className="object-contain w-4 h-4 opacity-80"
                               />
                             ) : (
                               <Button
@@ -965,28 +965,28 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                                 <img
                                   src={metodosPago[cliente.metododePago.toLowerCase()].icono}
                                   alt={metodosPago[cliente.metododePago.toLowerCase()].nombre}
-                                  className="object-contain w-5 h-5"
+                                  className="object-contain w-4 h-4"
                                 />
                               </Button>
                             )
                           ) : (
-                            <span className="text-gray-400">-</span>
+                            <span className="text-gray-400 text-[8px]">-</span>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between mb-2 text-xs">
-                      <span className="text-[9px] text-gray-500">
-                        {cliente.creadoPor === "admin" ? "Admin" : (cliente.creadorNombre || "Trabajador")}
+                    <div className="flex items-center justify-between mb-1.5 text-[9px]">
+                      <span className="text-[8px] text-gray-500">
+                        {cliente.creadoPor === "admin" ? "Admin" : (cliente.creadorNombre || "Trab").substring(0, 6)}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-gray-200">
+                    <div className="flex items-center justify-center gap-1 pt-1.5 border-t border-gray-200">
                       <IconButton
                         aria-label="Descargar voucher"
                         onClick={() => descargarVoucher(cliente)}
-                        sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                        sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                         size="small"
                       >
                         <AdfScannerRoundedIcon fontSize="inherit" />
@@ -994,7 +994,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                       <IconButton
                         aria-label="Editar cliente"
                         onClick={() => openModalEditar(cliente)}
-                        sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                        sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                         size="small"
                       >
                         <EditIcon fontSize="inherit" />
@@ -1003,7 +1003,7 @@ export default function TodosClientes({ refresh, mostrarTitulo = true, onCliente
                         <IconButton
                           aria-label="Eliminar cliente"
                           onClick={() => handleDeleteConfirm(cliente)}
-                          sx={{ color: getColorSistema(), fontSize: 18, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
+                          sx={{ color: getColorSistema(), fontSize: 16, cursor: "pointer", "&:hover": { opacity: 0.8 } }}
                           size="small"
                         >
                           <DeleteIcon fontSize="inherit" />

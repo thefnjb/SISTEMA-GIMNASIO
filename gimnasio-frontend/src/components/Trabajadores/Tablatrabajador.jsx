@@ -20,13 +20,16 @@ import BotonEditar from "../Iconos/BotonEditar";
 import BotonEliminar from "../Iconos/BotonEliminar";
 import CancelPresentationRoundedIcon from "@mui/icons-material/CancelPresentationRounded";
 import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineRounded";
+import HistoryIcon from "@mui/icons-material/History";
 import ModalEditarTrabajador from "./ModalEditarTrabajador";
+import ModalHistorialAsistencia from "./ModalHistorialAsistencia";
 
 export default function TablaTrabajadores({ refresh }) {
   const [trabajadores, setTrabajadores] = useState([]);
   const [filtro, setFiltro] = useState("");
   const [cargando, setCargando] = useState(true);
   const [editingTrabajador, setEditingTrabajador] = useState(null);
+  const [historialTrabajador, setHistorialTrabajador] = useState(null);
   const [alert, setAlert] = useState({ visible: false, color: "default", title: "" });
   const timeoutRef = useRef(null);
 
@@ -199,6 +202,17 @@ export default function TablaTrabajadores({ refresh }) {
                   </TableCell>
                   <TableCell>
                     <div className="relative flex items-center justify-center gap-1 sm:gap-2 md:gap-3">
+                      <Tooltip content="Ver Historial de Asistencia">
+                        <Button
+                          isIconOnly
+                          variant="light"
+                          size="sm"
+                          onPress={() => setHistorialTrabajador(trab)}
+                          className="text-blue-600"
+                        >
+                          <HistoryIcon className="text-base sm:text-lg" />
+                        </Button>
+                      </Tooltip>
                       <Tooltip content="Editar Trabajador">
                         <BotonEditar onClick={() => setEditingTrabajador(trab)} />
                       </Tooltip>
@@ -251,6 +265,14 @@ export default function TablaTrabajadores({ refresh }) {
           trabajador={editingTrabajador}
           onClose={() => setEditingTrabajador(null)}
           onUpdate={actualizarTrabajador}
+        />
+      )}
+
+      {historialTrabajador && (
+        <ModalHistorialAsistencia
+          trabajador={historialTrabajador}
+          isOpen={!!historialTrabajador}
+          onClose={() => setHistorialTrabajador(null)}
         />
       )}
     </div>
